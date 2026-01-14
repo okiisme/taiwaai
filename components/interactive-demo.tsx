@@ -22,7 +22,6 @@ const MOCK_ANALYSIS: AnalysisResult = {
   warmth: 35,
   heroInsight: {
     scores: MOCK_STATS.heroScores,
-    strength: "未来への希望(Hope)は非常に高く維持されています。",
     pathology: "高い希望(Hope)に対し、それを実行する効力感(Efficacy)が不足。「夢は語るが足元がおぼつかない」状態です。",
     risks: ["学習性無力感", "具体策の欠如"]
   },
@@ -99,8 +98,17 @@ const DEMO_SCRIPT = [
         time: 2500,
         highlight: true
       },
+      {
+        participant: "Member D",
+        role: "member",
+        asIs: "...",
+        solution: "...",
+        hero: "...",
+        vulnerability: "Typing...",
+        time: 3500,
+      }
     ],
-    duration: 5000,
+    duration: 8000, // Longer for mobile view
   },
   {
     stage: "realtime-analysis",
@@ -118,6 +126,98 @@ const DEMO_SCRIPT = [
   },
 ]
 
+// Mock Mobile Component
+const MockMobileClient = ({ step }: { step: number }) => {
+  return (
+    <div className="w-[300px] h-[600px] bg-white rounded-[3rem] border-8 border-gray-800 shadow-2xl overflow-hidden relative mx-auto transform scale-90 sm:scale-100 transition-transform">
+      {/* Notch */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-gray-800 rounded-b-2xl z-20"></div>
+
+      {/* Content */}
+      <div className="h-full w-full bg-slate-50 pt-10 px-4 pb-4 flex flex-col items-center overflow-hidden">
+        {/* Progress Bar */}
+        <div className="w-full flex gap-1 mb-6 px-2">
+          <div className={`h-1 flex-1 rounded-full ${step >= 1 ? 'bg-teal-500' : 'bg-gray-200'}`}></div>
+          <div className={`h-1 flex-1 rounded-full ${step >= 2 ? 'bg-teal-500' : 'bg-gray-200'}`}></div>
+          <div className={`h-1 flex-1 rounded-full ${step >= 3 ? 'bg-teal-500' : 'bg-gray-200'}`}></div>
+        </div>
+
+        {step === 1 && (
+          <div className="w-full animate-in slide-in-from-right duration-500">
+            <h3 className="font-bold text-center text-lg mb-8">1. 今のコンディションは？</h3>
+            <div className="flex justify-between px-4 mb-8">
+              <span className="text-2xl animate-bounce delay-100">💤</span>
+              <span className="text-2xl animate-bounce delay-200">😐</span>
+              <span className="text-2xl animate-bounce delay-300">🔥</span>
+            </div>
+            <div className="bg-gray-200 h-2 rounded-full mb-8 relative">
+              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-orange-400 rounded-full shadow border-2 border-white"></div>
+            </div>
+            <div className="text-center font-bold text-orange-500 mb-8">50%</div>
+            <h4 className="font-bold text-center text-sm mb-4">今の気分の色</h4>
+            <div className="grid grid-cols-4 gap-2">
+              {[...Array(8)].map((_, i) => (
+                <div key={i} className={`aspect-square rounded-lg ${i === 1 ? 'bg-orange-500 border-4 border-white shadow-lg transform scale-110' : 'bg-gray-300'}`}></div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {step === 2 && (
+          <div className="w-full animate-in slide-in-from-right duration-500">
+            <h3 className="font-bold text-center text-lg mb-6">2. 課題に対する感覚 (HERO)</h3>
+            <div className="space-y-6">
+              {['Hope (希望)', 'Efficacy (効力感)', 'Resilience (回復力)', 'Optimism (楽観性)'].map((label, i) => (
+                <div key={i}>
+                  <div className="flex justify-between text-xs font-bold mb-2">
+                    <span>{label}</span>
+                    <span className="text-teal-600">{[8, 4, 3, 5][i]}/10</span>
+                  </div>
+                  <div className="bg-gray-100 h-2 rounded-full relative">
+                    <div
+                      className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-teal-500 rounded-full shadow border-2 border-white transition-all duration-1000"
+                      style={{ left: `${[80, 40, 30, 50][i]}%` }}
+                    ></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {step === 3 && (
+          <div className="w-full animate-in slide-in-from-right duration-500">
+            <h3 className="font-bold text-center text-lg mb-6">3. 思考の構造化</h3>
+            <div className="space-y-4">
+              <div className="bg-red-50 p-3 rounded-xl border border-red-100">
+                <span className="text-xs font-bold text-red-400 block mb-1">As-Is (事実)</span>
+                <div className="h-2 w-3/4 bg-gray-200 rounded animate-pulse mb-1"></div>
+                <div className="h-2 w-1/2 bg-gray-200 rounded animate-pulse"></div>
+              </div>
+              <div className="bg-teal-50 p-3 rounded-xl border border-teal-100">
+                <span className="text-xs font-bold text-teal-400 block mb-1">To-Be (理想)</span>
+                <div className="h-2 w-full bg-gray-200 rounded animate-pulse mb-1"></div>
+              </div>
+              <div className="bg-yellow-50 p-3 rounded-xl border border-yellow-100">
+                <span className="text-xs font-bold text-yellow-600 block mb-1">Solution (行動)</span>
+                <div className="h-2 w-5/6 bg-gray-200 rounded animate-pulse"></div>
+              </div>
+            </div>
+            <Button className="w-full mt-6 bg-gradient-to-r from-teal-500 to-lime-500 text-white font-bold rounded-xl">
+              送信する
+            </Button>
+          </div>
+        )}
+
+        {/* Navigation */}
+        <div className="mt-auto w-full pt-4 border-t">
+          <Button className="w-full bg-teal-500 text-white rounded-full">次へ</Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function InteractiveDemo() {
   const [isPlaying, setIsPlaying] = useState(false)
   const [isPaused, setIsPaused] = useState(false)
@@ -127,6 +227,9 @@ export function InteractiveDemo() {
   const [speed, setSpeed] = useState(1)
   const [isFullScreen, setIsFullScreen] = useState(false)
 
+  // Mobile simulation state
+  const [mobileStep, setMobileStep] = useState(1)
+
   const currentStep = DEMO_SCRIPT[currentStepIndex]
 
   // Reset state when step changes or demo resets
@@ -134,6 +237,7 @@ export function InteractiveDemo() {
     if (currentStepIndex === 0 && !isPlaying) {
       setParticipants([])
       setResponses([])
+      setMobileStep(1)
     }
   }, [currentStepIndex, isPlaying])
 
@@ -145,7 +249,6 @@ export function InteractiveDemo() {
 
     // Handle step-specific logic
     if (currentStep.stage === "participants-join" && currentStep.participants) {
-      // Reset for this step if just started
       if (participants.length === 0) {
         currentStep.participants.forEach(p => {
           setTimeout(() => {
@@ -157,11 +260,22 @@ export function InteractiveDemo() {
 
     if (currentStep.stage === "responses-coming" && currentStep.responses) {
       if (responses.length === 0) {
+        // Cycle mobile steps
+        const cycleInterval = 2000 / speed
+        const cycleTimer = setInterval(() => {
+          setMobileStep(prev => prev >= 3 ? 1 : prev + 1)
+        }, cycleInterval)
+
         currentStep.responses.forEach(r => {
           setTimeout(() => {
             setResponses(prev => [...prev, r])
           }, r.time / speed)
         })
+
+        return () => {
+          clearInterval(cycleTimer)
+          clearTimeout(timer)
+        }
       }
     }
 
@@ -330,49 +444,46 @@ export function InteractiveDemo() {
             </div>
           )}
 
-          {/* Responses Coming */}
+          {/* Responses Coming (Split View: Dashboard + Mobile) */}
           {currentStep.stage === "responses-coming" && (
-            <div className="h-full flex flex-col animate-in fade-in duration-500">
-              <h3 className="text-2xl font-bold text-gray-700 mb-6 flex items-center gap-3">
-                <ArrowRight className="w-6 h-6 text-teal-500" />
-                リアルタイム回答受信中...
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {responses.map((r, i) => (
-                  <div
-                    key={i}
-                    className={`bg-white p-6 rounded-2xl shadow-md border-l-4 ${r.role === 'manager' ? 'border-l-indigo-500' : 'border-l-teal-500'} relative overflow-hidden animate-in zoom-in fade-in slide-in-from-bottom-2 duration-500`}
-                  >
-                    <div className="flex justify-between items-start mb-3">
-                      <span className={`text-xs font-bold px-2 py-1 rounded ${r.role === 'manager' ? 'bg-indigo-100 text-indigo-700' : 'bg-teal-100 text-teal-700'}`}>
-                        {r.participant}
-                      </span>
-                      <span className="text-xs font-mono text-gray-400">{r.hero}</span>
-                    </div>
-                    <div className="space-y-3">
-                      <div>
-                        <p className="text-xs text-gray-400 mb-1">As is (現状)</p>
-                        <p className="font-medium text-gray-800">"{r.asIs}"</p>
+            <div className="h-full flex flex-col md:flex-row gap-8 animate-in fade-in duration-500">
+              <div className="flex-1">
+                <h3 className="text-2xl font-bold text-gray-700 mb-6 flex items-center gap-3">
+                  <ArrowRight className="w-6 h-6 text-teal-500" />
+                  リアルタイムファシリテーション画面
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {responses.map((r, i) => (
+                    <div
+                      key={i}
+                      className={`bg-white p-4 rounded-2xl shadow-md border-l-4 ${r.role === 'manager' ? 'border-l-indigo-500' : 'border-l-teal-500'} relative overflow-hidden animate-in zoom-in fade-in slide-in-from-bottom-2 duration-500`}
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <span className={`text-xs font-bold px-2 py-1 rounded ${r.role === 'manager' ? 'bg-indigo-100 text-indigo-700' : 'bg-teal-100 text-teal-700'}`}>
+                          {r.participant}
+                        </span>
+                        <span className="text-xs font-mono text-gray-400">{r.hero}</span>
                       </div>
-                      {r.solution && (
+                      <div className="space-y-2">
                         <div>
-                          <p className="text-xs text-gray-400 mb-1">Solution</p>
-                          <p className="text-sm text-gray-600">{r.solution}</p>
+                          <p className="text-xs text-gray-400">As is</p>
+                          <p className="font-medium text-sm text-gray-800 line-clamp-2">"{r.asIs}"</p>
                         </div>
-                      )}
-                    </div>
-                    {/* Simulated Vulnerability Scorer */}
-                    <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between">
-                      <span className="text-xs text-red-400 font-semibold">Honesty Signal</span>
-                      <div className="h-1.5 w-24 bg-gray-100 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-red-400"
-                          style={{ width: r.vulnerability.includes('100%') ? '100%' : r.vulnerability.includes('20%') ? '20%' : '40%' }}
-                        />
                       </div>
                     </div>
+                  ))}
+                  <div className="bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl flex items-center justify-center p-8 opacity-50">
+                    <span className="animate-pulse text-gray-400">waiting...</span>
                   </div>
-                ))}
+                </div>
+              </div>
+
+              {/* Mobile Mockup Sidebar */}
+              <div className="w-full md:w-[320px] shrink-0 border-l pl-8 border-gray-100 hidden md:block">
+                <div className="text-center mb-4">
+                  <span className="bg-gray-900 text-white text-xs px-3 py-1 rounded-full">Participants View</span>
+                </div>
+                <MockMobileClient step={mobileStep} />
               </div>
             </div>
           )}
