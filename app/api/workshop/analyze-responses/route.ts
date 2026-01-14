@@ -144,33 +144,15 @@ JSON出力スキーマに厳密に従ってください。
 `
 
     try {
-      // ユーザーから提供されたAPIキーを使用 (本来は環境変数推奨だが、即時解決のため)
-      const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY || "AIzaSyDO9Rx8tLNwBpReDifoVPdDwcLRDtp6eoo"
+      const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
 
       if (!apiKey) {
-        throw new Error("API Key not configured.");
-      }
-
-      // Explicitly configure the Google provider with the key
-      const googleProvider = google
-
-      // Note: In Vercel AI SDK, the key is usually picked up from env. 
-      // If we need to pass it explicitly, we might need a custom instance or ensure env is set.
-      // However, we can't easily change env at runtime in Next.js edge/serverless without redeploy.
-      // We will try to rely on the fallback or ask user.
-      // Actually, @ai-sdk/google allows creating a custom provider instance.
-      // But 'google' export is a factory/helper. 
-      // Let's try to set the key in the environment variable for this process scope if possible, 
-      // or use the specific createGoogle function if available (it's 'createGoogleGenerativeAI' in some versions).
-      // Checking package version ^3.0.7... likely correct usage is just 'google'.
-
-      // Attempt to set env var for this request scope if missing
-      if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
-        process.env.GOOGLE_GENERATIVE_AI_API_KEY = apiKey
+        console.error("API Key missing");
+        throw new Error("API Key not configured (GOOGLE_GENERATIVE_AI_API_KEY).");
       }
 
       const result = await generateObject({
-        model: google("models/gemini-1.5-flash-latest"), // Try specific model version
+        model: google("models/gemini-1.5-flash-latest"),
         schema: analysisSchema,
         system: systemPrompt,
         prompt: `以下の回答を分析し、チームの現状と次の一手を明確にしてください:\n\n${formattedResponses}`,

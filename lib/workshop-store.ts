@@ -54,8 +54,16 @@ type WorkshopStore = {
   >
 }
 
-const store: WorkshopStore = {
+const globalStore = globalThis as unknown as {
+  workshopStore: WorkshopStore | undefined
+}
+
+const store: WorkshopStore = globalStore.workshopStore || {
   sessions: new Map(),
+}
+
+if (process.env.NODE_ENV !== "production") {
+  globalStore.workshopStore = store
 }
 
 // CHANGE: Add sample data for demonstration
