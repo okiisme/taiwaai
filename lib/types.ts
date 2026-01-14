@@ -351,5 +351,6 @@ export interface LocalAnalysisStats {
     environment: number
     communication?: number
   }
+  roi: number
   responseCount: number
 }

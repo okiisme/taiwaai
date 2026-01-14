@@ -21,11 +21,93 @@ import {
   Target,
   Zap,
 } from "@/components/icons"
-import type { WorkshopSession } from "@/lib/types"
+import type { WorkshopSession, LocalAnalysisStats } from "@/lib/types"
 import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer } from "recharts"
 import { ErrorBoundary } from "react-error-boundary"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { QRCodeSVG } from "qrcode.react"
+
+// Helper to calculate stats deterministically
+const calculateAnalysisStats = (session: WorkshopSession): LocalAnalysisStats | null => {
+  if (!session.responses || session.responses.length === 0) return null
+
+  // 1. Warmth (from Participants Stance)
+  let totalWarmth = 0
+  let warmCount = 0
+  session.participants.forEach(p => {
+    if (p.stance) {
+      // Normalize 0-5 scale to 0-100
+      const openness = (p.stance.openness || 0) * 20
+      const energy = (p.stance.energyLevel || 0) * 20
+      totalWarmth += (openness + energy) / 2
+      warmCount++
+    }
+  })
+  const warmth = warmCount > 0 ? Math.round(totalWarmth / warmCount) : 50
+
+  // 2. HERO Scores (from Responses)
+  let totalHope = 0, totalEfficacy = 0, totalResilience = 0, totalOptimism = 0
+  let heroCount = 0
+
+  session.responses.forEach(r => {
+    if (r.hero) {
+      totalHope += r.hero.hope || 0
+      totalEfficacy += r.hero.efficacy || 0
+      totalResilience += r.hero.resilience || 0
+      totalOptimism += r.hero.optimism || 0
+      heroCount++
+    }
+  })
+
+  // Default to mid-range if no data (to avoid 0/0)
+  const heroScores = heroCount > 0 ? {
+    hope: Math.round((totalHope / heroCount) * 10) / 10,
+    efficacy: Math.round((totalEfficacy / heroCount) * 10) / 10,
+    resilience: Math.round((totalResilience / heroCount) * 10) / 10,
+    optimism: Math.round((totalOptimism / heroCount) * 10) / 10
+  } : { hope: 5, efficacy: 5, resilience: 5, optimism: 5 }
+
+  // 3. Focus Tags (Keyword Analysis)
+  let mindset = 0, process = 0, environment = 0
+  const keywords = {
+    mindset: ["意識", "モチベーション", "やる気", "不安", "心理", "気持ち", "納得", "当事者", "主体性", "自信", "本音", "文化", "風土"],
+    process: ["ルール", "仕組み", "制度", "時間", "会議", "ツール", "手順", "役割", "責任", "評価", "フロー", "方法", "業務"],
+    environment: ["環境", "オフィス", "設備", "雑音", "椅子", "リモート", "空間", "予算", "人員", "リソース", "ｐｃ", "pc", "手当"]
+  }
+
+  session.responses.forEach(r => {
+    const text = (r.solution?.action || "") + " " + (r.gap?.interpretation || "") + " " + (r.asIs.fact || "") + " " + (r.toBe.will || "")
+
+    const hasMindset = keywords.mindset.some(k => text.includes(k))
+    const hasProcess = keywords.process.some(k => text.includes(k))
+    const hasEnvironment = keywords.environment.some(k => text.includes(k))
+
+    if (hasMindset) mindset++
+    if (hasProcess) process++
+    if (hasEnvironment) environment++
+  })
+
+  const totalTags = mindset + process + environment
+  const focusTags = totalTags > 0 ? {
+    mindset: Math.round((mindset / totalTags) * 100),
+    process: Math.round((process / totalTags) * 100),
+    environment: Math.round((environment / totalTags) * 100)
+  } : { mindset: 33, process: 33, environment: 34 }
+
+  // 4. ROI Calculation
+  // Formula: Average HERO (0-10) / 2 * Growth Factor
+  const avgHero = (heroScores.hope + heroScores.efficacy + heroScores.resilience + heroScores.optimism) / 4
+  // If avgHero is 10, ROI = 5.0x. If 5, ROI = 2.5x.
+  const roi = Math.round((avgHero / 2) * 10) / 10
+
+  return {
+    warmth,
+    heroScores,
+    focusTags,
+    roi,
+    responseCount: session.responses.length
+  }
+}
 
 // Helper function to load data from localStorage
 const loadFromLocalStorage = (key: string) => {
@@ -498,6 +580,25 @@ const generateMarkdownReport = (session: WorkshopSession, selectedTheme: string)
   // Logic Model Analysis (HERO)
   markdown += `## 🧠 心理資本（HERO）に基づく組織診断\n\n`
   markdown += `本セッションのデータを、組織の持続的パフォーマンスの源泉である「心理資本（PsyCap）」の4要素に基づいて分析しました。\n\n`
+
+  const stats = calculateAnalysisStats(session)
+
+  if (stats) {
+    markdown += `### 📊 HERO Stats & ROI\n\n`
+    markdown += `- **組織心理資本 (Total HERO)**: ${((stats.heroScores.hope + stats.heroScores.efficacy + stats.heroScores.resilience + stats.heroScores.optimism) / 4).toFixed(1)}/10\n`
+    markdown += `  - Hope (意志): ${stats.heroScores.hope}\n`
+    markdown += `  - Efficacy (効力感): ${stats.heroScores.efficacy}\n`
+    markdown += `  - Resilience (回復力): ${stats.heroScores.resilience}\n`
+    markdown += `  - Optimism (楽観性): ${stats.heroScores.optimism}\n`
+    markdown += `\n`
+    markdown += `- **Warmth (組織体温)**: ${stats.warmth}/100\n`
+    markdown += `- **Expected ROI (投資対効果)**: **${stats.roi}x** (${stats.roi * 100}%)\n\n`
+
+    markdown += `### 🔍 Focus Areas (関心の所在)\n`
+    markdown += `- Mindset (意識): ${stats.focusTags.mindset}%\n`
+    markdown += `- Process (仕組み): ${stats.focusTags.process}%\n`
+    markdown += `- Environment (環境): ${stats.focusTags.environment}%\n\n`
+  }
 
   // Hope (Waypower)
   markdown += `### 1. Hope (希望・意志)\n`
@@ -1508,220 +1609,17 @@ export default function FacilitatePage({ params }: { params: { id: string } }) {
                 console.error("[v0] Error boundary caught error in analysis section:", error, info)
               }}
             >
-              <Card className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-gray-100">
-                <h2 className="text-2xl font-bold mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
-                  <div className="bg-gradient-to-r from-teal-400 to-lime-400 p-2 sm:p-3 rounded-2xl">
-                    <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
-                  </div>
-                  AI分析結果
-                </h2>
 
-                <div className="space-y-8">
-                  {/* 1. HERO ROI Float Effect */}
-                  {session.analysis?.roiScore !== undefined && (
-                    <div className="relative overflow-hidden bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-800 rounded-3xl p-8 text-white shadow-xl animate-in fade-in duration-700">
-                      <div className="absolute top-0 right-0 p-32 bg-purple-500 rounded-full mix-blend-overlay filter blur-3xl opacity-20 -mr-16 -mt-16 animate-pulse"></div>
-                      <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
-                        <div className="space-y-4 max-w-lg">
-                          <div className="inline-block px-3 py-1 bg-white/10 rounded-full text-xs font-medium backdrop-blur-sm border border-white/20">
-                            対話の投資効果予測
-                          </div>
-                          <h3 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-purple-200">
-                            Expected HERO ROI
-                          </h3>
-                          <p className="text-indigo-200 text-sm leading-relaxed">
-                            今回の対話によって、組織の「心理資本（HERO）」がどれだけ向上したかを示す指標です。
-                            <br />
-                            {(session.analysis.roiScore || 0) > 80 ? "🚀 重力を振り切り、組織が急成長するポテンシャルを秘めています。" : "🌱 着実な一歩が踏み出されました。継続的な対話でさらに上昇気流を作り出せます。"}
-                          </p>
-                        </div>
-                        <div className="text-center relative">
-                          {/* Floating Animation */}
-                          <div className="text-6xl font-black tracking-tighter drop-shadow-lg animate-bounce" style={{ animationDuration: '3s' }}>
-                            {session.analysis.roiScore}
-                            <span className="text-2xl ml-1 align-top opacity-80">%</span>
-                          </div>
-                          <div className="text-xs uppercase tracking-widest text-indigo-300 mt-2 font-semibold">Growth Potential</div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
+              // ... inside component ...
+              // const stats = calculateAnalysisStats(session)
 
-                  {/* 2. Three-Axis Bubble Chart (Mindset / Process / Environment) */}
-                  {session.analysis?.tags && (
-                    <Card className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-gray-100">
-                      <h3 className="text-xl font-bold mb-6 flex items-center gap-2 text-gray-800">
-                        <div className="bg-teal-100 p-2 rounded-lg text-teal-600">📊</div>
-                        関心の所在 (Focus Areas)
-                      </h3>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-64 items-end justify-items-center pb-4">
-                        {/* Mindset Bubble */}
-                        <div className="flex flex-col items-center gap-3 w-full group">
-                          <div
-                            className="rounded-full bg-gradient-to-br from-purple-400 to-purple-600 shadow-lg transition-all duration-1000 group-hover:scale-110 flex items-center justify-center text-white font-bold"
-                            style={{
-                              width: `${Math.max(80, (session.analysis.tags.mindset || 0) * 2)}px`,
-                              height: `${Math.max(80, (session.analysis.tags.mindset || 0) * 2)}px`,
-                              opacity: Math.max(0.3, (session.analysis.tags.mindset || 0) / 100 + 0.2)
-                            }}
-                          >
-                            {session.analysis.tags.mindset}%
-                          </div>
-                          <span className="font-bold text-purple-700">Mindset (意識)</span>
-                        </div>
-
-                        {/* Process Bubble */}
-                        <div className="flex flex-col items-center gap-3 w-full group">
-                          <div
-                            className="rounded-full bg-gradient-to-br from-orange-400 to-orange-600 shadow-lg transition-all duration-1000 delay-100 group-hover:scale-110 flex items-center justify-center text-white font-bold"
-                            style={{
-                              width: `${Math.max(80, (session.analysis.tags.process || 0) * 2)}px`,
-                              height: `${Math.max(80, (session.analysis.tags.process || 0) * 2)}px`,
-                              opacity: Math.max(0.3, (session.analysis.tags.process || 0) / 100 + 0.2)
-                            }}
-                          >
-                            {session.analysis.tags.process}%
-                          </div>
-                          <span className="font-bold text-orange-700">Process (仕組み)</span>
-                        </div>
-
-                        {/* Environment Bubble */}
-                        <div className="flex flex-col items-center gap-3 w-full group">
-                          <div
-                            className="rounded-full bg-gradient-to-br from-green-400 to-green-600 shadow-lg transition-all duration-1000 delay-200 group-hover:scale-110 flex items-center justify-center text-white font-bold"
-                            style={{
-                              width: `${Math.max(80, (session.analysis.tags.environment || 0) * 2)}px`,
-                              height: `${Math.max(80, (session.analysis.tags.environment || 0) * 2)}px`,
-                              opacity: Math.max(0.3, (session.analysis.tags.environment || 0) / 100 + 0.2)
-                            }}
-                          >
-                            {session.analysis.tags.environment}%
-                          </div>
-                          <span className="font-bold text-green-700">Environment (環境)</span>
-                        </div>
-                      </div>
-                    </Card>
-                  )}
-
-                  {/* 3. Gap Analysis / Lemon Market */}
-                  {session.analysis?.gapAnalysis && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <Card className={`rounded-3xl p-6 border-l-8 shadow-sm ${session.analysis.gapAnalysis.asymmetryLevel === 'High' ? 'border-l-red-500 bg-red-50' : 'border-l-yellow-500 bg-yellow-50'}`}>
-                        <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
-                          <AlertCircle className={`w-5 h-5 ${session.analysis.gapAnalysis.asymmetryLevel === 'High' ? 'text-red-500' : 'text-yellow-500'}`} />
-                          情報の非対称性 (Information Asymmetry)
-                        </h3>
-                        <div className="space-y-4">
-                          <div className="bg-white/60 p-4 rounded-xl">
-                            <span className="text-xs font-bold text-gray-500 uppercase">Manager View</span>
-                            <p className="text-gray-800 font-medium mt-1">{session.analysis.gapAnalysis.managerView}</p>
-                          </div>
-                          <div className="flex justify-center text-gray-400 font-bold text-xs transform rotate-90 md:rotate-0">
-                            VS
-                          </div>
-                          <div className="bg-white/60 p-4 rounded-xl">
-                            <span className="text-xs font-bold text-gray-500 uppercase">Member View</span>
-                            <p className="text-gray-800 font-medium mt-1">{session.analysis.gapAnalysis.memberView}</p>
-                          </div>
-                          {session.analysis.gapAnalysis.asymmetryLevel === 'High' && (
-                            <div className="mt-4 p-3 bg-red-100 text-red-800 text-sm rounded-lg font-bold">
-                              🍋 Lemon Market Alert: 認識のズレが大きく、質的な劣化リスクがあります。
-                            </div>
-                          )}
-                        </div>
-                      </Card>
-
-                      {/* 4. HERO Insight (Anti-Gravity Radar) */}
-                      <Card className="rounded-3xl p-6 bg-white shadow-sm border border-blue-100">
-                        <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
-                          <TrendingUp className="w-5 h-5 text-blue-500" />
-                          HERO Insight (組織の心理資本)
-                        </h3>
-                        {session.analysis.heroInsight && (
-                          <div className="space-y-4">
-                            <div className="h-48 w-full">
-                              <ResponsiveContainer width="100%" height="100%">
-                                <RadarChart cx="50%" cy="50%" outerRadius="80%" data={[
-                                  { subject: 'Hope', A: session.analysis.heroInsight.scores.hope, fullMark: 100 },
-                                  { subject: 'Efficacy', A: session.analysis.heroInsight.scores.efficacy, fullMark: 100 },
-                                  { subject: 'Resilience', A: session.analysis.heroInsight.scores.resilience, fullMark: 100 },
-                                  { subject: 'Optimism', A: session.analysis.heroInsight.scores.optimism, fullMark: 100 },
-                                ]}>
-                                  <PolarGrid />
-                                  <PolarAngleAxis dataKey="subject" />
-                                  <PolarRadiusAxis angle={30} domain={[0, 100]} />
-                                  <Radar name="Team HERO" dataKey="A" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.4} />
-                                </RadarChart>
-                              </ResponsiveContainer>
-                            </div>
-                            <div className="space-y-2 text-sm">
-                              <div className="flex items-start gap-2">
-                                <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs font-bold whitespace-nowrap">強み</span>
-                                <p>{session.analysis.heroInsight.strength}</p>
-                              </div>
-                              <div className="flex items-start gap-2">
-                                <span className="bg-red-100 text-red-800 px-2 py-0.5 rounded text-xs font-bold whitespace-nowrap">病理</span>
-                                <p>{session.analysis.heroInsight.pathology}</p>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </Card>
-                    </div>
-                  )}
-
-                  {/* 5. Intervention Questions */}
-                  {session.analysis?.interventionQuestions && (
-                    <Card className="bg-gradient-to-r from-teal-50 to-emerald-50 rounded-3xl p-6 sm:p-8 border border-teal-200 shadow-sm">
-                      <h3 className="text-xl font-bold mb-6 flex items-center gap-2 text-teal-800">
-                        <MessageCircle className="w-6 h-6" />
-                        AI Intervention (次の対話へ)
-                      </h3>
-                      <div className="space-y-4">
-                        <div className="bg-white p-4 rounded-xl border-l-4 border-teal-400 shadow-sm transition-all hover:shadow-md cursor-pointer" onClick={() => handleSelectQuestion(session.analysis!.interventionQuestions!.mutualUnderstanding)}>
-                          <span className="text-xs font-bold text-teal-500 uppercase tracking-widest block mb-1">Mutual Understanding</span>
-                          <p className="text-lg font-medium text-gray-800">“{session.analysis.interventionQuestions.mutualUnderstanding}”</p>
-                        </div>
-                        <div className="bg-white p-4 rounded-xl border-l-4 border-yellow-400 shadow-sm transition-all hover:shadow-md cursor-pointer" onClick={() => handleSelectQuestion(session.analysis!.interventionQuestions!.suspendedJudgment)}>
-                          <span className="text-xs font-bold text-yellow-600 uppercase tracking-widest block mb-1">Suspended Judgment</span>
-                          <p className="text-lg font-medium text-gray-800">“{session.analysis.interventionQuestions.suspendedJudgment}”</p>
-                        </div>
-                        <div className="bg-white p-4 rounded-xl border-l-4 border-indigo-400 shadow-sm transition-all hover:shadow-md cursor-pointer" onClick={() => handleSelectQuestion(session.analysis!.interventionQuestions!.smallAgreement)}>
-                          <span className="text-xs font-bold text-indigo-500 uppercase tracking-widest block mb-1">Small Agreement (MVP)</span>
-                          <p className="text-lg font-medium text-gray-800">“{session.analysis.interventionQuestions.smallAgreement}”</p>
-                        </div>
-                        <p className="text-center text-xs text-gray-500 mt-2">クリックするとこの質問を次のセッションで使用できます</p>
-                      </div>
-                    </Card>
-                  )}
-
-
-                  {/* Key Findings */}
-                  {session.analysis?.keyFindings &&
-                    Array.isArray(session.analysis.keyFindings) &&
-                    session.analysis.keyFindings.length > 0 && (
-                      <div>
-                        <h3 className="font-semibold mb-3 sm:mb-4 flex items-center gap-1 sm:gap-2 text-gray-700 text-sm sm:text-base">
-                          <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-teal-500" />
-                          主要な発見
-                        </h3>
-                        <div className="space-y-3">
-                          {session.analysis.keyFindings.map((finding: string, idx: number) => (
-                            <div
-                              key={idx}
-                              className="flex items-start gap-2 sm:gap-3 bg-white p-3 sm:p-4 rounded-2xl border border-teal-100"
-                            >
-                              <div className="flex-shrink-0 w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-teal-400 text-white flex items-center justify-center font-bold text-xs sm:text-sm">
-                                {idx + 1}
-                              </div>
-                              <p className="text-xs sm:text-sm text-gray-700 leading-relaxed">{finding}</p>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                </div>
-              </Card>
+              {session.analysis && (
+                <AnalysisDisplay
+                  analysis={session.analysis}
+                  stats={calculateAnalysisStats(session)}
+                  onSelectQuestion={handleSelectQuestion}
+                />
+              )}
 
               <Accordion
                 type="multiple"

@@ -28,13 +28,11 @@ interface AnalysisDisplayProps {
 }
 
 export function AnalysisDisplay({ analysis, stats, onSelectQuestion }: AnalysisDisplayProps) {
-    // If neither exists, show nothing or loading
-    if (!analysis && !stats) return null
-
     // Use stats if available, otherwise fallback to AI analysis (for backward compatibility)
     const warmth = stats ? stats.warmth : (analysis?.warmth || 0)
     const heroScores = stats ? stats.heroScores : (analysis?.heroInsight?.scores || { hope: 0, efficacy: 0, resilience: 0, optimism: 0 })
     const focusTags = stats ? stats.focusTags : (analysis?.tags || { mindset: 0, process: 0, environment: 0 })
+    const roi = stats ? stats.roi : (analysis?.roiScore || 0)
 
     return (
         <div className="space-y-8">
@@ -96,11 +94,11 @@ export function AnalysisDisplay({ analysis, stats, onSelectQuestion }: AnalysisD
             </div>
 
             {/* 2. Next Dialogue Intervention (Action Trigger) */}
-            {analysis?.intervention ? (
+            {analysis?.interventionQuestions ? (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <Card
                         className="p-6 bg-gradient-to-br from-indigo-50 to-blue-50 border-l-4 border-indigo-500 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
-                        onClick={() => onSelectQuestion(analysis.intervention.mutualUnderstanding)}
+                        onClick={() => onSelectQuestion(analysis.interventionQuestions!.mutualUnderstanding)}
                     >
                         <div className="flex items-start gap-3">
                             <div className="p-2 bg-indigo-100 rounded-lg">
@@ -108,13 +106,13 @@ export function AnalysisDisplay({ analysis, stats, onSelectQuestion }: AnalysisD
                             </div>
                             <div>
                                 <h4 className="font-bold text-indigo-900 mb-1">Mutual Understanding</h4>
-                                <p className="text-sm text-indigo-700 italic">"{analysis.intervention.mutualUnderstanding}"</p>
+                                <p className="text-sm text-indigo-700 italic">"{analysis.interventionQuestions!.mutualUnderstanding}"</p>
                             </div>
                         </div>
                     </Card>
                     <Card
                         className="p-6 bg-gradient-to-br from-fuchsia-50 to-pink-50 border-l-4 border-fuchsia-500 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
-                        onClick={() => onSelectQuestion(analysis.intervention.suspendedJudgment)}
+                        onClick={() => onSelectQuestion(analysis.interventionQuestions!.suspendedJudgment)}
                     >
                         <div className="flex items-start gap-3">
                             <div className="p-2 bg-fuchsia-100 rounded-lg">
@@ -122,13 +120,13 @@ export function AnalysisDisplay({ analysis, stats, onSelectQuestion }: AnalysisD
                             </div>
                             <div>
                                 <h4 className="font-bold text-fuchsia-900 mb-1">Suspended Judgment</h4>
-                                <p className="text-sm text-fuchsia-700 italic">"{analysis.intervention.suspendedJudgment}"</p>
+                                <p className="text-sm text-fuchsia-700 italic">"{analysis.interventionQuestions!.suspendedJudgment}"</p>
                             </div>
                         </div>
                     </Card>
                     <Card
                         className="p-6 bg-gradient-to-br from-emerald-50 to-teal-50 border-l-4 border-emerald-500 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
-                        onClick={() => onSelectQuestion(analysis.intervention.smallAgreement)}
+                        onClick={() => onSelectQuestion(analysis.interventionQuestions!.smallAgreement)}
                     >
                         <div className="flex items-start gap-3">
                             <div className="p-2 bg-emerald-100 rounded-lg">
@@ -136,7 +134,7 @@ export function AnalysisDisplay({ analysis, stats, onSelectQuestion }: AnalysisD
                             </div>
                             <div>
                                 <h4 className="font-bold text-emerald-900 mb-1">Small Agreement</h4>
-                                <p className="text-sm text-emerald-700 italic">"{analysis.intervention.smallAgreement}"</p>
+                                <p className="text-sm text-emerald-700 italic">"{analysis.interventionQuestions!.smallAgreement}"</p>
                             </div>
                         </div>
                     </Card>
@@ -158,11 +156,14 @@ export function AnalysisDisplay({ analysis, stats, onSelectQuestion }: AnalysisD
                                 <h4 className="font-bold text-red-800 flex items-center gap-2">
                                     ⚠️ Cognitive Gap (Lemon Market)
                                 </h4>
-                                {analysis.gapAnalysis.lemonMarketAlert === "High" && (
+                                {analysis.gapAnalysis.lemonMarketRisk === "High" && (
                                     <span className="bg-red-100 text-red-600 px-2 py-1 rounded text-xs font-bold">HIGH ALERT</span>
                                 )}
                             </div>
-                            <p className="text-sm text-gray-700">{analysis.gapAnalysis.cognitiveGap}</p>
+                            {/* Derive cognitive gap summary from view points since original field missing */}
+                            <p className="text-sm text-gray-700">
+                                {analysis.gapAnalysis.managerView} vs {analysis.gapAnalysis.memberView}
+                            </p>
                         </Card>
                     )}
                 </div>
@@ -254,17 +255,17 @@ export function AnalysisDisplay({ analysis, stats, onSelectQuestion }: AnalysisD
             </div>
 
             {/* 6. Growth Potential / ROI (Bottom) */}
-            {analysis?.roi ? (
+            {(roi > 0 || analysis?.roiScore) && (
                 <div className="bg-gradient-to-r from-slate-800 to-slate-900 rounded-2xl p-6 text-white text-center">
                     <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Growth Potential</h3>
                     <p className="text-lg font-medium opacity-90">
-                        期待されるROI係数: <span className="text-3xl font-black text-emerald-400">{analysis.roi}x</span>
+                        期待されるROI係数: <span className="text-3xl font-black text-emerald-400">{roi}x</span>
                     </p>
                     <p className="text-xs text-slate-500 mt-2 max-w-lg mx-auto">
                         心理的資本(HERO)の向上がもたらす、将来的なパフォーマンス向上の予測値です。
                     </p>
                 </div>
-            ) : null}
+            )}
         </div>
     )
 }
