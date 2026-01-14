@@ -246,6 +246,7 @@ export function InteractiveDemo() {
     if (!isPlaying || isPaused) return
 
     let timer: NodeJS.Timeout
+    let cycleTimer: NodeJS.Timeout | null = null // Add cycleTimer reference
     const stepDuration = currentStep.duration / speed
 
     // Handle step-specific logic
@@ -263,7 +264,7 @@ export function InteractiveDemo() {
       if (responses.length === 0) {
         // Cycle mobile steps
         const cycleInterval = 2000 / speed
-        const cycleTimer = setInterval(() => {
+        cycleTimer = setInterval(() => { // Assign to cycleTimer
           setMobileStep(prev => prev >= 3 ? 1 : prev + 1)
         }, cycleInterval)
 
@@ -272,14 +273,10 @@ export function InteractiveDemo() {
             setResponses(prev => [...prev, r])
           }, r.time / speed)
         })
-
-        return () => {
-          clearInterval(cycleTimer)
-          clearTimeout(timer)
-        }
       }
     }
 
+    // Step transition logic (Ensured to run)
     timer = setTimeout(() => {
       if (currentStepIndex < DEMO_SCRIPT.length - 1) {
         setCurrentStepIndex((prev) => prev + 1)
@@ -289,7 +286,11 @@ export function InteractiveDemo() {
       }
     }, stepDuration)
 
-    return () => clearTimeout(timer)
+    // Cleanup
+    return () => {
+      clearTimeout(timer)
+      if (cycleTimer) clearInterval(cycleTimer)
+    }
   }, [isPlaying, isPaused, currentStepIndex, currentStep, speed])
 
   const handleStart = () => {
