@@ -22,24 +22,25 @@ const MOCK_ANALYSIS: AnalysisResult = {
   warmth: 35,
   heroInsight: {
     scores: MOCK_STATS.heroScores,
-    pathology: "高い希望(Hope)に対し、それを実行する効力感(Efficacy)が不足。「夢は語るが足元がおぼつかない」状態です。",
-    risks: ["学習性無力感", "具体策の欠如"]
+    strength: "未来への希望(Hope: 8.5)は非常に高く維持されており、全員が『良くなる可能性』を信じています。",
+    pathology: "高い希望に対し、実行する効力感(Efficacy: 4.0)が不足。『夢は語るが足元がおぼつかない』状態です。過去の失敗体験がブレーキになっています。",
+    risks: ["学習性無力感の定着", "具体策なき精神論への反発"]
   },
   gapAnalysis: {
-    managerView: "意識改革(Mindset)が必要",
-    memberView: "具体的な仕組み(Process)が必要",
-    cognitiveGap: "マネージャーは「やる気」の問題と捉えていますが、メンバーは「手段」がないことに絶望しています。",
+    managerView: "課題は『メンバーの意識(Mindset)』にあると認識。主体性を求めている。",
+    memberView: "課題は『仕組み(Process)とリソース(Env)』にあると認識。失敗を許容する制度を求めている。",
+    cognitiveGap: "【認識のズレ】マネージャーは「やる気がない」と嘆き、メンバーは「手段がない」と嘆いています。このズレが不信感の源泉です（Lemon Market Risk: High）。",
     lemonMarketRisk: "High",
     asymmetryLevel: "High"
   },
   structuralBridge: {
-    missingLink: "「精神論」ではなく「明日使えるツール」の提供",
+    missingLink: "『精神論』ではなく『明日使えるツール・制度』の提供",
     bridgeQuality: "Fragile"
   },
   interventionQuestions: {
-    mutualUnderstanding: "「やる気はあるのに、動けない」と感じた瞬間はいつですか？",
-    suspendedJudgment: "もし「意識」の問題ではないとしたら、何が手かせ足かせになっていますか？",
-    smallAgreement: "明日、会議の時間を「5分」短くすることから始めませんか？"
+    mutualUnderstanding: "Q. (Managerへ) メンバーが『やりたくてもできない』と感じている具体的な障壁は何だと思いますか？",
+    suspendedJudgment: "Q. (Memberへ) もし『失敗しても評価が下がらない』としたら、まず何を変えたいですか？",
+    smallAgreement: "Q. (All) 明日から試せる『意識を変えずに、仕組みだけで解決できること』を1つ決めませんか？"
   },
   tags: MOCK_STATS.focusTags,
   roiScore: 2.6
