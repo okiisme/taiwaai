@@ -1512,37 +1512,184 @@ export default function FacilitatePage({ params }: { params: { id: string } }) {
                 </h2>
 
                 <div className="space-y-8">
-                  {/* Sentiment Analysis */}
-                  {session.analysis?.sentiment && (
-                    <div className="bg-gradient-to-r from-teal-50 to-lime-50 rounded-2xl p-5 sm:p-6 border border-teal-200">
-                      <h3 className="font-semibold text-lg mb-3 sm:mb-4 text-gray-700 text-sm sm:text-base">
-                        📊 感情分析
-                      </h3>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                        <div className="text-center p-4 sm:p-6 bg-white rounded-2xl shadow-sm border border-green-100">
-                          <div className="text-4xl sm:text-5xl font-bold text-green-600 mb-2">
-                            {session.analysis.sentiment.positive || 0}%
+                  {/* 1. HERO ROI Float Effect */}
+                  {session.analysis?.roiScore !== undefined && (
+                    <div className="relative overflow-hidden bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-800 rounded-3xl p-8 text-white shadow-xl animate-in fade-in duration-700">
+                      <div className="absolute top-0 right-0 p-32 bg-purple-500 rounded-full mix-blend-overlay filter blur-3xl opacity-20 -mr-16 -mt-16 animate-pulse"></div>
+                      <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+                        <div className="space-y-4 max-w-lg">
+                          <div className="inline-block px-3 py-1 bg-white/10 rounded-full text-xs font-medium backdrop-blur-sm border border-white/20">
+                            対話の投資効果予測
                           </div>
-                          <p className="text-xs sm:text-sm text-gray-600">ポジティブ</p>
-                          <div className="mt-2 sm:mt-3 text-2xl">😊</div>
+                          <h3 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-purple-200">
+                            Expected HERO ROI
+                          </h3>
+                          <p className="text-indigo-200 text-sm leading-relaxed">
+                            今回の対話によって、組織の「心理資本（HERO）」がどれだけ向上したかを示す指標です。
+                            <br />
+                            {(session.analysis.roiScore || 0) > 80 ? "🚀 重力を振り切り、組織が急成長するポテンシャルを秘めています。" : "🌱 着実な一歩が踏み出されました。継続的な対話でさらに上昇気流を作り出せます。"}
+                          </p>
                         </div>
-                        <div className="text-center p-4 sm:p-6 bg-white rounded-2xl shadow-sm border border-gray-100">
-                          <div className="text-4xl sm:text-5xl font-bold text-gray-600 mb-2">
-                            {session.analysis.sentiment.neutral || 0}%
+                        <div className="text-center relative">
+                          {/* Floating Animation */}
+                          <div className="text-6xl font-black tracking-tighter drop-shadow-lg animate-bounce" style={{ animationDuration: '3s' }}>
+                            {session.analysis.roiScore}
+                            <span className="text-2xl ml-1 align-top opacity-80">%</span>
                           </div>
-                          <p className="text-xs sm:text-sm text-gray-600">ニュートラル</p>
-                          <div className="mt-2 sm:mt-3 text-2xl">😐</div>
-                        </div>
-                        <div className="text-center p-4 sm:p-6 bg-white rounded-2xl shadow-sm border border-orange-100">
-                          <div className="text-4xl sm:text-5xl font-bold text-orange-600 mb-2">
-                            {session.analysis.sentiment.negative || 0}%
-                          </div>
-                          <p className="text-xs sm:text-sm text-gray-600">要注意</p>
-                          <div className="mt-2 sm:mt-3 text-2xl">😟</div>
+                          <div className="text-xs uppercase tracking-widest text-indigo-300 mt-2 font-semibold">Growth Potential</div>
                         </div>
                       </div>
                     </div>
                   )}
+
+                  {/* 2. Three-Axis Bubble Chart (Mindset / Process / Environment) */}
+                  {session.analysis?.tags && (
+                    <Card className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-gray-100">
+                      <h3 className="text-xl font-bold mb-6 flex items-center gap-2 text-gray-800">
+                        <div className="bg-teal-100 p-2 rounded-lg text-teal-600">📊</div>
+                        関心の所在 (Focus Areas)
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-64 items-end justify-items-center pb-4">
+                        {/* Mindset Bubble */}
+                        <div className="flex flex-col items-center gap-3 w-full group">
+                          <div
+                            className="rounded-full bg-gradient-to-br from-purple-400 to-purple-600 shadow-lg transition-all duration-1000 group-hover:scale-110 flex items-center justify-center text-white font-bold"
+                            style={{
+                              width: `${Math.max(80, (session.analysis.tags.mindset || 0) * 2)}px`,
+                              height: `${Math.max(80, (session.analysis.tags.mindset || 0) * 2)}px`,
+                              opacity: Math.max(0.3, (session.analysis.tags.mindset || 0) / 100 + 0.2)
+                            }}
+                          >
+                            {session.analysis.tags.mindset}%
+                          </div>
+                          <span className="font-bold text-purple-700">Mindset (意識)</span>
+                        </div>
+
+                        {/* Process Bubble */}
+                        <div className="flex flex-col items-center gap-3 w-full group">
+                          <div
+                            className="rounded-full bg-gradient-to-br from-orange-400 to-orange-600 shadow-lg transition-all duration-1000 delay-100 group-hover:scale-110 flex items-center justify-center text-white font-bold"
+                            style={{
+                              width: `${Math.max(80, (session.analysis.tags.process || 0) * 2)}px`,
+                              height: `${Math.max(80, (session.analysis.tags.process || 0) * 2)}px`,
+                              opacity: Math.max(0.3, (session.analysis.tags.process || 0) / 100 + 0.2)
+                            }}
+                          >
+                            {session.analysis.tags.process}%
+                          </div>
+                          <span className="font-bold text-orange-700">Process (仕組み)</span>
+                        </div>
+
+                        {/* Environment Bubble */}
+                        <div className="flex flex-col items-center gap-3 w-full group">
+                          <div
+                            className="rounded-full bg-gradient-to-br from-green-400 to-green-600 shadow-lg transition-all duration-1000 delay-200 group-hover:scale-110 flex items-center justify-center text-white font-bold"
+                            style={{
+                              width: `${Math.max(80, (session.analysis.tags.environment || 0) * 2)}px`,
+                              height: `${Math.max(80, (session.analysis.tags.environment || 0) * 2)}px`,
+                              opacity: Math.max(0.3, (session.analysis.tags.environment || 0) / 100 + 0.2)
+                            }}
+                          >
+                            {session.analysis.tags.environment}%
+                          </div>
+                          <span className="font-bold text-green-700">Environment (環境)</span>
+                        </div>
+                      </div>
+                    </Card>
+                  )}
+
+                  {/* 3. Gap Analysis / Lemon Market */}
+                  {session.analysis?.gapAnalysis && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <Card className={`rounded-3xl p-6 border-l-8 shadow-sm ${session.analysis.gapAnalysis.asymmetryLevel === 'High' ? 'border-l-red-500 bg-red-50' : 'border-l-yellow-500 bg-yellow-50'}`}>
+                        <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                          <AlertCircle className={`w-5 h-5 ${session.analysis.gapAnalysis.asymmetryLevel === 'High' ? 'text-red-500' : 'text-yellow-500'}`} />
+                          情報の非対称性 (Information Asymmetry)
+                        </h3>
+                        <div className="space-y-4">
+                          <div className="bg-white/60 p-4 rounded-xl">
+                            <span className="text-xs font-bold text-gray-500 uppercase">Manager View</span>
+                            <p className="text-gray-800 font-medium mt-1">{session.analysis.gapAnalysis.managerView}</p>
+                          </div>
+                          <div className="flex justify-center text-gray-400 font-bold text-xs transform rotate-90 md:rotate-0">
+                            VS
+                          </div>
+                          <div className="bg-white/60 p-4 rounded-xl">
+                            <span className="text-xs font-bold text-gray-500 uppercase">Member View</span>
+                            <p className="text-gray-800 font-medium mt-1">{session.analysis.gapAnalysis.memberView}</p>
+                          </div>
+                          {session.analysis.gapAnalysis.asymmetryLevel === 'High' && (
+                            <div className="mt-4 p-3 bg-red-100 text-red-800 text-sm rounded-lg font-bold">
+                              🍋 Lemon Market Alert: 認識のズレが大きく、質的な劣化リスクがあります。
+                            </div>
+                          )}
+                        </div>
+                      </Card>
+
+                      {/* 4. HERO Insight (Anti-Gravity Radar) */}
+                      <Card className="rounded-3xl p-6 bg-white shadow-sm border border-blue-100">
+                        <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                          <TrendingUp className="w-5 h-5 text-blue-500" />
+                          HERO Insight (組織の心理資本)
+                        </h3>
+                        {session.analysis.heroInsight && (
+                          <div className="space-y-4">
+                            <div className="h-48 w-full">
+                              <ResponsiveContainer width="100%" height="100%">
+                                <RadarChart cx="50%" cy="50%" outerRadius="80%" data={[
+                                  { subject: 'Hope', A: session.analysis.heroInsight.scores.hope, fullMark: 100 },
+                                  { subject: 'Efficacy', A: session.analysis.heroInsight.scores.efficacy, fullMark: 100 },
+                                  { subject: 'Resilience', A: session.analysis.heroInsight.scores.resilience, fullMark: 100 },
+                                  { subject: 'Optimism', A: session.analysis.heroInsight.scores.optimism, fullMark: 100 },
+                                ]}>
+                                  <PolarGrid />
+                                  <PolarAngleAxis dataKey="subject" />
+                                  <PolarRadiusAxis angle={30} domain={[0, 100]} />
+                                  <Radar name="Team HERO" dataKey="A" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.4} />
+                                </RadarChart>
+                              </ResponsiveContainer>
+                            </div>
+                            <div className="space-y-2 text-sm">
+                              <div className="flex items-start gap-2">
+                                <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs font-bold whitespace-nowrap">強み</span>
+                                <p>{session.analysis.heroInsight.strength}</p>
+                              </div>
+                              <div className="flex items-start gap-2">
+                                <span className="bg-red-100 text-red-800 px-2 py-0.5 rounded text-xs font-bold whitespace-nowrap">病理</span>
+                                <p>{session.analysis.heroInsight.pathology}</p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </Card>
+                    </div>
+                  )}
+
+                  {/* 5. Intervention Questions */}
+                  {session.analysis?.interventionQuestions && (
+                    <Card className="bg-gradient-to-r from-teal-50 to-emerald-50 rounded-3xl p-6 sm:p-8 border border-teal-200 shadow-sm">
+                      <h3 className="text-xl font-bold mb-6 flex items-center gap-2 text-teal-800">
+                        <MessageCircle className="w-6 h-6" />
+                        AI Intervention (次の対話へ)
+                      </h3>
+                      <div className="space-y-4">
+                        <div className="bg-white p-4 rounded-xl border-l-4 border-teal-400 shadow-sm transition-all hover:shadow-md cursor-pointer" onClick={() => handleSelectQuestion(session.analysis!.interventionQuestions!.mutualUnderstanding)}>
+                          <span className="text-xs font-bold text-teal-500 uppercase tracking-widest block mb-1">Mutual Understanding</span>
+                          <p className="text-lg font-medium text-gray-800">“{session.analysis.interventionQuestions.mutualUnderstanding}”</p>
+                        </div>
+                        <div className="bg-white p-4 rounded-xl border-l-4 border-yellow-400 shadow-sm transition-all hover:shadow-md cursor-pointer" onClick={() => handleSelectQuestion(session.analysis!.interventionQuestions!.suspendedJudgment)}>
+                          <span className="text-xs font-bold text-yellow-600 uppercase tracking-widest block mb-1">Suspended Judgment</span>
+                          <p className="text-lg font-medium text-gray-800">“{session.analysis.interventionQuestions.suspendedJudgment}”</p>
+                        </div>
+                        <div className="bg-white p-4 rounded-xl border-l-4 border-indigo-400 shadow-sm transition-all hover:shadow-md cursor-pointer" onClick={() => handleSelectQuestion(session.analysis!.interventionQuestions!.smallAgreement)}>
+                          <span className="text-xs font-bold text-indigo-500 uppercase tracking-widest block mb-1">Small Agreement (MVP)</span>
+                          <p className="text-lg font-medium text-gray-800">“{session.analysis.interventionQuestions.smallAgreement}”</p>
+                        </div>
+                        <p className="text-center text-xs text-gray-500 mt-2">クリックするとこの質問を次のセッションで使用できます</p>
+                      </div>
+                    </Card>
+                  )}
+
 
                   {/* Key Findings */}
                   {session.analysis?.keyFindings &&

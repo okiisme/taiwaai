@@ -99,6 +99,7 @@ export interface Participant {
     energyLevel: number // 0-100
     currentMode: "divergent" | "convergent" | "challenge" | "reflection"
     openness: number // 0-100
+    moodColor?: string // New: Color representing mood
   }
   mode?: "divergent" | "convergent" | "challenge" | "reflection"
   joinedAt: string
@@ -131,6 +132,27 @@ export interface Response {
     action: string // ギャップを埋めるための具体的なアクション
     tags: string[]
   }
+  // New: HERO scores
+  hero?: {
+    hope: number // 0-100
+    efficacy: number // 0-100
+    resilience: number // 0-100
+    optimism: number // 0-100
+  }
+  // New: Vulnerability metrics
+  vulnerability?: {
+    honesty: number // 0-100 (本音度)
+    resistance: number // 0-100 (共有への抵抗感)
+  }
+  // New: Analysis results per response
+  analysis?: {
+    tags?: {
+      mindset: boolean
+      process: boolean
+      environment: boolean
+    }
+    roiScore?: number
+  }
   // Deprecated fields
   gap?: {
     interpretation: string
@@ -151,6 +173,35 @@ export interface AnalysisResult {
   consensus: string[] // 合意点 (Consensus)
   conflicts: string[] // 相違点 (Conflict/Gap)
   discussionPoints: string[] // ディスカッションポイント
+
+  // New structured fields
+  tags?: {
+    mindset: number
+    process: number
+    environment: number
+  }
+  gapAnalysis?: {
+    managerView: string
+    memberView: string
+    asymmetryLevel: string
+    lemonMarketRisk: string
+  }
+  heroInsight?: {
+    pathology: string
+    strength: string
+    scores: {
+      hope: number
+      efficacy: number
+      resilience: number
+      optimism: number
+    }
+  }
+  interventionQuestions?: {
+    mutualUnderstanding: string
+    suspendedJudgment: string
+    smallAgreement: string
+  }
+  roiScore?: number
 
   // Legacy or auxiliary fields
   keyFindings?: string[]
