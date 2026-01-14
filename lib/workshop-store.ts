@@ -310,7 +310,7 @@ export function addResponse(
     asIs?: { fact: string; score: number }
     toBe?: { will: string; score: number }
     solution?: { action: string; tags: string[] }
-    solution?: { action: string; tags: string[] }
+
     gap?: { interpretation: string; tags: string[] }
     hero?: { hope: number; efficacy: number; resilience: number; optimism: number }
     vulnerability?: { honesty: number; resistance: number }

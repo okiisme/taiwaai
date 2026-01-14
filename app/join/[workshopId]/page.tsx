@@ -39,6 +39,51 @@ export default function JoinWorkshopPage() {
 
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
+  // New Step Management
+  const [currentStep, setCurrentStep] = useState(1)
+  const totalSteps = 4
+
+  // HERO Input
+  const [hero, setHero] = useState({
+    hope: 50,
+    efficacy: 50,
+    resilience: 50,
+    optimism: 50
+  })
+
+  // Vulnerability Input
+  const [vulnerability, setVulnerability] = useState({
+    honesty: 50,
+    resistance: 50
+  })
+
+  // Mood Color
+  const moodColors = [
+    { color: "#ef4444", label: "情熱/怒り" }, // Red
+    { color: "#f97316", label: "活気/焦り" }, // Orange
+    { color: "#eab308", label: "希望/注意" }, // Yellow
+    { color: "#22c55e", label: "成長/調和" }, // Green
+    { color: "#3b82f6", label: "冷静/悲嘆" }, // Blue
+    { color: "#a855f7", label: "洞察/不安" }, // Purple
+    { color: "#ec4899", label: "愛情/興奮" }, // Pink
+    { color: "#78716c", label: "中立/停滞" }, // Gray
+  ]
+  const [selectedMoodColor, setSelectedMoodColor] = useState(moodColors[3].color)
+
+  const handleNextStep = () => {
+    if (currentStep < totalSteps) {
+      setCurrentStep(currentStep + 1)
+    } else {
+      handleSubmitResponse()
+    }
+  }
+
+  const handlePrevStep = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1)
+    }
+  }
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       const path = window.location.pathname
@@ -294,51 +339,7 @@ export default function JoinWorkshopPage() {
     )
   }
 
-  // New Step Management
-  const [currentStep, setCurrentStep] = useState(1)
-  const totalSteps = 4
-
-  // HERO Input
-  const [hero, setHero] = useState({
-    hope: 50,
-    efficacy: 50,
-    resilience: 50,
-    optimism: 50
-  })
-
-  // Vulnerability Input
-  const [vulnerability, setVulnerability] = useState({
-    honesty: 50,
-    resistance: 50
-  })
-
-  // Mood Color
-  const moodColors = [
-    { color: "#ef4444", label: "情熱/怒り" }, // Red
-    { color: "#f97316", label: "活気/焦り" }, // Orange
-    { color: "#eab308", label: "希望/注意" }, // Yellow
-    { color: "#22c55e", label: "成長/調和" }, // Green
-    { color: "#3b82f6", label: "冷静/悲嘆" }, // Blue
-    { color: "#a855f7", label: "洞察/不安" }, // Purple
-    { color: "#ec4899", label: "愛情/興奮" }, // Pink
-    { color: "#78716c", label: "中立/停滞" }, // Gray
-  ]
-  const [selectedMoodColor, setSelectedMoodColor] = useState(moodColors[3].color)
-
-
-  const handleNextStep = () => {
-    if (currentStep < totalSteps) {
-      setCurrentStep(currentStep + 1)
-    } else {
-      handleSubmitResponse()
-    }
-  }
-
-  const handlePrevStep = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1)
-    }
-  }
+  // State and handlers moved to top level to avoid Hooks errors
 
   // Question answering screen (4-Step Wizard)
   if (hasJoined && currentQuestion) {
