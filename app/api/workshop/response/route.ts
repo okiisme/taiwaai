@@ -3,7 +3,7 @@ import { addResponse, syncWithLocalStorage } from "@/lib/workshop-store"
 
 export async function POST(request: NextRequest) {
   try {
-    const { workshopId, participantId, participantName, participantRole, answer, asIs, toBe, solution, gap } =
+    const { workshopId, participantId, participantName, participantRole, answer, asIs, toBe, solution, gap, hero, vulnerability, moodColor } =
       await request.json()
 
     const session = addResponse(workshopId, {
@@ -15,6 +15,9 @@ export async function POST(request: NextRequest) {
       toBe,
       solution,
       gap,
+      hero,
+      vulnerability,
+      moodColor,
     })
 
     syncWithLocalStorage(workshopId)

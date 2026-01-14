@@ -198,6 +198,7 @@ export default function JoinWorkshopPage() {
           },
           hero: hero, // New
           vulnerability: vulnerability, // New
+          moodColor: selectedMoodColor, // New from Step 1
         }),
       })
 
