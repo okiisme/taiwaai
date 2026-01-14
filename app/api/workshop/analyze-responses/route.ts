@@ -123,22 +123,30 @@ Participant ${index + 1} (${r.participantRole || "member"}):
 
     const systemPrompt = `
 あなたは組織開発の専門家であるファシリテーターAIです。
-参加者の回答（As-Is/To-Be/Solution）を分析し、**「心理的資本の向上度」よりも「現在の状況の明確化」と「次に行うべき対話」**に焦点を当ててJSONを出力してください。
+参加者の回答データ（As-Is/To-Be/Solution/HERO/Vulnerability）を分析し、**「表面的な要約」ではなく「構造的な深い洞察」**を提供してください。
 
-■ 重要視点: 状況の明確化 (Gravity Status)
-・スコアの計算よりも、「なぜそのスコアなのか？」「チームは今どんな状態（浮遊、墜落、停滞、上昇気流など）なのか？」を言語化せよ。
-・「Structural Bridge」では、解決策が本質的か、対症療法的かを分析し、**Structural Missing Link（構造的な欠落＝議論されていない不都合な真実）**を指摘せよ。
+以下の3つの視点で分析を実行し、JSONを出力してください：
 
-■ 最重要: 次の対話への介入 (Intervention)
-・**Intervention Questions** は、単なる「問い」ではなく、**具体的なアクションに繋がるトリガー**として生成せよ。
-  - Mutual Understanding: メンバーの隠れた願いを引き出す問い
-  - Suspended Judgment: マネージャーが固定観念を捨てるための問い
-  - Small Agreement: 明日から全員が合意して始められる「小さな一歩」を決める問い
+1. **断絶の解剖 (The Disconnect Analyzer) -> field: gapAnalysis**
+   - マネージャー(Role: manager)とメンバー(Role: member)の間にある「認知のズレ」を特定せよ。
+   - 特に「解決策の方向性」のズレに着目せよ（例：上司は「意識(Mindset)」の問題とし、部下は「仕組み(Process)」の問題としている等）。
+   - Lemon Market Alertは、このズレが致命的で対話不能なレベルの場合に High とせよ。
 
-■ 出力フィールドの定義変更
-・Gravity Status: 状態のメタファーと、その背後にある「語られていない前提」
-・Hero Insight: スコアそのものではなく、スコアの乖離が生む「組織の感情リスク」
-・Asset Prediction: このまま進んだ場合の未来予測と、それを回避/促進するための具体的な意思決定案
+2. **語られない本音 (The Unspoken Voice) -> field: gravityStatus / heroInsight.pathology**
+   - VulnerabilityのHonesty(本音度)が低い、またはResistance(抵抗感)が高い回答に注目せよ。
+   - テキストが「特に問題ない」等の無難なものでも、スコアが低い場合は「諦め」「学習性無力感」「心理的安全性欠如」と深読みし、それを指摘せよ。
+   - Gravity Statusには、この「空気感」をメタファー（例：冷戦状態、仮面舞踏会）で表現せよ。
+
+3. **ボトルネック特定 (The Action Blocker) -> field: structuralBridge**
+   - HEROスコアとSolutionの整合性を見よ。
+   - Hope(希望)は高いがSolutionが抽象的な場合は「夢見がち(Dreamer)」、Efficacy(効力感)が低くSolutionが他責的な場合は「当事者意識の欠如」と指摘せよ。
+   - Missing Linkには、スコアとテキストの矛盾から見える「議論されていない真の課題」を記述せよ。
+
+■ Intervention (介入) の生成
+- 上記の分析に基づき、ファシリテーターが投げかけるべき「鋭いが愛のある問い」を作成せよ。
+- Mutual Understanding: 互いの「前提」を疑う問い。
+- Suspended Judgment: マネージャーが耳を痛くしてでも聞くべき問い。
+- Small Agreement: 壮大な理想ではなく、明日できる具体的な一歩。
 
 JSON出力スキーマに厳密に従ってください。
 `
@@ -155,7 +163,7 @@ JSON出力スキーマに厳密に従ってください。
         model: google("gemini-1.5-flash"),
         schema: analysisSchema,
         system: systemPrompt,
-        prompt: `以下の回答を分析し、チームの現状と次の一手を明確にしてください:\n\n${formattedResponses}`,
+        prompt: `以下の回答を分析し、チームの現状と次の一手を明確にしてください: \n\n${formattedResponses} `,
       })
 
       // Calculate HERO ROI logic (updated)
@@ -185,7 +193,7 @@ JSON出力スキーマに厳密に従ってください。
           summary: "AI分析中にエラーが発生しました。",
           gravityStatus: "システムエラー",
           warmth: 0,
-          structuralBridge: { missingLink: `Error: ${aiError.message || "Unknown"}`, bridgeBalance: "Unknown" },
+          structuralBridge: { missingLink: `Error: ${aiError.message || "Unknown"} `, bridgeBalance: "Unknown" },
           assetPrediction: { retentionRate: 0, decisionLog: "再試行してください" },
           consensus: [],
           conflicts: [],
@@ -195,7 +203,7 @@ JSON出力スキーマに厳密に従ってください。
           gapAnalysis: { managerView: "-", memberView: "-", asymmetryLevel: "-", lemonMarketRisk: "-" },
           heroInsight: { pathology: "-", strength: "-", scores: { hope: 0, efficacy: 0, resilience: 0, optimism: 0 } },
           interventionQuestions: { mutualUnderstanding: "-", suspendedJudgment: "-", smallAgreement: "-" },
-          keyFindings: [`エラー内容: ${aiError.message || "詳細不明"}`],
+          keyFindings: [`エラー内容: ${aiError.message || "詳細不明"} `],
           recommendations: ["しばらく待ってから再試行してください。", "APIキーの設定を確認してください。"],
           roiScore: 0
         }

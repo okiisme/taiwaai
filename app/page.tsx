@@ -16,11 +16,11 @@ export default function HomePage() {
             <span className="text-xl font-bold">TAIWA AI</span>
           </div>
           <nav className="flex items-center gap-4">
-            <Link href="/login" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-              ログイン
+            <Link href="/dashboard" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              ダッシュボードへ
             </Link>
             <Button asChild className="gradient-teal-lime text-background font-semibold rounded-xl">
-              <Link href="/login">無料で始める</Link>
+              <Link href="/dashboard">デモを試す（登録不要）</Link>
             </Button>
           </nav>
         </div>
@@ -44,8 +44,8 @@ export default function HomePage() {
           </p>
           <div className="flex items-center justify-center gap-4 flex-wrap">
             <Button size="lg" asChild className="gradient-teal-lime text-background font-semibold rounded-xl group">
-              <Link href="/login">
-                無料で始める
+              <Link href="/dashboard">
+                デモを試す（登録不要）
                 <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
               </Link>
             </Button>
@@ -93,8 +93,8 @@ export default function HomePage() {
               QRコード表示から結果分析まで、すべてのステップを確認できます
             </p>
             <Button size="lg" asChild className="gradient-teal-lime text-background font-semibold rounded-xl">
-              <Link href="/login">
-                無料で始める
+              <Link href="/dashboard">
+                デモを試す（登録不要）
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
@@ -322,8 +322,8 @@ export default function HomePage() {
               asChild
               className="gradient-teal-lime text-background font-semibold rounded-xl text-lg px-8 group"
             >
-              <Link href="/login">
-                無料で始める
+              <Link href="/dashboard">
+                デモを試す（登録不要）
                 <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </Link>
             </Button>

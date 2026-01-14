@@ -35,7 +35,7 @@ const MOCK_USERS: User[] = [
 ]
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
+  const [user, setUser] = useState<User | null>(MOCK_USERS[0]) // Default to manager
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
@@ -43,6 +43,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const storedUser = localStorage.getItem("user")
     if (storedUser) {
       setUser(JSON.parse(storedUser))
+    } else {
+      // Auto-login logic for demo
+      setUser(MOCK_USERS[0])
     }
     setIsLoading(false)
   }, [])

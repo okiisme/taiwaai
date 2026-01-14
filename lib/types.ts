@@ -336,3 +336,20 @@ export interface DiversityAnalysis {
     perspectiveTags: string[]
   }[]
 }
+// Deterministic Stats calculated locally
+export interface LocalAnalysisStats {
+  warmth: number
+  heroScores: {
+    hope: number
+    efficacy: number
+    resilience: number
+    optimism: number
+  }
+  focusTags: {
+    mindset: number
+    process: number
+    environment: number
+    communication?: number
+  }
+  responseCount: number
+}
