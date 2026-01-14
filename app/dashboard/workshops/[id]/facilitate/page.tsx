@@ -1,5 +1,6 @@
 "use client"
 import { useState, useEffect } from "react"
+import { AnalysisDisplay } from "./analysis-display"
 import { DashboardLayout } from "@/components/dashboard-layout"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -15,6 +16,10 @@ import {
   MessageCircle,
   Lightbulb,
   AlertCircle,
+  GitBranch,
+  Unplug,
+  Target,
+  Zap,
 } from "@/components/icons"
 import type { WorkshopSession } from "@/lib/types"
 import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer } from "recharts"
@@ -496,7 +501,7 @@ const generateMarkdownReport = (session: WorkshopSession, selectedTheme: string)
 
   // Hope (Waypower)
   markdown += `### 1. Hope (希望・意志)\n`
-  if (gap > 5) {
+  if (avgGap > 5) {
     markdown += `- **状態**: 現状と理想のギャップが明確になっており、「変わりたい」という意志（Willpower）は強い状態です。\n`
     markdown += `- **推奨介入**: 曖昧な不満を「理想への経路（Waypower）」へ構造化する必要があります。「誰に」「何を」相談すればよいかを具体化しましょう。\n\n`
   } else {

@@ -1,13 +1,19 @@
 import { NextResponse } from "next/server"
-import { openai } from "@ai-sdk/openai"
+import { google } from "@ai-sdk/google"
 import { generateObject } from "ai"
 import { z } from "zod"
 
 // Define the schema for the analysis result
 const analysisSchema = z.object({
   summary: z.string().describe("回答全体の要約"),
-  consensus: z.array(z.string()).describe("合意点"),
-  conflicts: z.array(z.string()).describe("相違点（Gap Analysisの結果も含む）"),
+  gravityStatus: z.string().describe("対話の現在の重力状態（例：'浮遊開始：解決への糸口が見え始めた状態'、'停滞：重力が強く議論が噛み合わない状態'など）"),
+  warmth: z.number().describe("場の温かさ (0-100)。本音度と安心感から算出"),
+  consensus: z.array(z.string()).describe("合意点 (Consensus Area): 全員が認めている課題や北極星"),
+  conflicts: z.array(z.string()).describe("相違点 (Divergence Area): 立場による認識差やアプローチの違い"),
+  structuralBridge: z.object({
+    missingLink: z.string().describe("構造的欠落 (Missing Link): 理想に対して欠けている議論（例：リソース不足、具体性欠如）"),
+    bridgeBalance: z.string().describe("解決策のバランス評価（例：Mindset偏重、Environment偏重、Balanced）")
+  }),
   discussionPoints: z.array(z.string()).describe("対話を深めるための問い"),
   sentiment: z.object({
     positive: z.number(),
@@ -37,9 +43,13 @@ const analysisSchema = z.object({
     })
   }),
   interventionQuestions: z.object({
-    mutualUnderstanding: z.string().describe("相互理解を促す問い（ワクワクする点は？）"),
-    suspendedJudgment: z.string().describe("判断保留を促す問い（障壁は何か？）"),
-    smallAgreement: z.string().describe("小さな合意形成を促す問い（明日できることは？）")
+    mutualUnderstanding: z.string().describe("相互理解を促す問い（沈黙を壊す優しい問い）"),
+    suspendedJudgment: z.string().describe("判断保留を促す問い（構造を深める高い視座からの問い）"),
+    smallAgreement: z.string().describe("小さな合意形成を促す問い（行動を促す最初の一歩の問い）")
+  }),
+  assetPrediction: z.object({
+    retentionRate: z.number().describe("資産定着率の予測 (0-100%)"),
+    decisionLog: z.string().describe("意思決定ログの案（誰が、いつ、何をするか）")
   }),
   keyFindings: z.array(z.string()),
   recommendations: z.array(z.string()),
@@ -68,6 +78,10 @@ export async function POST(request: Request) {
           ? `HERO: Hope(${r.hero.hope}), Efficacy(${r.hero.efficacy}), Resilience(${r.hero.resilience}), Optimism(${r.hero.optimism})`
           : "No HERO scores"
 
+        const vulnerability = r.vulnerability
+          ? `Vulnerability: Honesty(${r.vulnerability.honesty}%), Resistance(${r.vulnerability.resistance}%)`
+          : "No vulnerability data"
+
         return `
 Participant ${index + 1} (${r.participantRole || "member"}):
 - Answer: ${r.answer}
@@ -75,59 +89,57 @@ Participant ${index + 1} (${r.participantRole || "member"}):
 - To Be (理想): ${r.toBe?.will} (Score: ${r.toBe?.score})
 - ${solutionText}
 - ${heroScores}
+- ${vulnerability}
 `
       })
       .join("\n---\n")
 
     const systemPrompt = `
 あなたは組織開発の専門家であるファシリテーターAIです。
-以下の観点で参加者の回答を分析し、JSON形式で出力してください。
+以下の3つの論理エンジンを用いて、参加者の回答を深く分析し、JSON形式で出力してください。
 
-分析観点:
-1. **Tags (観点分類)**: 各回答の内容がどこに重点を置いているか？
-   - Mindset: 意識、意欲、心理的安全性
-   - Process: ルール、会議、役割分担、情報の流れ
-   - Environment: 物理的環境、ツール、予算、組織構造
-2. **Gap Analysis (認識のズレ)**: マネージャー(manager)とメンバー(member)の間で、現状(As-Is)や理想(To-Be)の捉え方にどのような違いがあるか？「情報の非対称性」が高い部分を特定せよ。
-3. **HERO Insight (心理資本)**: HEROスコアのバランスから、チームの心理的状態（病理や強み）を診断せよ。
-   - Hope低: 経路が見えない
-   - Efficacy低: 実行権限がない
-   - Resilience低: 失敗を恐れている
-4. **Intervention Questions (介入の問い)**: 
-   - 相互理解の問い: ワクワクするポイントは？
-   - 判断保留の問い: 障壁は何か？
-   - 小さな合意の問い: 明日15分でできることは？
+■ 第1エンジン：構造ブリッジ解析 (Structural Bridge)
+・As-Is（事実）からTo-Be（理想）への距離を計算し、Solution（解決策）がその橋渡しとして機能しているか評価せよ。
+・「Structural Bridge」フィールドに、構造的欠落（Missing Link）と解決策のバランス（Mindset/Process/Environmentの偏り）を出力せよ。
 
-JSON出力スキーマに従ってください。
+■ 第2エンジン：情報非対称性解析 (Information Asymmetry)
+・ManagerとMemberの間で、同じ言葉を違う意味で使っていないか？一方が触れていない死角はないか？
+・「Gap Analysis」フィールドに、視点の違いと情報の非対称性レベルを出力せよ。
+
+■ 第3エンジン：心理資本ダイナミクス (Psycho-Capital Dynamics)
+・HEROスコア（Hope, Efficacy, Resilience, Optimism）のバランスと、テキストの内容が整合しているか検証せよ。
+・「HERO Insight」フィールドに、組織の病理と強みを出力せよ。
+・「Gravity Status」には、現在の対話の状態（浮遊開始、停滞、墜落リスクなど）を記述せよ。
+
+■ その他
+・"Warmth" (場の温かさ) は、VulnerabilityのHonestyが高いほど高く、Resistanceが高いほど低くなるよう評価せよ(0-100)。
+・"Intervention Questions" には、沈黙を壊す問い、構造を深める問い、行動を促す問いの3種類を生成せよ。
+・"Asset Prediction" には、この対話が資産として定着する確率と、具体的なアクション案を出力せよ。
+
+JSON出力スキーマに厳密に従ってください。
 `
 
     try {
       const result = await generateObject({
         model: google("gemini-1.5-flash"),
-        schema: analysisSchema, // Note: Schema needs update for new fields, using existing for now but prompting for structure logic
-        // Actually, I need to update the Schema first to match new requirements or map them.
-        // For simplicity in this step, I'll extend the schema locally or map AI output to updated AnalysisResult.
-        // Let's stick to the defined Schema but enrich the prompt to ensure content fits into 'keyFindings', 'recommendations', etc. or update schema.
-        // Ideally, we update schema. Let's do that in a follow-up or try to fit into existing structure.
-        // The user wants specific output structure. I should update schema.
-
+        schema: analysisSchema,
         system: systemPrompt,
         prompt: `以下の回答を分析してください:\n\n${formattedResponses}`,
       })
 
-      // Calculate HERO ROI (Simple Logic)
-      // Formula: (Quality x Vulnerability) ^ Action Execution Rate
-      // Proxy: Quality = Average Gap Size (higher means clearer gap?), Vulnerability = Avg Openness/Honesty
-      // This is a rough simulation as we don't have historical execution rate yet.
-      // Let's assume baseline 1.1 for execution rate proxy.
+      // Calculate HERO ROI logic (updated)
+      // Proxy: Quality = Bridge Balance (AI eval) + Gap Clarity
+      // Vulnerability = Avg Honesty
       const avgVulnerability = responses.reduce((acc: number, r: any) => acc + (r.vulnerability?.honesty || 50), 0) / responses.length
       const avgGap = responses.reduce((acc: number, r: any) => acc + Math.abs((r.toBe?.score || 0) - (r.asIs?.score || 0)), 0) / responses.length
-      const roiScore = Math.round((avgGap * (avgVulnerability / 10)) * 1.5) // Arbitrary multiplier for effect
+
+      // ROI Calculation: Base + (Vulnerability * GapCoef)
+      let roiScore = 50 + ((avgVulnerability - 50) + (avgGap * 10)) / 2;
+      roiScore = Math.min(Math.max(Math.round(roiScore), 0), 100);
 
       const analysisWithRoi = {
         ...result.object,
         roiScore: roiScore,
-        // Add other computed fields if needed
       }
 
       console.log("[v0] AI Analysis completed successfully")
@@ -137,10 +149,18 @@ JSON出力スキーマに従ってください。
       return NextResponse.json({
         analysis: {
           summary: "AI分析に失敗しました。",
+          gravityStatus: "接続エラー",
+          warmth: 0,
+          structuralBridge: { missingLink: "分析不可", bridgeBalance: "Unknown" },
+          assetPrediction: { retentionRate: 0, decisionLog: "再試行してください" },
           consensus: [],
           conflicts: [],
           discussionPoints: [],
           sentiment: { positive: 0, neutral: 0, negative: 0 },
+          tags: { mindset: 0, process: 0, environment: 0 },
+          gapAnalysis: { managerView: "-", memberView: "-", asymmetryLevel: "-", lemonMarketRisk: "-" },
+          heroInsight: { pathology: "-", strength: "-", scores: { hope: 0, efficacy: 0, resilience: 0, optimism: 0 } },
+          interventionQuestions: { mutualUnderstanding: "-", suspendedJudgment: "-", smallAgreement: "-" },
           keyFindings: ["分析サービスに接続できませんでした。"],
           recommendations: ["しばらく待ってから再試行してください。"],
           roiScore: 50

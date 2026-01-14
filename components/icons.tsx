@@ -366,3 +366,55 @@ export function Lightbulb({ className }: { className?: string }) {
     </svg>
   )
 }
+
+export function GitBranch({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M6 3v12M18 9a3 3 0 100-6 3 3 0 000 6zM6 21a3 3 0 100-6 3 3 0 000 6zM15 6a9 9 0 00-9 9"
+      />
+    </svg>
+  )
+}
+
+export function Unplug({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M19 5l3-3M2 22l3-3M6.3 20.3a3 3 0 01-4.25-4.25l3.4-3.4M12.5 13.5l-2.5 2.5M18.7 1.7a3 3 0 014.25 4.25l-3.4 3.4M7.5 7.5l2.5-2.5"
+      />
+    </svg>
+  )
+}
+
+export function Target({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M22 12a10 10 0 11-20 0 10 10 0 0120 0z M12 12a3 3 0 11-6 0 3 3 0 016 0z M12 12a2 2 0 11-4 0 2 2 0 014 0z"
+      />
+    </svg>
+  )
+}
+
+export function Zap({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M13 10V3L4 14h7v7l9-11h-7z"
+      />
+    </svg>
+  )
+}

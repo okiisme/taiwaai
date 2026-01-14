@@ -175,6 +175,16 @@ export interface AnalysisResult {
   discussionPoints: string[] // ディスカッションポイント
 
   // New structured fields
+  gravityStatus?: string // e.g. "浮遊開始"
+  warmth?: number // 0-100 indicating psychological safety/mood
+  structuralBridge?: {
+    missingLink?: string
+    bridgeBalance?: string // "Mindset biased", "Environment biased", "Balanced"
+  }
+  assetPrediction?: {
+    retentionRate: number
+    decisionLog?: string
+  }
   tags?: {
     mindset: number
     process: number
