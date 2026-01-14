@@ -319,7 +319,12 @@ export function InteractiveDemo() {
   }
 
   const handleSpeedChange = () => {
-    setSpeed((prev) => (prev === 0.5 ? 1 : prev === 1 ? 2 : 0.5))
+    setSpeed((prev) => {
+      if (prev === 1) return 1.5
+      if (prev === 1.5) return 2
+      if (prev === 2) return 0.5
+      return 1
+    })
   }
 
   const toggleFullScreen = () => {
