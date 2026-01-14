@@ -109,7 +109,7 @@ const DEMO_SCRIPT = [
         time: 3500,
       }
     ],
-    duration: 8000, // Longer for mobile view
+    duration: 5000, // Shortened for better pacing
   },
   {
     stage: "realtime-analysis",
