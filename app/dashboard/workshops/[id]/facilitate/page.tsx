@@ -20,6 +20,7 @@ import type { WorkshopSession } from "@/lib/types"
 import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer } from "recharts"
 import { ErrorBoundary } from "react-error-boundary"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { QRCodeSVG } from "qrcode.react"
 
 // Helper function to load data from localStorage
 const loadFromLocalStorage = (key: string) => {
@@ -563,7 +564,7 @@ export default function FacilitatePage({ params }: { params: { id: string } }) {
 
   const workshopUrl = typeof window !== "undefined" ? `${window.location.origin}/join/${workshopId}` : ""
   const encodedUrl = encodeURIComponent(workshopUrl)
-  const qrCodeSrc = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodedUrl}`
+
 
   const updateSessionStatus = async (newStatus: string) => {
     try {
@@ -911,11 +912,16 @@ export default function FacilitatePage({ params }: { params: { id: string } }) {
                       </p>
                     </div>
                     <div className="bg-white p-4 sm:p-6 rounded-2xl border-2 border-gray-200 inline-block mx-auto">
-                      <img
-                        src={qrCodeSrc || "/placeholder.svg"}
-                        alt="Workshop QR Code"
-                        className="w-40 h-40 sm:w-56 sm:h-56"
-                      />
+                      {workshopUrl ? (
+                        <QRCodeSVG
+                          value={workshopUrl}
+                          size={220}
+                          level="H"
+                          className="w-40 h-40 sm:w-56 sm:h-56"
+                        />
+                      ) : (
+                        <div className="w-40 h-40 sm:w-56 sm:h-56 bg-gray-100 animate-pulse rounded-lg" />
+                      )}
                     </div>
                     <div className="bg-gray-50 p-3 sm:p-4 rounded-xl border border-gray-200">
                       <p className="text-xs text-gray-500 break-all">{workshopUrl}</p>

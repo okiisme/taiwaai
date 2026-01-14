@@ -10,6 +10,7 @@ import { Calendar, Users, MessageSquare, ThumbsUp, Lock, Send, QrCode } from "@/
 import { useState, useEffect } from "react"
 import { mockQuestions, type Question } from "@/lib/mock-data"
 import { useAuth } from "@/lib/auth-context"
+import { QRCodeSVG } from "qrcode.react"
 
 export default function WorkshopDetailPage() {
   const { user } = useAuth()
@@ -79,11 +80,11 @@ export default function WorkshopDetailPage() {
             <Card className="glass-light rounded-2xl p-6 text-center space-y-4">
               <p className="text-sm font-medium">スマホで参加</p>
               <div className="bg-white p-4 rounded-xl inline-block">
-                <img
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(workshopUrl)}`}
-                  alt="Workshop QR Code"
-                  className="w-48 h-48"
-                />
+                {workshopUrl ? (
+                  <QRCodeSVG value={workshopUrl} size={200} level="H" />
+                ) : (
+                  <div className="w-48 h-48 bg-gray-100 animate-pulse rounded-lg" />
+                )}
               </div>
               <p className="text-xs text-muted-foreground">{workshopUrl}</p>
             </Card>
