@@ -69,7 +69,7 @@ JSON形式で返却してください。
 
     try {
       const result = await generateObject({
-        model: openai("gpt-4o"), // Use gpt-4o for better analysis
+        model: google("gemini-1.5-flash"), // Use Gemini 1.5 Flash for speed/cost efficiency
         schema: analysisSchema,
         system: systemPrompt,
         prompt: `以下の参加者回答を分析してください:\n\n${formattedResponses}`,
