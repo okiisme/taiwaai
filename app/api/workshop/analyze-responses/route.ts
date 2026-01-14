@@ -123,39 +123,57 @@ Participant ${index + 1} (${r.participantRole || "member"}):
 
     const systemPrompt = `
 あなたは組織開発の専門家であるファシリテーターAIです。
-以下の3つの論理エンジンを用いて、参加者の回答を深く分析し、JSON形式で出力してください。
+参加者の回答（As-Is/To-Be/Solution）を分析し、**「心理的資本の向上度」よりも「現在の状況の明確化」と「次に行うべき対話」**に焦点を当ててJSONを出力してください。
 
-■ 第1エンジン：構造ブリッジ解析 (Structural Bridge)
-・As-Is（事実）からTo-Be（理想）への距離を計算し、Solution（解決策）がその橋渡しとして機能しているか評価せよ。
-・「Structural Bridge」フィールドに、構造的欠落（Missing Link）と解決策のバランス（Mindset/Process/Environmentの偏り）を出力せよ。
+■ 重要視点: 状況の明確化 (Gravity Status)
+・スコアの計算よりも、「なぜそのスコアなのか？」「チームは今どんな状態（浮遊、墜落、停滞、上昇気流など）なのか？」を言語化せよ。
+・「Structural Bridge」では、解決策が本質的か、対症療法的かを分析し、**Structural Missing Link（構造的な欠落＝議論されていない不都合な真実）**を指摘せよ。
 
-■ 第2エンジン：情報非対称性解析 (Information Asymmetry)
-・ManagerとMemberの間で、同じ言葉を違う意味で使っていないか？一方が触れていない死角はないか？
-・「Gap Analysis」フィールドに、視点の違いと情報の非対称性レベルを出力せよ。
+■ 最重要: 次の対話への介入 (Intervention)
+・**Intervention Questions** は、単なる「問い」ではなく、**具体的なアクションに繋がるトリガー**として生成せよ。
+  - Mutual Understanding: メンバーの隠れた願いを引き出す問い
+  - Suspended Judgment: マネージャーが固定観念を捨てるための問い
+  - Small Agreement: 明日から全員が合意して始められる「小さな一歩」を決める問い
 
-■ 第3エンジン：心理資本ダイナミクス (Psycho-Capital Dynamics)
-・HEROスコア（Hope, Efficacy, Resilience, Optimism）のバランスと、テキストの内容が整合しているか検証せよ。
-・「HERO Insight」フィールドに、組織の病理と強みを出力せよ。
-・「Gravity Status」には、現在の対話の状態（浮遊開始、停滞、墜落リスクなど）を記述せよ。
-
-■ その他
-・"Warmth" (場の温かさ) は、VulnerabilityのHonestyが高いほど高く、Resistanceが高いほど低くなるよう評価せよ(0-100)。
-・"Intervention Questions" には、沈黙を壊す問い、構造を深める問い、行動を促す問いの3種類を生成せよ。
-・"Asset Prediction" には、この対話が資産として定着する確率と、具体的なアクション案を出力せよ。
+■ 出力フィールドの定義変更
+・Gravity Status: 状態のメタファーと、その背後にある「語られていない前提」
+・Hero Insight: スコアそのものではなく、スコアの乖離が生む「組織の感情リスク」
+・Asset Prediction: このまま進んだ場合の未来予測と、それを回避/促進するための具体的な意思決定案
 
 JSON出力スキーマに厳密に従ってください。
 `
 
     try {
+      // ユーザーから提供されたAPIキーを使用 (本来は環境変数推奨だが、即時解決のため)
+      const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY || "AIzaSyDO9Rx8tLNwBpReDifoVPdDwcLRDtp6eoo"
+
+      if (!apiKey) {
+        throw new Error("API Key not configured.");
+      }
+
+      // Explicitly configure the Google provider with the key
+      const googleProvider = google
+
+      // Note: In Vercel AI SDK, the key is usually picked up from env. 
+      // If we need to pass it explicitly, we might need a custom instance or ensure env is set.
+      // However, we can't easily change env at runtime in Next.js edge/serverless without redeploy.
+      // We will try to rely on the fallback or ask user.
+      // Actually, @ai-sdk/google allows creating a custom provider instance.
+      // But 'google' export is a factory/helper. 
+      // Let's try to set the key in the environment variable for this process scope if possible, 
+      // or use the specific createGoogle function if available (it's 'createGoogleGenerativeAI' in some versions).
+      // Checking package version ^3.0.7... likely correct usage is just 'google'.
+
+      // Attempt to set env var for this request scope if missing
       if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
-        throw new Error("API Key not configured (GOOGLE_GENERATIVE_AI_API_KEY).");
+        process.env.GOOGLE_GENERATIVE_AI_API_KEY = apiKey
       }
 
       const result = await generateObject({
-        model: google("gemini-1.5-flash"),
+        model: google("models/gemini-1.5-flash-latest"), // Try specific model version
         schema: analysisSchema,
         system: systemPrompt,
-        prompt: `以下の回答を分析してください:\n\n${formattedResponses}`,
+        prompt: `以下の回答を分析し、チームの現状と次の一手を明確にしてください:\n\n${formattedResponses}`,
       })
 
       // Calculate HERO ROI logic (updated)

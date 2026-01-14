@@ -31,45 +31,48 @@ export function AnalysisDisplay({ analysis, onSelectQuestion }: AnalysisDisplayP
 
     return (
         <div className="space-y-8">
-            {/* 1. Executive Summary: Gravity & Warmth (NEW) */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card className="rounded-3xl p-6 bg-slate-800 text-white shadow-lg relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-20 bg-blue-500 rounded-full mix-blend-overlay filter blur-3xl opacity-20 -mr-10 -mt-10"></div>
-                    <h3 className="text-sm font-bold text-slate-300 uppercase tracking-widest mb-2">
-                        対話の現在地 (Gravity Status)
+            {/* 1. Executive Summary: Gravity & Warmth (Situation Clarity) */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <Card className="col-span-1 md:col-span-2 rounded-3xl p-8 bg-slate-900 text-white shadow-2xl relative overflow-hidden border border-slate-700">
+                    <div className="absolute top-0 right-0 p-24 bg-blue-600 rounded-full mix-blend-overlay filter blur-3xl opacity-30 -mr-12 -mt-12 animate-pulse"></div>
+                    <div className="absolute bottom-0 left-0 p-24 bg-purple-600 rounded-full mix-blend-overlay filter blur-3xl opacity-30 -ml-12 -mb-12"></div>
+
+                    <h3 className="text-xs font-bold text-blue-300 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                        <TrendingUp className="w-4 h-4" />
+                        CURRENT SITUATION (Gravity Status)
                     </h3>
-                    <div className="text-2xl sm:text-3xl font-black leading-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-300">
-                        {analysis.gravityStatus || "分析中..."}
+
+                    <div className="relative z-10">
+                        <div className="text-3xl sm:text-4xl font-black leading-tight mb-4 text-white">
+                            {analysis.gravityStatus || "分析中..."}
+                        </div>
+                        <p className="text-slate-300 text-sm leading-relaxed max-w-xl">
+                            {analysis.heroInsight?.pathology ? `組織の感情リスク: ${analysis.heroInsight.pathology}` : ""}
+                        </p>
                     </div>
                 </Card>
 
-                <Card className="rounded-3xl p-6 bg-white border border-gray-200 shadow-sm flex flex-col justify-between">
-                    <div className="flex justify-between items-start">
-                        <div>
-                            <h3 className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-1">
-                                場の温かさ (Warmth)
-                            </h3>
-                            <p className="text-xs text-gray-400">
-                                心理的安全性と本音度から算出
-                            </p>
-                        </div>
-                        <div
-                            className={`text-3xl font-black ${(analysis.warmth || 0) > 70
-                                ? "text-orange-500"
-                                : (analysis.warmth || 0) > 40
-                                    ? "text-yellow-500"
-                                    : "text-blue-500"
-                                }`}
-                        >
-                            {analysis.warmth || 0}
-                            <span className="text-base ml-1">%</span>
+                <Card className="rounded-3xl p-6 bg-white border border-gray-100 shadow-sm flex flex-col justify-between relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-orange-50 rounded-bl-full -mr-4 -mt-4"></div>
+                    <div className="relative z-10">
+                        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">
+                            Team Warmth
+                        </h3>
+                        <p className="text-xs text-gray-400 mb-4">
+                            心理的安全性・本音度
+                        </p>
+                        <div className="flex items-baseline gap-1">
+                            <span className={`text-5xl font-black ${(analysis.warmth || 0) > 70 ? "text-orange-500" : "text-blue-500"}`}>
+                                {analysis.warmth || 0}
+                            </span>
+                            <span className="text-lg text-gray-400 font-bold">/100</span>
                         </div>
                     </div>
-                    <div className="w-full bg-gray-100 rounded-full h-3 mt-4 overflow-hidden">
+                    <div className="w-full bg-gray-100 rounded-full h-2 mt-4 overflow-hidden">
                         <div
                             className={`h-full rounded-full transition-all duration-1000 ${(analysis.warmth || 0) > 70
                                 ? "bg-gradient-to-r from-orange-400 to-red-400"
-                                : "bg-gradient-to-r from-blue-300 to-yellow-300"
+                                : "bg-gradient-to-r from-blue-300 to-blue-500"
                                 }`}
                             style={{ width: `${analysis.warmth || 0}%` }}
                         />
@@ -77,37 +80,64 @@ export function AnalysisDisplay({ analysis, onSelectQuestion }: AnalysisDisplayP
                 </Card>
             </div>
 
-            {/* 2. Expected HERO ROI (Existing - Enhanced) */}
-            {analysis.roiScore !== undefined && (
-                <div className="relative overflow-hidden bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-800 rounded-3xl p-8 text-white shadow-xl animate-in fade-in duration-700">
-                    <div className="absolute top-0 right-0 p-32 bg-purple-500 rounded-full mix-blend-overlay filter blur-3xl opacity-20 -mr-16 -mt-16 animate-pulse"></div>
-                    <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
-                        <div className="space-y-4 max-w-lg">
-                            <div className="inline-block px-3 py-1 bg-white/10 rounded-full text-xs font-medium backdrop-blur-sm border border-white/20">
-                                対話の投資効果予測
-                            </div>
-                            <h3 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-purple-200">
-                                Expected HERO ROI
-                            </h3>
-                            <p className="text-indigo-200 text-sm leading-relaxed">
-                                今回の対話によって、組織の「心理資本（HERO）」がどれだけ向上したかを示す指標です。
-                                <br />
-                                {(analysis.roiScore || 0) > 80
-                                    ? "🚀 重力を振り切り、組織が急成長するポテンシャルを秘めています。"
-                                    : "🌱 着実な一歩が踏み出されました。継続的な対話でさらに上昇気流を作り出せます。"}
-                            </p>
+            {/* 2. Critical Analysis: Intervention & Structure (Moved Up) */}
+            {analysis.interventionQuestions && (
+                <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-700 delay-200">
+                    <div className="flex items-center gap-3 mb-2">
+                        <div className="p-2 bg-yellow-100 rounded-lg text-yellow-600">
+                            <Zap className="w-5 h-5" />
                         </div>
-                        <div className="text-center relative">
-                            {/* Floating Animation */}
-                            <div
-                                className="text-6xl font-black tracking-tighter drop-shadow-lg animate-bounce"
-                                style={{ animationDuration: "3s" }}
-                            >
-                                {analysis.roiScore}
-                                <span className="text-2xl ml-1 align-top opacity-80">%</span>
+                        <h3 className="text-xl font-bold text-gray-800">
+                            Next Dialogue Intervention (次に行うべき対話)
+                        </h3>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {/* Mutual Understanding */}
+                        <div
+                            onClick={() => onSelectQuestion(analysis.interventionQuestions!.mutualUnderstanding)}
+                            className="group cursor-pointer bg-white p-6 rounded-2xl border border-indigo-100 shadow-sm hover:shadow-md hover:border-indigo-300 transition-all duration-300"
+                        >
+                            <div className="text-xs font-bold text-indigo-500 uppercase tracking-wider mb-3 group-hover:text-indigo-600">
+                                Step 1: Mutual Understanding
                             </div>
-                            <div className="text-xs uppercase tracking-widest text-indigo-300 mt-2 font-semibold">
-                                Growth Potential
+                            <p className="text-gray-700 font-medium leading-relaxed group-hover:text-indigo-900">
+                                {analysis.interventionQuestions.mutualUnderstanding}
+                            </p>
+                            <div className="mt-4 flex items-center text-xs text-indigo-400 group-hover:text-indigo-600 font-bold">
+                                沈黙を壊す <span className="ml-2">→</span>
+                            </div>
+                        </div>
+
+                        {/* Suspended Judgment */}
+                        <div
+                            onClick={() => onSelectQuestion(analysis.interventionQuestions!.suspendedJudgment)}
+                            className="group cursor-pointer bg-white p-6 rounded-2xl border border-pink-100 shadow-sm hover:shadow-md hover:border-pink-300 transition-all duration-300"
+                        >
+                            <div className="text-xs font-bold text-pink-500 uppercase tracking-wider mb-3 group-hover:text-pink-600">
+                                Step 2: Structural Deepening
+                            </div>
+                            <p className="text-gray-700 font-medium leading-relaxed group-hover:text-pink-900">
+                                {analysis.interventionQuestions.suspendedJudgment}
+                            </p>
+                            <div className="mt-4 flex items-center text-xs text-pink-400 group-hover:text-pink-600 font-bold">
+                                構造を深める <span className="ml-2">→</span>
+                            </div>
+                        </div>
+
+                        {/* Small Agreement */}
+                        <div
+                            onClick={() => onSelectQuestion(analysis.interventionQuestions!.smallAgreement)}
+                            className="group cursor-pointer bg-white p-6 rounded-2xl border border-teal-100 shadow-sm hover:shadow-md hover:border-teal-300 transition-all duration-300"
+                        >
+                            <div className="text-xs font-bold text-teal-500 uppercase tracking-wider mb-3 group-hover:text-teal-600">
+                                Step 3: Action Trigger
+                            </div>
+                            <p className="text-gray-700 font-medium leading-relaxed group-hover:text-teal-900">
+                                {analysis.interventionQuestions.smallAgreement}
+                            </p>
+                            <div className="mt-4 flex items-center text-xs text-teal-400 group-hover:text-teal-600 font-bold">
+                                行動を決める <span className="ml-2">→</span>
                             </div>
                         </div>
                     </div>
@@ -498,8 +528,29 @@ export function AnalysisDisplay({ analysis, onSelectQuestion }: AnalysisDisplayP
                                 </div>
                             ))}
                         </div>
+                        {/* Potential Growth (De-emphasized, placed at bottom) */}
+                        {analysis.roiScore !== undefined && (
+                            <div className="relative overflow-hidden bg-gradient-to-r from-gray-900 to-slate-800 rounded-3xl p-6 text-white shadow-lg opacity-90">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-1">
+                                            Growth Potential (参考指標)
+                                        </h3>
+                                        <p className="text-xs text-gray-400 max-w-md">
+                                            ※現在の対話の質から算出される、将来的な組織成長のポテンシャル予測
+                                        </p>
+                                    </div>
+                                    <div className="text-right">
+                                        <div className="text-3xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-teal-200 to-teal-400">
+                                            {analysis.roiScore}%
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
-                )}
+                )
+            }
         </div>
     )
 }
