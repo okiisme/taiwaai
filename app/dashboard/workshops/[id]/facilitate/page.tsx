@@ -593,7 +593,7 @@ export default function FacilitatePage({ params }: { params: { id: string } }) {
         setIsLoading(true)
         console.log("[v0] Loading initial session from API for workshop:", workshopId)
 
-        const response = await fetch(`/api/workshop/session/${workshopId}`)
+        const response = await fetch(`/api/workshop/session/${workshopId}`, { cache: "no-store" })
         if (response.ok) {
           const data = await response.json()
           console.log("[v0] Initial session loaded:", data)
@@ -650,7 +650,7 @@ export default function FacilitatePage({ params }: { params: { id: string } }) {
 
     const pollInterval = setInterval(async () => {
       try {
-        const response = await fetch(`/api/workshop/session/${workshopId}`)
+        const response = await fetch(`/api/workshop/session/${workshopId}`, { cache: "no-store" })
         if (response.ok) {
           const data = await response.json()
 

@@ -58,7 +58,34 @@ const analysisSchema = z.object({
 export async function POST(request: Request) {
   try {
     console.log("[v0] Analysis API called")
-    const { responses, question, workshopId } = await request.json()
+
+    const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY
+    if (!apiKey) {
+      console.error("[v0] GOOGLE_GENERATIVE_AI_API_KEY is missing")
+      return NextResponse.json({
+        analysis: {
+          summary: "APIキーが設定されていません。",
+          gravityStatus: "システムエラー",
+          warmth: 0,
+          structuralBridge: { missingLink: "システム管理者に連絡してください", bridgeBalance: "Unknown" },
+          assetPrediction: { retentionRate: 0, decisionLog: "API Key Missing" },
+          consensus: [],
+          conflicts: [],
+          discussionPoints: [],
+          sentiment: { positive: 0, neutral: 0, negative: 0 },
+          tags: { mindset: 0, process: 0, environment: 0 },
+          gapAnalysis: { managerView: "-", memberView: "-", asymmetryLevel: "-", lemonMarketRisk: "-" },
+          heroInsight: { pathology: "-", strength: "-", scores: { hope: 0, efficacy: 0, resilience: 0, optimism: 0 } },
+          interventionQuestions: { mutualUnderstanding: "-", suspendedJudgment: "-", smallAgreement: "-" },
+          keyFindings: ["GOOGLE_GENERATIVE_AI_API_KEY environment variable is missing."],
+          recommendations: ["Check your .env.local file."],
+          roiScore: 0
+        }
+      })
+    }
+
+    const body = await request.json()
+    const { responses, question, workshopId } = body
 
     if (!responses || responses.length === 0) {
       console.log("[v0] No responses provided")
@@ -120,6 +147,10 @@ JSON出力スキーマに厳密に従ってください。
 `
 
     try {
+      if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
+        throw new Error("API Key not configured (GOOGLE_GENERATIVE_AI_API_KEY).");
+      }
+
       const result = await generateObject({
         model: google("gemini-1.5-flash"),
         schema: analysisSchema,
@@ -130,11 +161,14 @@ JSON出力スキーマに厳密に従ってください。
       // Calculate HERO ROI logic (updated)
       // Proxy: Quality = Bridge Balance (AI eval) + Gap Clarity
       // Vulnerability = Avg Honesty
-      const avgVulnerability = responses.reduce((acc: number, r: any) => acc + (r.vulnerability?.honesty || 50), 0) / responses.length
-      const avgGap = responses.reduce((acc: number, r: any) => acc + Math.abs((r.toBe?.score || 0) - (r.asIs?.score || 0)), 0) / responses.length
+      const avgVulnerability = responses.reduce((acc: number, r: any) => acc + (r.vulnerability?.honesty || 0), 0) / (responses.length || 1)
+      const avgGap = responses.reduce((acc: number, r: any) => acc + Math.abs((r.toBe?.score || 0) - (r.asIs?.score || 0)), 0) / (responses.length || 1)
 
       // ROI Calculation: Base + (Vulnerability * GapCoef)
-      let roiScore = 50 + ((avgVulnerability - 50) + (avgGap * 10)) / 2;
+      // If no vulnerability data, assume 50
+      const safeVulnerability = avgVulnerability || 50
+
+      let roiScore = 50 + ((safeVulnerability - 50) + (avgGap * 10)) / 2;
       roiScore = Math.min(Math.max(Math.round(roiScore), 0), 100);
 
       const analysisWithRoi = {
@@ -144,14 +178,14 @@ JSON出力スキーマに厳密に従ってください。
 
       console.log("[v0] AI Analysis completed successfully")
       return NextResponse.json({ analysis: analysisWithRoi })
-    } catch (aiError) {
+    } catch (aiError: any) {
       console.error("[v0] AI generation error:", aiError)
       return NextResponse.json({
         analysis: {
-          summary: "AI分析に失敗しました。",
-          gravityStatus: "接続エラー",
+          summary: "AI分析中にエラーが発生しました。",
+          gravityStatus: "システムエラー",
           warmth: 0,
-          structuralBridge: { missingLink: "分析不可", bridgeBalance: "Unknown" },
+          structuralBridge: { missingLink: `Error: ${aiError.message || "Unknown"}`, bridgeBalance: "Unknown" },
           assetPrediction: { retentionRate: 0, decisionLog: "再試行してください" },
           consensus: [],
           conflicts: [],
@@ -161,14 +195,14 @@ JSON出力スキーマに厳密に従ってください。
           gapAnalysis: { managerView: "-", memberView: "-", asymmetryLevel: "-", lemonMarketRisk: "-" },
           heroInsight: { pathology: "-", strength: "-", scores: { hope: 0, efficacy: 0, resilience: 0, optimism: 0 } },
           interventionQuestions: { mutualUnderstanding: "-", suspendedJudgment: "-", smallAgreement: "-" },
-          keyFindings: ["分析サービスに接続できませんでした。"],
-          recommendations: ["しばらく待ってから再試行してください。"],
-          roiScore: 50
+          keyFindings: [`エラー内容: ${aiError.message || "詳細不明"}`],
+          recommendations: ["しばらく待ってから再試行してください。", "APIキーの設定を確認してください。"],
+          roiScore: 0
         }
       })
     }
 
-  } catch (error) {
+  } catch (error: any) {
     console.error("[v0] Error in analysis route:", error)
     return NextResponse.json(
       { error: "Failed to analyze responses", analysis: null },
