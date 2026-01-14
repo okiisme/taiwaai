@@ -205,8 +205,8 @@ export default function JoinWorkshopPage() {
     }
   }
 
-  const handleSubmitResponse = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmitResponse = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault()
     console.log("[v0] handleSubmitResponse called")
 
     if (!asIsFact.trim() || !toBeWill.trim() || !participantId) {
