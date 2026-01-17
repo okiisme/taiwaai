@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { google } from "@ai-sdk/google"
+import { createGoogleGenerativeAI } from "@ai-sdk/google"
 import { generateObject } from "ai"
 import { z } from "zod"
 
@@ -159,8 +159,12 @@ JSON出力スキーマに厳密に従ってください。
         throw new Error("API Key not configured (GOOGLE_GENERATIVE_AI_API_KEY).");
       }
 
+      const google = createGoogleGenerativeAI({
+        apiKey: apiKey,
+      });
+
       const result = await generateObject({
-        model: google("gemini-1.5-pro"),
+        model: google("gemini-1.5-flash"),
         schema: analysisSchema,
         system: systemPrompt,
         prompt: `以下の回答を分析し、チームの現状と次の一手を明確にしてください: \n\n${formattedResponses} `,
