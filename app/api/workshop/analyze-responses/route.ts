@@ -192,13 +192,38 @@ JSON出力スキーマに厳密に従ってください。
       return NextResponse.json({ analysis: analysisWithRoi })
     } catch (aiError: any) {
       console.error("[v0] AI generation error:", aiError)
+
+      // Analyze specific error causes
+      let friendlyError = "AI利用中に不明なエラーが発生しました。"
+      let detailedReason = aiError.message || "詳細不明"
+      let actionSuggestion = "しばらく待ってから再試行してください。"
+
+      const errorMessage = aiError.message?.toLowerCase() || ""
+
+      if (errorMessage.includes("api key") || errorMessage.includes("403")) {
+        friendlyError = "APIキーが無効、または権限がありません。"
+        detailedReason = "使用しているAPIキーがGoogleによってブロックされているか、Gemini APIが有効化されていません。"
+        actionSuggestion = "新しいAPIキーを発行し、.env.localを更新してください。"
+      } else if (errorMessage.includes("not found") || errorMessage.includes("404")) {
+        friendlyError = "指定されたAIモデルが見つかりません。"
+        detailedReason = "モデル名(gemini-1.5-flash)が現在のAPIキーまたは地域で利用できない可能性があります。"
+        actionSuggestion = "APIキーを変更するか、モデルをgemini-proに変更してください。"
+      } else if (errorMessage.includes("quota") || errorMessage.includes("429")) {
+        friendlyError = "利用上限(Quota)に達しました。"
+        detailedReason = "短期間にリクエストを送りすぎています。"
+        actionSuggestion = "1分ほど待ってから再試行してください。"
+      }
+
       return NextResponse.json({
         analysis: {
-          summary: "AI分析中にエラーが発生しました。",
-          gravityStatus: "システムエラー",
+          summary: "AI分析に失敗しました。",
+          gravityStatus: "システムエラー: " + friendlyError,
           warmth: 0,
-          structuralBridge: { missingLink: `Error: ${aiError.message || "Unknown"} `, bridgeBalance: "Unknown" },
-          assetPrediction: { retentionRate: 0, decisionLog: "再試行してください" },
+          structuralBridge: {
+            missingLink: `【原因】${detailedReason}`,
+            bridgeBalance: "Error"
+          },
+          assetPrediction: { retentionRate: 0, decisionLog: actionSuggestion },
           consensus: [],
           conflicts: [],
           discussionPoints: [],
@@ -207,8 +232,8 @@ JSON出力スキーマに厳密に従ってください。
           gapAnalysis: { managerView: "-", memberView: "-", asymmetryLevel: "-", lemonMarketRisk: "-" },
           heroInsight: { pathology: "-", strength: "-", scores: { hope: 0, efficacy: 0, resilience: 0, optimism: 0 } },
           interventionQuestions: { mutualUnderstanding: "-", suspendedJudgment: "-", smallAgreement: "-" },
-          keyFindings: [`エラー内容: ${aiError.message || "詳細不明"} `],
-          recommendations: ["しばらく待ってから再試行してください。", "APIキーの設定を確認してください。"],
+          keyFindings: [friendlyError, detailedReason, actionSuggestion],
+          recommendations: [actionSuggestion],
           roiScore: 0
         }
       })
