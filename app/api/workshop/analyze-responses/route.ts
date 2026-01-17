@@ -164,7 +164,7 @@ JSON出力スキーマに厳密に従ってください。
       });
 
       const result = await generateObject({
-        model: google("gemini-pro"),
+        model: google("gemini-1.5-flash"),
         schema: analysisSchema,
         system: systemPrompt,
         prompt: `以下の回答を分析し、チームの現状と次の一手を明確にしてください: \n\n${formattedResponses} `,
@@ -206,8 +206,8 @@ JSON出力スキーマに厳密に従ってください。
         actionSuggestion = "新しいAPIキーを発行し、.env.localを更新してください。"
       } else if (errorMessage.includes("not found") || errorMessage.includes("404")) {
         friendlyError = "指定されたAIモデルが見つかりません。"
-        detailedReason = "モデル名(gemini-pro)が現在のAPIキーまたは地域で利用できない可能性があります。"
-        actionSuggestion = "APIキーを変更するか、モデルをgemini-1.5-flashに変更してください。"
+        detailedReason = "モデル名(gemini-1.5-flash)が現在のAPIキーまたは地域で利用できない可能性があります。"
+        actionSuggestion = "APIキーを変更するか、モデルをgemini-proに変更してください。"
       } else if (errorMessage.includes("quota") || errorMessage.includes("429")) {
         friendlyError = "利用上限(Quota)に達しました。"
         detailedReason = "短期間にリクエストを送りすぎています。"
