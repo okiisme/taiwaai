@@ -18,29 +18,29 @@ const MOCK_STATS: LocalAnalysisStats = {
 
 // Dummy analysis result matching the "Disconnect" and "Action Blocker" scenario
 const MOCK_ANALYSIS: AnalysisResult = {
-  gravityStatus: "🛸 浮遊する理想郷 (Floating Utopia)",
+  gravityStatus: "🌧️ 理想と現実の乖離 (空回り状態)",
   warmth: 35,
   heroInsight: {
     scores: MOCK_STATS.heroScores,
-    strength: "未来への希望(Hope: 8.5)は非常に高く維持されており、全員が『良くなる可能性』を信じています。",
-    pathology: "高い希望に対し、実行する効力感(Efficacy: 4.0)が不足。『夢は語るが足元がおぼつかない』状態です。過去の失敗体験がブレーキになっています。",
-    risks: ["学習性無力感の定着", "具体策なき精神論への反発"]
+    strength: "マネージャー層を中心に「未来への希望(Hope: 8.5)」は非常に高く、「良くなる可能性」を強く信じています。",
+    pathology: "高い希望に対し、現場の実行効力感(Efficacy: 4.0)が著しく不足しています。「理想は語られるが、足元の手段がない」状態です。",
+    risks: ["現場の学習性無力感", "具体策なき精神論への反発"]
   },
   gapAnalysis: {
-    managerView: "課題は『メンバーの意識(Mindset)』にあると認識。主体性を求めている。",
-    memberView: "課題は『仕組み(Process)とリソース(Env)』にあると認識。失敗を許容する制度を求めている。",
-    cognitiveGap: "【認識のズレ】マネージャーは「やる気がない」と嘆き、メンバーは「手段がない」と嘆いています。このズレが不信感の源泉です（Lemon Market Risk: High）。",
+    managerView: "課題は『メンバーの当事者意識(Mindset)』の欠如にあると認識。",
+    memberView: "課題は『失敗を許容しない仕組み(Process)』とリソース不足にあると認識。",
+    cognitiveGap: "【認識のズレ】マネージャーは「やる気の問題」と捉え、メンバーは「環境の問題」と捉えています。この前提の違いが対話を噛み合わせなくしています。",
     lemonMarketRisk: "High",
     asymmetryLevel: "High"
   },
   structuralBridge: {
-    missingLink: "『精神論』ではなく『明日使えるツール・制度』の提供",
+    missingLink: "『精神論』ではなく『明日から使える具体的なツール・制度』",
     bridgeQuality: "Fragile"
   },
   interventionQuestions: {
-    mutualUnderstanding: "Q. (Managerへ) メンバーが『やりたくてもできない』と感じている具体的な障壁は何だと思いますか？",
-    suspendedJudgment: "Q. (Memberへ) もし『失敗しても評価が下がらない』としたら、まず何を変えたいですか？",
-    smallAgreement: "Q. (All) 明日から試せる『意識を変えずに、仕組みだけで解決できること』を1つ決めませんか？"
+    mutualUnderstanding: "Q. (Managerへ) メンバーが「やりたくてもできない」と感じている具体的な物理的・制度的障壁は何だと思いますか？",
+    suspendedJudgment: "Q. (Memberへ) もし「失敗しても評価が下がらない」としたら、まず何を変えたいですか？",
+    smallAgreement: "Q. (All) 明日から試せる「意識を変えずに、仕組みだけで解決できること」を1つだけ決めませんか？"
   },
   tags: MOCK_STATS.focusTags,
   roiScore: 2.6
@@ -58,10 +58,10 @@ const DEMO_SCRIPT = [
     title: "2. 参加者が匿名で入室",
     description: "QRコードから、メンバーが匿名でセッションに参加します。",
     participants: [
-      { name: "Manager A", role: "manager", joinTime: 500, avatar: "👔" },
-      { name: "Member B", role: "member", joinTime: 1200, avatar: "👩‍💻" },
-      { name: "Member C", role: "member", joinTime: 1800, avatar: "👨‍💻" },
-      { name: "Member D", role: "member", joinTime: 2400, avatar: "🤔" },
+      { name: "マネージャーA", role: "manager", joinTime: 500, avatar: "👔" },
+      { name: "メンバーB", role: "member", joinTime: 1200, avatar: "👩‍💻" },
+      { name: "メンバーC", role: "member", joinTime: 1800, avatar: "👨‍💻" },
+      { name: "メンバーD", role: "member", joinTime: 2400, avatar: "🤔" },
     ],
     duration: 4000,
     showQR: true
@@ -72,7 +72,7 @@ const DEMO_SCRIPT = [
     description: "「現状(As-is)」と「理想(To-be)」、そして「隠れた感情(Vulnerability)」をリアルタイムに収集。",
     responses: [
       {
-        participant: "Manager A",
+        participant: "マネージャーA",
         role: "manager",
         asIs: "メンバーの主体性が足りない",
         solution: "もっと当事者意識を持つべき (Mindset)",
@@ -81,7 +81,7 @@ const DEMO_SCRIPT = [
         time: 500,
       },
       {
-        participant: "Member B",
+        participant: "メンバーB",
         role: "member",
         asIs: "何を言っても変わらない空気がある",
         solution: "失敗を許容するルールが欲しい (Process)",
@@ -90,7 +90,7 @@ const DEMO_SCRIPT = [
         time: 1500,
       },
       {
-        participant: "Member C",
+        participant: "メンバーC",
         role: "member",
         asIs: "理想ばかり語られて疲れる",
         solution: "リソースを増やしてほしい (Environment)",
@@ -100,7 +100,7 @@ const DEMO_SCRIPT = [
         highlight: true
       },
       {
-        participant: "Member D",
+        participant: "メンバーD",
         role: "member",
         asIs: "...",
         solution: "...",
@@ -114,7 +114,7 @@ const DEMO_SCRIPT = [
   {
     stage: "realtime-analysis",
     title: "4. リアルタイム集計 (Deterministic)",
-    description: "AIを待たずに、場の「温かさ」や「心理資本」が即座に可視化されます。",
+    description: "AIを待たずに、場の「肯定度」や「心理的資本」が即座に可視化されます。",
     showStats: true,
     duration: 3000,
   },
@@ -473,14 +473,14 @@ export function InteractiveDemo() {
                       </div>
                       <div className="space-y-2">
                         <div>
-                          <p className="text-xs text-gray-400">As is</p>
+                          <p className="text-xs text-gray-400">現状 (As is)</p>
                           <p className="font-medium text-sm text-gray-800 line-clamp-2">"{r.asIs}"</p>
                         </div>
                       </div>
                     </div>
                   ))}
                   <div className="bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl flex items-center justify-center p-8 opacity-50">
-                    <span className="animate-pulse text-gray-400">waiting...</span>
+                    <span className="animate-pulse text-gray-400">待機中...</span>
                   </div>
                 </div>
               </div>
@@ -488,7 +488,7 @@ export function InteractiveDemo() {
               {/* Mobile Mockup Sidebar */}
               <div className="w-full md:w-[320px] shrink-0 border-l pl-8 border-gray-100 hidden md:block">
                 <div className="text-center mb-4">
-                  <span className="bg-gray-900 text-white text-xs px-3 py-1 rounded-full">Participants View</span>
+                  <span className="bg-gray-900 text-white text-xs px-3 py-1 rounded-full">参加者画面 (Mobile)</span>
                 </div>
                 <MockMobileClient step={mobileStep} />
               </div>
@@ -501,11 +501,11 @@ export function InteractiveDemo() {
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="text-2xl font-bold flex items-center gap-2">
                   <span className="text-3xl">📊</span>
-                  {currentStep.showAnalysis ? "AI Analysis Result" : "Realtime Stats"}
+                  {currentStep.showAnalysis ? "AI Analysis Result" : "リアルタイム集計"}
                 </h2>
                 {!currentStep.showAnalysis && (
                   <span className="animate-pulse text-teal-500 font-bold bg-teal-50 px-3 py-1 rounded-full border border-teal-200">
-                    Calculating...
+                    分析中...
                   </span>
                 )}
               </div>

@@ -44,7 +44,7 @@ export function AnalysisDisplay({ analysis, stats, onSelectQuestion }: AnalysisD
 
                     <h3 className="text-xs font-bold text-blue-300 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
                         <TrendingUp className="w-4 h-4" />
-                        CURRENT SITUATION (Gravity Status)
+                        現在のチーム状態 (Gravity Status)
                     </h3>
 
                     <div className="relative z-10">
@@ -69,7 +69,7 @@ export function AnalysisDisplay({ analysis, stats, onSelectQuestion }: AnalysisD
                     <div className="absolute top-0 right-0 w-24 h-24 bg-orange-50 rounded-bl-full -mr-4 -mt-4"></div>
                     <div className="relative z-10">
                         <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">
-                            Team Warmth
+                            Team Warmth (温度感)
                         </h3>
                         <p className="text-xs text-gray-400 mb-4">
                             心理的安全性・本音度
@@ -105,7 +105,7 @@ export function AnalysisDisplay({ analysis, stats, onSelectQuestion }: AnalysisD
                                 <Users className="w-5 h-5 text-indigo-600" />
                             </div>
                             <div>
-                                <h4 className="font-bold text-indigo-900 mb-1">Mutual Understanding</h4>
+                                <h4 className="font-bold text-indigo-900 mb-1">相互理解の問い (Mutual Understanding)</h4>
                                 <p className="text-sm text-indigo-700 italic">"{analysis.interventionQuestions!.mutualUnderstanding}"</p>
                             </div>
                         </div>
@@ -119,7 +119,7 @@ export function AnalysisDisplay({ analysis, stats, onSelectQuestion }: AnalysisD
                                 <Unplug className="w-5 h-5 text-fuchsia-600" />
                             </div>
                             <div>
-                                <h4 className="font-bold text-fuchsia-900 mb-1">Suspended Judgment</h4>
+                                <h4 className="font-bold text-fuchsia-900 mb-1">判断保留の問い (Suspended Judgment)</h4>
                                 <p className="text-sm text-fuchsia-700 italic">"{analysis.interventionQuestions!.suspendedJudgment}"</p>
                             </div>
                         </div>
@@ -133,7 +133,7 @@ export function AnalysisDisplay({ analysis, stats, onSelectQuestion }: AnalysisD
                                 <CheckCircle className="w-5 h-5 text-emerald-600" />
                             </div>
                             <div>
-                                <h4 className="font-bold text-emerald-900 mb-1">Small Agreement</h4>
+                                <h4 className="font-bold text-emerald-900 mb-1">小さな合意形成 (Small Agreement)</h4>
                                 <p className="text-sm text-emerald-700 italic">"{analysis.interventionQuestions!.smallAgreement}"</p>
                             </div>
                         </div>
@@ -146,7 +146,7 @@ export function AnalysisDisplay({ analysis, stats, onSelectQuestion }: AnalysisD
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <Card className="p-6 border-l-4 border-yellow-400 bg-yellow-50/30">
                         <h4 className="font-bold text-yellow-800 mb-2 flex items-center gap-2">
-                            🚫 Structural Missing Link
+                            🚫 構造的な欠落箇所 (Missing Link)
                         </h4>
                         <p className="text-sm text-gray-700">{analysis.structuralBridge.missingLink}</p>
                     </Card>
@@ -154,10 +154,10 @@ export function AnalysisDisplay({ analysis, stats, onSelectQuestion }: AnalysisD
                         <Card className="p-6 border-l-4 border-red-400 bg-red-50/30">
                             <div className="flex justify-between items-center mb-2">
                                 <h4 className="font-bold text-red-800 flex items-center gap-2">
-                                    ⚠️ Cognitive Gap (Lemon Market)
+                                    ⚠️ 認識のズレ (Cognitive Gap)
                                 </h4>
                                 {analysis.gapAnalysis.lemonMarketRisk === "High" && (
-                                    <span className="bg-red-100 text-red-600 px-2 py-1 rounded text-xs font-bold">HIGH ALERT</span>
+                                    <span className="bg-red-100 text-red-600 px-2 py-1 rounded text-xs font-bold">要警戒 (High Risk)</span>
                                 )}
                             </div>
                             {/* Derive cognitive gap summary from view points since original field missing */}
@@ -174,7 +174,7 @@ export function AnalysisDisplay({ analysis, stats, onSelectQuestion }: AnalysisD
                 <Card className="p-6 bg-white shadow-sm border border-gray-100">
                     <h3 className="font-bold text-gray-700 mb-4 flex items-center gap-2">
                         <Target className="w-5 h-5" />
-                        Focus Areas (Mindset / Process / Env)
+                        関心の所在 (Focus Areas)
                     </h3>
                     <div className="relative h-64 flex items-center justify-center">
                         <div className="absolute flex gap-4 items-end">
@@ -227,15 +227,15 @@ export function AnalysisDisplay({ analysis, stats, onSelectQuestion }: AnalysisD
                 <Card className="p-6 bg-white shadow-sm border border-gray-100">
                     <h3 className="font-bold text-gray-700 mb-4 flex items-center gap-2">
                         <Zap className="w-5 h-5" />
-                        HERO Insight (Psychological Capital)
+                        心理的資本 (HERO Insight)
                     </h3>
                     <div className="h-64 w-full">
                         <ResponsiveContainer width="100%" height="100%">
                             <RadarChart cx="50%" cy="50%" outerRadius="80%" data={[
-                                { subject: 'Hope', A: heroScores.hope, fullMark: 10 },
-                                { subject: 'Efficacy', A: heroScores.efficacy, fullMark: 10 },
-                                { subject: 'Resilience', A: heroScores.resilience, fullMark: 10 },
-                                { subject: 'Optimism', A: heroScores.optimism, fullMark: 10 },
+                                { subject: '希望 (Hope)', A: heroScores.hope, fullMark: 10 },
+                                { subject: '効力感 (Efficacy)', A: heroScores.efficacy, fullMark: 10 },
+                                { subject: '回復力 (Resilience)', A: heroScores.resilience, fullMark: 10 },
+                                { subject: '楽観性 (Optimism)', A: heroScores.optimism, fullMark: 10 },
                             ]}>
                                 <PolarGrid stroke="#e2e8f0" />
                                 <PolarAngleAxis dataKey="subject" tick={{ fill: '#64748b', fontSize: 12 }} />
@@ -257,7 +257,7 @@ export function AnalysisDisplay({ analysis, stats, onSelectQuestion }: AnalysisD
             {/* 6. Growth Potential / ROI (Bottom) */}
             {(roi > 0 || analysis?.roiScore) && (
                 <div className="bg-gradient-to-r from-slate-800 to-slate-900 rounded-2xl p-6 text-white text-center">
-                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Growth Potential</h3>
+                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Growth Potential (成長ポテンシャル)</h3>
                     <p className="text-lg font-medium opacity-90">
                         期待されるROI係数: <span className="text-3xl font-black text-emerald-400">{roi}x</span>
                     </p>
