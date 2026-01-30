@@ -1,4 +1,5 @@
 "use client"
+import { useState, useEffect } from "react"
 
 import { Card } from "@/components/ui/card"
 import {
@@ -27,6 +28,12 @@ interface AnalysisDisplayProps {
 }
 
 export function AnalysisDisplay({ analysis, stats, onSelectQuestion }: AnalysisDisplayProps) {
+    // Recharts hydration fix
+    const [isMounted, setIsMounted] = useState(false);
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
+
     if (!analysis) return null
 
     // Fallback values
@@ -34,6 +41,8 @@ export function AnalysisDisplay({ analysis, stats, onSelectQuestion }: AnalysisD
     const warmth = stats ? stats.warmth : (analysis.warmth || 0)
     const heroScores = stats ? stats.heroScores : (analysis.heroInsight?.scores || { hope: 0, efficacy: 0, resilience: 0, optimism: 0 })
     const focusTags = stats ? stats.focusTags : (analysis.tags || { mindset: 0, process: 0, environment: 0 })
+
+    if (!isMounted) return null; // Prevent server-side rendering of Recharts
 
     return (
         <div className="space-y-12">

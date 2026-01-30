@@ -61,7 +61,7 @@ export async function POST(request: Request) {
 
     const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY
     if (!apiKey) {
-      console.error("[v0] GOOGLE_GENERATIVE_AI_API_KEY is missing")
+      console.error("[v0] GOOGLE_GENERATIVE_AI_API_KEY is missing. Env check:", process.env.NODE_ENV);
       return NextResponse.json({
         analysis: {
           summary: "APIキーが設定されていません。",

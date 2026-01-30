@@ -392,6 +392,14 @@ export function InteractiveDemo() {
     ? "min-h-screen p-8 max-w-7xl mx-auto flex flex-col justify-center"
     : "w-full"
 
+  // Hydration fix
+  const [isMounted, setIsMounted] = useState(false)
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
+
+  if (!isMounted) return null
+
   return (
     <div className={containerClasses}>
       <div className={contentClasses}>
