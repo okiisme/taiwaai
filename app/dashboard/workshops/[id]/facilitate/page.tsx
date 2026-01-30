@@ -1,5 +1,5 @@
 "use client"
-import { useState, useEffect } from "react"
+import React, { useState, useEffect, useCallback } from "react"
 import { AnalysisDisplay } from "./analysis-display"
 import { DashboardLayout } from "@/components/dashboard-layout"
 import { Button } from "@/components/ui/button"
@@ -651,16 +651,26 @@ const downloadReport = (session: WorkshopSession, selectedTheme: string) => {
   URL.revokeObjectURL(url)
 }
 
-// CHANGE: Remove async from component and extract params.id directly (Next.js handles Promise resolution)
-export default function FacilitatePage({ params }: { params: { id: string } }) {
-  const workshopId = params.id
+// CHANGE: Remove async from component and extract params.id using React.use() (Next.js 15)
+export default function FacilitatePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id: workshopId } = React.use(params)
+
 
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [mounted, setMounted] = useState(false) // For useEffect cleanup
 
-  // CHANGE: Initialize session with empty data, let API populate it
-  const [session, setSession] = useState<WorkshopSession>(() => getInitialSession(workshopId))
+  // CHANGE: Initialize with empty/loading state
+  const [session, setSession] = useState<WorkshopSession>({
+    id: workshopId,
+    workshopId: workshopId,
+    status: "preparation",
+    participants: [],
+    responses: [],
+    currentQuestion: undefined,
+    analysis: undefined,
+    createdAt: new Date().toISOString()
+  })
 
   const [selectedTheme, setSelectedTheme] = useState("")
   const [questionMode, setQuestionMode] = useState<"predefined" | "custom">("predefined")
@@ -671,138 +681,86 @@ export default function FacilitatePage({ params }: { params: { id: string } }) {
   const workshopUrl = typeof window !== "undefined" ? `${window.location.origin}/join/${workshopId}` : ""
   const encodedUrl = encodeURIComponent(workshopUrl)
 
-
   const updateSessionStatus = async (newStatus: string) => {
     try {
-      const response = await fetch(`/api/workshop/session/${workshopId}`, {
-        method: "PUT",
+      const response = await fetch(`/api/workshop/${workshopId}`, {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),
       })
       if (!response.ok) {
         console.error("[v0] Failed to update session status")
+      } else {
+        // Optimistic update
+        setSession(prev => ({ ...prev, status: newStatus as any }))
       }
     } catch (error) {
       console.error("[v0] Error updating session status:", error)
     }
   }
 
-  // CHANGE: Load initial session from API on mount
-  useEffect(() => {
-    const loadInitialSession = async () => {
-      try {
-        setIsLoading(true)
-        console.log("[v0] Loading initial session from API for workshop:", workshopId)
 
-        const response = await fetch(`/api/workshop/session/${workshopId}`, { cache: "no-store" })
-        if (response.ok) {
-          const data = await response.json()
-          console.log("[v0] Initial session loaded:", data)
+  // CHANGE: Poll API for real-time updates
+  const fetchSession = useCallback(async () => {
+    if (!mounted) return
 
-          if (data.session) {
-            setSession((prev) => ({
-              ...prev,
-              ...data.session,
-              workshopId: workshopId,
-            }))
-            // Save to localStorage as backup
-            saveToLocalStorage(`session-${workshopId}`, data.session)
-          } else {
-            console.log("[v0] No session data from API, using initial state")
+    try {
+      const dbResponse = await fetch(`/api/workshop/${workshopId}`)
+
+      if (dbResponse.ok) {
+        const body = await dbResponse.json()
+        setSession(prev => {
+          // Basic diff prevention
+          if (JSON.stringify(prev) !== JSON.stringify(body)) {
+            return { ...prev, ...body, workshopId }
           }
-        } else {
-          console.log("[v0] API returned error, trying localStorage")
-          // Fallback to localStorage if API fails
-          const stored = loadFromLocalStorage(`session-${workshopId}`)
-          if (stored) {
-            setSession((prev) => ({
-              ...prev,
-              ...stored,
-              workshopId: workshopId,
-            }))
-          }
-        }
-        setError(null)
-      } catch (err) {
-        console.error("[v0] Error loading initial session:", err)
-        // Try localStorage as fallback
-        const stored = loadFromLocalStorage(`session-${workshopId}`)
-        if (stored) {
-          setSession((prev) => ({
-            ...prev,
-            ...stored,
-            workshopId: workshopId,
-          }))
-        }
-        setError("セッションの読み込みに失敗しました")
-      } finally {
-        setIsLoading(false)
+          return prev
+        })
       }
+    } catch (error) {
+      console.error("[v0] Error fetching session:", error)
+    } finally {
+      setIsLoading(false)
     }
+  }, [workshopId, mounted])
 
-    loadInitialSession()
+  useEffect(() => {
+    setMounted(true)
+    setIsLoading(true)
+
+    // Initial fetch
+    fetch(`/api/workshop/${workshopId}`)
+      .then(res => res.json())
+      .then(data => {
+        setSession(prev => ({ ...prev, ...data, workshopId }))
+        setIsLoading(false)
+      })
+      .catch(err => {
+        console.error(err)
+        setIsLoading(false)
+      })
+
+    const interval = setInterval(() => {
+      fetch(`/api/workshop/${workshopId}`)
+        .then(res => res.json())
+        .then(data => {
+          setSession(prev => {
+            if (JSON.stringify(prev.responses) !== JSON.stringify(data.responses) ||
+              prev.participants.length !== data.participants.length ||
+              prev.status !== data.status) {
+              return { ...prev, ...data, workshopId }
+            }
+            return prev
+          })
+        })
+        .catch(e => console.error(e))
+    }, 3000)
+
+    return () => clearInterval(interval)
   }, [workshopId])
 
   // CHANGE: Poll API every 2 seconds for real-time updates
-  useEffect(() => {
-    if (isLoading) return // Don't poll until initial load is complete
 
-    console.log("[v0] Starting polling for workshop:", workshopId)
-
-    const pollInterval = setInterval(async () => {
-      try {
-        const response = await fetch(`/api/workshop/session/${workshopId}`, { cache: "no-store" })
-        if (response.ok) {
-          const data = await response.json()
-
-          if (data.session) {
-            setSession((prev) => {
-              const participantsChanged =
-                JSON.stringify(data.session.participants || []) !== JSON.stringify(prev.participants || [])
-              const responsesChanged =
-                JSON.stringify(data.session.responses || []) !== JSON.stringify(prev.responses || [])
-              const analysisChanged = JSON.stringify(data.session.analysis) !== JSON.stringify(prev.analysis)
-
-              if (participantsChanged || responsesChanged || analysisChanged) {
-                console.log("[v0] Session updated:", {
-                  participants: data.session.participants?.length || 0,
-                  responses: data.session.responses?.length || 0,
-                  hasAnalysis: !!data.session.analysis,
-                })
-
-                const updated = {
-                  ...prev,
-                  participants: Array.isArray(data.session.participants)
-                    ? data.session.participants
-                    : prev.participants || [],
-                  responses: Array.isArray(data.session.responses) ? data.session.responses : prev.responses || [],
-                  analysis: data.session.analysis || prev.analysis,
-                  workshopId: workshopId,
-                }
-
-                // Save to localStorage
-                saveToLocalStorage(`session-${workshopId}`, updated)
-
-                return updated
-              }
-
-              return prev
-            })
-          }
-        } else {
-          console.error("[v0] Polling failed with status:", response.status)
-        }
-      } catch (err) {
-        console.error("[v0] Polling error:", err)
-        setError("データの取得に失敗しました。ページを再読み込みしてください。")
-      }
-    }, 2000)
-
-    return () => {
-      console.log("[v0] Stopping polling for workshop:", workshopId)
-      clearInterval(pollInterval)
-    }
-  }, [workshopId, isLoading])
 
   // CHANGE: Save session to localStorage whenever it changes (backup only)
   useEffect(() => {
@@ -2209,7 +2167,7 @@ export default function FacilitatePage({ params }: { params: { id: string } }) {
                 onClick={() =>
                   setSession({
                     id: `session-${Date.now()}`,
-                    workshopId: params.id,
+                    workshopId: workshopId,
                     status: "preparation",
                     participants: [],
                     responses: [],
@@ -2296,7 +2254,7 @@ export default function FacilitatePage({ params }: { params: { id: string } }) {
                   onClick={() =>
                     setSession({
                       id: `session-${Date.now()}`,
-                      workshopId: params.id, // Keep original workshopId
+                      workshopId: workshopId,
                       status: "preparation",
                       participants: [],
                       responses: [],

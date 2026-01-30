@@ -102,7 +102,7 @@ export default function JoinWorkshopPage() {
     const pollQuestion = async () => {
       try {
         console.log("[v0] Polling session...")
-        const response = await fetch(`/api/workshop/session/${workshopId}`)
+        const response = await fetch(`/api/workshop/${workshopId}`)
         if (response.ok) {
           const data = await response.json()
           console.log("[v0] Polling session data:", data)

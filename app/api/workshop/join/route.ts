@@ -1,51 +1,42 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { addParticipant } from "@/lib/workshop-store"
+import { sql } from "@vercel/postgres"
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    console.log("[v0] Join API - Received body:", JSON.stringify(body, null, 2))
+    const { workshopId, participant } = body
 
-    const { workshopId, name, role, stance } = body
-
-    console.log("[v0] Join API - Extracted values:", {
-      workshopId,
-      name,
-      nameType: typeof name,
-      nameLength: name?.length,
-      role,
-      stance,
-    })
-
-    if (!name || !name.trim()) {
-      console.error("[v0] Join API - Missing or empty participant name:", { name })
-      return NextResponse.json({ error: "Participant name is required" }, { status: 400 })
+    if (!participant || !participant.id || !participant.name) {
+      return NextResponse.json({ error: "Invalid participant data" }, { status: 400 })
     }
 
-    const participantId = `p-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+    // Check if participant already exists
+    const { rows: existing } = await sql`
+      SELECT id FROM participants 
+      WHERE workshop_id = ${workshopId} AND id = ${participant.id}
+    `
 
-    const participantData = {
-      id: participantId,
-      name: name.trim(),
-      role,
-      stance,
+    if (existing.length === 0) {
+      await sql`
+        INSERT INTO participants (
+          id, workshop_id, name, role, 
+          stance_energy, stance_mode, stance_openness, 
+          joined_at
+        )
+        VALUES (
+          ${participant.id}, ${workshopId}, ${participant.name}, ${participant.role || 'member'},
+          ${participant.stance?.energyLevel || 5}, ${participant.stance?.currentMode || 'divergent'}, ${participant.stance?.openness || 5},
+          ${new Date().toISOString()}
+        )
+      `
+    } else {
+      // Update if exists (re-join logic) - optional, but good for idempotency
+      console.log("Participant already exists, skipping insert")
     }
-    console.log("[v0] Join API - Creating participant:", JSON.stringify(participantData, null, 2))
 
-    const session = addParticipant(workshopId, participantData)
-
-    console.log(
-      "[v0] Join API - Participant added, current participants:",
-      session.participants.map((p) => ({ id: p.id, name: p.name })),
-    )
-
-    return NextResponse.json({
-      success: true,
-      participantId,
-      session,
-    })
+    return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("[v0] Join API - Error:", error)
+    console.error("[v0] Database Error joining workshop:", error)
     return NextResponse.json({ error: "Failed to join workshop" }, { status: 500 })
   }
 }
