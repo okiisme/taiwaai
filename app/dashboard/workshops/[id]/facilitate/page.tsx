@@ -1577,6 +1577,60 @@ export default function FacilitatePage({ params }: { params: { id: string } }) {
               </Card>
             )}
 
+            {/* Debug Button for Vercel */}
+            <div className="flex justify-center mb-4">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  const saved = localStorage.getItem(`workshop-sample-workshop-1`) // Try getting from sample
+                  // Hardcoded sample data for robust testing
+                  const sampleParticipants = [
+                    { id: "p1", name: "鈴木マネージャー", role: "manager", joinedAt: new Date().toISOString() },
+                    { id: "p2", name: "佐藤メンバー", role: "member", joinedAt: new Date().toISOString() },
+                    { id: "p3", name: "田中メンバー", role: "member", joinedAt: new Date().toISOString() },
+                  ];
+                  const sampleResponses = [
+                    {
+                      id: "r1", participantId: "p1", participantName: "鈴木マネージャー", participantRole: "manager",
+                      answer: "会議で発言が少ない",
+                      asIs: { fact: "誰も発言しない", score: 3 },
+                      toBe: { will: "全員が活発に議論する", score: 9 },
+                      hero: { hope: 80, efficacy: 60, resilience: 70, optimism: 75 },
+                      vulnerability: { honesty: 90, resistance: 10 },
+                      submittedAt: new Date().toISOString()
+                    },
+                    {
+                      id: "r2", participantId: "p2", participantName: "佐藤メンバー", participantRole: "member",
+                      answer: "心理的安全性が低い",
+                      asIs: { fact: "怒られるのが怖い", score: 2 },
+                      toBe: { will: "安心して失敗できる", score: 8 },
+                      hero: { hope: 40, efficacy: 30, resilience: 40, optimism: 30 },
+                      vulnerability: { honesty: 85, resistance: 20 },
+                      submittedAt: new Date().toISOString()
+                    },
+                    {
+                      id: "r3", participantId: "p3", participantName: "田中メンバー", participantRole: "member",
+                      answer: "目的が曖昧",
+                      asIs: { fact: "何のためにやるかわからない", score: 4 },
+                      toBe: { will: "納得感を持って働きたい", score: 8 },
+                      hero: { hope: 50, efficacy: 40, resilience: 50, optimism: 40 },
+                      vulnerability: { honesty: 80, resistance: 10 },
+                      submittedAt: new Date().toISOString()
+                    }
+                  ];
+
+                  setSession(prev => ({
+                    ...prev,
+                    participants: sampleParticipants as any,
+                    responses: sampleResponses as any
+                  }));
+                }}
+                className="text-xs text-gray-500 border-dashed border-gray-300 hover:border-teal-500 hover:text-teal-600"
+              >
+                🛠️ デバッグ用データをロード (Vercel用)
+              </Button>
+            </div>
+
             <div className="flex justify-center">
               <Button
                 onClick={handleAnalyze}
