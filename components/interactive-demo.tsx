@@ -19,6 +19,7 @@ const MOCK_STATS: LocalAnalysisStats = {
 // Dummy analysis result matching the "Disconnect" and "Action Blocker" scenario
 const MOCK_ANALYSIS: AnalysisResult = {
   gravityStatus: "🌧️ 理想と現実の乖離 (空回り状態)",
+  gapScore: 85,
   warmth: 35,
   heroInsight: {
     scores: MOCK_STATS.heroScores,
@@ -42,6 +43,26 @@ const MOCK_ANALYSIS: AnalysisResult = {
     suspendedJudgment: "Q. (Memberへ) もし「失敗しても評価が下がらない」としたら、まず何を変えたいですか？",
     smallAgreement: "Q. (All) 明日から試せる「意識を変えずに、仕組みだけで解決できること」を1つだけ決めませんか？"
   },
+  comparisonTable: [
+    {
+      category: "現状 (As-Is)",
+      manager: "メンバーの主体性が足りず、指示待ちになっている。",
+      member: "何を言っても無駄な空気があり、諦めている。",
+      insight: "【視点のズレ】マネージャーは「個人の資質」の問題とし、メンバーは「環境・空気」の問題としている。"
+    },
+    {
+      category: "理想 (To-Be)",
+      manager: "全員が当事者意識を持って自走するチーム。",
+      member: "失敗しても責められず、安心して挑戦できるチーム。",
+      insight: "動機は同じ「良くなりたい」だが、求める条件（責任 vs 安全性）が食い違っている。"
+    },
+    {
+      category: "解決策 (Solution)",
+      manager: "意識改革、マインドセット研修。",
+      member: "具体的で安全なルール、リソースの拡充。",
+      insight: "精神論(Manager) vs 具体論(Member) の対立構造。"
+    }
+  ],
   tags: MOCK_STATS.focusTags,
   roiScore: 2.6
 }

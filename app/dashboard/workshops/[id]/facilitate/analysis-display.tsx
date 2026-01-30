@@ -2,14 +2,13 @@
 
 import { Card } from "@/components/ui/card"
 import {
-    Users,
-    GitBranch,
-    Unplug,
     Target,
     Zap,
     AlertCircle,
-    TrendingUp,
     CheckCircle,
+    Info,
+    ArrowRight,
+    MessageSquare
 } from "@/components/icons"
 import {
     RadarChart,
@@ -28,217 +27,169 @@ interface AnalysisDisplayProps {
 }
 
 export function AnalysisDisplay({ analysis, stats, onSelectQuestion }: AnalysisDisplayProps) {
-    // Use stats if available, otherwise fallback to AI analysis (for backward compatibility)
-    const warmth = stats ? stats.warmth : (analysis?.warmth || 0)
-    const heroScores = stats ? stats.heroScores : (analysis?.heroInsight?.scores || { hope: 0, efficacy: 0, resilience: 0, optimism: 0 })
-    const focusTags = stats ? stats.focusTags : (analysis?.tags || { mindset: 0, process: 0, environment: 0 })
-    const roi = stats ? stats.roi : (analysis?.roiScore || 0)
+    if (!analysis) return null
+
+    // Fallback values
+    const gapScore = analysis.gapScore || 0
+    const warmth = stats ? stats.warmth : (analysis.warmth || 0)
+    const heroScores = stats ? stats.heroScores : (analysis.heroInsight?.scores || { hope: 0, efficacy: 0, resilience: 0, optimism: 0 })
+    const focusTags = stats ? stats.focusTags : (analysis.tags || { mindset: 0, process: 0, environment: 0 })
 
     return (
-        <div className="space-y-8">
-            {/* 1. Executive Summary: Gravity & Warmth (Situation Clarity) */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card className="col-span-1 md:col-span-2 rounded-3xl p-8 bg-slate-900 text-white shadow-2xl relative overflow-hidden border border-slate-700">
-                    <div className="absolute top-0 right-0 p-24 bg-blue-600 rounded-full mix-blend-overlay filter blur-3xl opacity-30 -mr-12 -mt-12 animate-pulse"></div>
-                    <div className="absolute bottom-0 left-0 p-24 bg-purple-600 rounded-full mix-blend-overlay filter blur-3xl opacity-30 -ml-12 -mb-12"></div>
+        <div className="space-y-12">
 
-                    <h3 className="text-xs font-bold text-blue-300 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
-                        <TrendingUp className="w-4 h-4" />
-                        現在のチーム状態 (Gravity Status)
-                    </h3>
-
-                    <div className="relative z-10">
-                        {analysis?.gravityStatus ? (
-                            <>
-                                <div className="text-3xl sm:text-4xl font-black leading-tight mb-4 text-white">
-                                    {analysis.gravityStatus}
-                                </div>
-                                <p className="text-slate-300 text-sm leading-relaxed max-w-xl">
-                                    {analysis.heroInsight?.pathology ? `組織の感情リスク: ${analysis.heroInsight.pathology}` : ""}
-                                </p>
-                            </>
-                        ) : (
-                            <div className="flex flex-col items-center justify-center h-32 opacity-50">
-                                <span className="animate-pulse">AI思考中... 深刻な構造課題を分析しています</span>
-                            </div>
-                        )}
-                    </div>
-                </Card>
-
-                <Card className="rounded-3xl p-6 bg-white border border-gray-100 shadow-sm flex flex-col justify-between relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-orange-50 rounded-bl-full -mr-4 -mt-4"></div>
-                    <div className="relative z-10">
-                        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">
-                            Team Warmth (温度感)
-                        </h3>
-                        <p className="text-xs text-gray-400 mb-4">
-                            心理的安全性・本音度
-                        </p>
-                        <div className="flex items-baseline gap-1">
-                            <span className={`text-5xl font-black ${warmth > 70 ? "text-orange-500" : "text-blue-500"}`}>
-                                {warmth}
-                            </span>
-                            <span className="text-lg text-gray-400 font-bold">/100</span>
-                        </div>
-                    </div>
-                    <div className="w-full bg-gray-100 rounded-full h-2 mt-4 overflow-hidden">
-                        <div
-                            className={`h-full rounded-full transition-all duration-1000 ${warmth > 70
-                                ? "bg-gradient-to-r from-orange-400 to-red-400"
-                                : "bg-gradient-to-r from-blue-300 to-blue-500"
-                                }`}
-                            style={{ width: `${warmth}%` }}
-                        />
-                    </div>
-                </Card>
-            </div>
-
-            {/* 2. Next Dialogue Intervention (Action Trigger) */}
-            {analysis?.interventionQuestions ? (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <Card
-                        className="p-6 bg-gradient-to-br from-indigo-50 to-blue-50 border-l-4 border-indigo-500 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
-                        onClick={() => onSelectQuestion(analysis.interventionQuestions!.mutualUnderstanding)}
-                    >
-                        <div className="flex items-start gap-3">
-                            <div className="p-2 bg-indigo-100 rounded-lg">
-                                <Users className="w-5 h-5 text-indigo-600" />
-                            </div>
-                            <div>
-                                <h4 className="font-bold text-indigo-900 mb-1">相互理解の問い (Mutual Understanding)</h4>
-                                <p className="text-sm text-indigo-700 italic">"{analysis.interventionQuestions!.mutualUnderstanding}"</p>
-                            </div>
-                        </div>
-                    </Card>
-                    <Card
-                        className="p-6 bg-gradient-to-br from-fuchsia-50 to-pink-50 border-l-4 border-fuchsia-500 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
-                        onClick={() => onSelectQuestion(analysis.interventionQuestions!.suspendedJudgment)}
-                    >
-                        <div className="flex items-start gap-3">
-                            <div className="p-2 bg-fuchsia-100 rounded-lg">
-                                <Unplug className="w-5 h-5 text-fuchsia-600" />
-                            </div>
-                            <div>
-                                <h4 className="font-bold text-fuchsia-900 mb-1">判断保留の問い (Suspended Judgment)</h4>
-                                <p className="text-sm text-fuchsia-700 italic">"{analysis.interventionQuestions!.suspendedJudgment}"</p>
-                            </div>
-                        </div>
-                    </Card>
-                    <Card
-                        className="p-6 bg-gradient-to-br from-emerald-50 to-teal-50 border-l-4 border-emerald-500 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
-                        onClick={() => onSelectQuestion(analysis.interventionQuestions!.smallAgreement)}
-                    >
-                        <div className="flex items-start gap-3">
-                            <div className="p-2 bg-emerald-100 rounded-lg">
-                                <CheckCircle className="w-5 h-5 text-emerald-600" />
-                            </div>
-                            <div>
-                                <h4 className="font-bold text-emerald-900 mb-1">小さな合意形成 (Small Agreement)</h4>
-                                <p className="text-sm text-emerald-700 italic">"{analysis.interventionQuestions!.smallAgreement}"</p>
-                            </div>
-                        </div>
-                    </Card>
-                </div>
-            ) : null}
-
-            {/* 3. Text Structure Analysis (Consensus / Divergence / Missing Link) */}
-            {analysis?.structuralBridge ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <Card className="p-6 border-l-4 border-yellow-400 bg-yellow-50/30">
-                        <h4 className="font-bold text-yellow-800 mb-2 flex items-center gap-2">
-                            🚫 構造的な欠落箇所 (Missing Link)
-                        </h4>
-                        <p className="text-sm text-gray-700">{analysis.structuralBridge.missingLink}</p>
-                    </Card>
-                    {analysis.gapAnalysis && (
-                        <Card className="p-6 border-l-4 border-red-400 bg-red-50/30">
-                            <div className="flex justify-between items-center mb-2">
-                                <h4 className="font-bold text-red-800 flex items-center gap-2">
-                                    ⚠️ 認識のズレ (Cognitive Gap)
-                                </h4>
-                                {analysis.gapAnalysis.lemonMarketRisk === "High" && (
-                                    <span className="bg-red-100 text-red-600 px-2 py-1 rounded text-xs font-bold">要警戒 (High Risk)</span>
-                                )}
-                            </div>
-                            {/* Derive cognitive gap summary from view points since original field missing */}
-                            <p className="text-sm text-gray-700">
-                                {analysis.gapAnalysis.managerView} vs {analysis.gapAnalysis.memberView}
+            {/* SECTION 1: Gap Score (The "Hook") */}
+            <section className="relative">
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-24 bg-teal-500/20 blur-[100px] rounded-full pointer-events-none"></div>
+                <Card className="relative overflow-hidden border-2 border-slate-900 bg-slate-900 text-white p-8 rounded-[2rem] shadow-2xl">
+                    <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+                        <div className="flex-1 text-center md:text-left">
+                            <h2 className="text-sm font-bold text-teal-400 tracking-widest uppercase mb-2 flex items-center justify-center md:justify-start gap-2">
+                                <AlertCircle className="w-4 h-4" />
+                                Gravity Status
+                            </h2>
+                            <h1 className="text-3xl md:text-4xl font-black mb-4 leading-tight">
+                                {analysis.gravityStatus}
+                            </h1>
+                            <p className="text-slate-400 text-sm max-w-lg">
+                                {analysis.heroInsight?.pathology}
                             </p>
-                        </Card>
-                    )}
-                </div>
-            ) : null}
+                        </div>
 
-            {/* 4. Three-Axis Bubble Chart (Focus Areas) */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card className="p-6 bg-white shadow-sm border border-gray-100">
-                    <h3 className="font-bold text-gray-700 mb-4 flex items-center gap-2">
-                        <Target className="w-5 h-5" />
-                        関心の所在 (Focus Areas)
-                    </h3>
-                    <div className="relative h-64 flex items-center justify-center">
-                        <div className="absolute flex gap-4 items-end">
-                            {/* Mindset Bubble */}
-                            <div className="flex flex-col items-center gap-2">
-                                <div
-                                    className="rounded-full bg-blue-500 opacity-80 flex items-center justify-center text-white font-bold transition-all duration-1000"
-                                    style={{
-                                        width: `${Math.max(40, focusTags.mindset * 1.5)}px`,
-                                        height: `${Math.max(40, focusTags.mindset * 1.5)}px`
-                                    }}
-                                >
-                                    {Math.round(focusTags.mindset)}%
-                                </div>
-                                <span className="text-xs font-bold text-blue-600">Mindset</span>
-                            </div>
-
-                            {/* Process Bubble */}
-                            <div className="flex flex-col items-center gap-2">
-                                <div
-                                    className="rounded-full bg-green-500 opacity-80 flex items-center justify-center text-white font-bold transition-all duration-1000"
-                                    style={{
-                                        width: `${Math.max(40, focusTags.process * 1.5)}px`,
-                                        height: `${Math.max(40, focusTags.process * 1.5)}px`
-                                    }}
-                                >
-                                    {Math.round(focusTags.process)}%
-                                </div>
-                                <span className="text-xs font-bold text-green-600">Process</span>
-                            </div>
-
-                            {/* Environment Bubble */}
-                            <div className="flex flex-col items-center gap-2">
-                                <div
-                                    className="rounded-full bg-purple-500 opacity-80 flex items-center justify-center text-white font-bold transition-all duration-1000"
-                                    style={{
-                                        width: `${Math.max(40, focusTags.environment * 1.5)}px`,
-                                        height: `${Math.max(40, focusTags.environment * 1.5)}px`
-                                    }}
-                                >
-                                    {Math.round(focusTags.environment)}%
-                                </div>
-                                <span className="text-xs font-bold text-purple-600">Environment</span>
+                        {/* Gap Meter */}
+                        <div className="relative w-48 h-48 flex items-center justify-center shrink-0">
+                            <div className="absolute inset-0 rounded-full border-[12px] border-slate-800"></div>
+                            <svg className="absolute inset-0 w-full h-full -rotate-90">
+                                <circle
+                                    cx="96"
+                                    cy="96"
+                                    r="84"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="12"
+                                    strokeDasharray={2 * Math.PI * 84}
+                                    strokeDashoffset={2 * Math.PI * 84 * (1 - gapScore / 100)}
+                                    className={`text-red-500 transition-all duration-1000 ease-out`}
+                                    strokeLinecap="round"
+                                />
+                            </svg>
+                            <div className="text-center">
+                                <span className="block text-5xl font-black">{gapScore}</span>
+                                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Gap Level</span>
                             </div>
                         </div>
                     </div>
                 </Card>
+            </section>
 
-                {/* 5. HERO Insight (Radar Chart) */}
-                <Card className="p-6 bg-white shadow-sm border border-gray-100">
-                    <h3 className="font-bold text-gray-700 mb-4 flex items-center gap-2">
-                        <Zap className="w-5 h-5" />
-                        心理的資本 (HERO Insight)
-                    </h3>
-                    <div className="h-64 w-full">
+            {/* SECTION 2: Response Summary (The "Why") */}
+            {analysis.comparisonTable && (
+                <section>
+                    <div className="flex items-center gap-3 mb-6">
+                        <div className="p-2 bg-indigo-100 rounded-lg text-indigo-600">
+                            <Info className="w-5 h-5" />
+                        </div>
+                        <div>
+                            <h3 className="text-xl font-bold text-gray-800">認識ギャップの構造</h3>
+                            <p className="text-xs text-gray-500">マネージャーとメンバー、それぞれの「見ている世界」の違い</p>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 overflow-hidden rounded-2xl border border-gray-200 shadow-sm bg-white">
+                        {/* Header */}
+                        <div className="grid grid-cols-10 bg-gray-50 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase tracking-wider py-3 px-4">
+                            <div className="col-span-2">Category</div>
+                            <div className="col-span-3 text-indigo-600">Manager View</div>
+                            <div className="col-span-3 text-teal-600">Member View</div>
+                            <div className="col-span-2 text-gray-600">AI Insight</div>
+                        </div>
+
+                        {/* Rows */}
+                        {analysis.comparisonTable.map((row, i) => (
+                            <div key={i} className="grid grid-cols-10 border-b border-gray-100 last:border-0 hover:bg-gray-50/50 transition-colors py-4 px-4 items-start gap-4 text-sm">
+                                <div className="col-span-2 font-bold text-gray-700 bg-gray-100/50 px-2 py-1 rounded inline-block w-fit">
+                                    {row.category}
+                                </div>
+                                <div className="col-span-3 text-gray-600 leading-relaxed font-medium">
+                                    "{row.manager}"
+                                </div>
+                                <div className="col-span-3 text-gray-600 leading-relaxed font-medium">
+                                    "{row.member}"
+                                </div>
+                                <div className="col-span-2 text-xs text-gray-500 bg-yellow-50 p-2 rounded border border-yellow-100 leading-relaxed">
+                                    {row.insight}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+            )}
+
+            {/* SECTION 3: Visualization (The "Data") */}
+            <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                {/* 3-A: Mood / Warmth */}
+                <Card className="p-6 bg-white border border-gray-100 shadow-sm">
+                    <h4 className="font-bold text-gray-700 mb-6 flex items-center gap-2">
+                        <span className="text-xl">🌡️</span> チームの温度感
+                    </h4>
+                    <div className="flex flex-col items-center justify-center h-48">
+                        <div className="relative w-full max-w-[200px] aspect-square rounded-full border-8 border-gray-100 flex items-center justify-center">
+                            <div
+                                className={`text-4xl font-black ${warmth >= 70 ? 'text-orange-500' : 'text-blue-500'}`}
+                            >
+                                {warmth}<span className="text-lg text-gray-400 font-bold">%</span>
+                            </div>
+                            {/* Simple visual indicator rings could go here */}
+                        </div>
+                        <p className="mt-4 text-sm text-center text-gray-500 font-medium">
+                            {warmth >= 70 ? "心理的安全性は高い状態です" : "本音を言いづらい冷えた状態です"}
+                        </p>
+                    </div>
+                </Card>
+
+                {/* 3-B: Focus Areas (Bubble Chart substitute) */}
+                <Card className="p-6 bg-white border border-gray-100 shadow-sm">
+                    <h4 className="font-bold text-gray-700 mb-6 flex items-center gap-2">
+                        <Target className="w-5 h-5 text-gray-700" /> 関心の所在
+                    </h4>
+                    <div className="space-y-6 h-48 flex flex-col justify-center">
+                        {[
+                            { label: 'Mindset (意識)', value: focusTags.mindset, color: 'bg-blue-500' },
+                            { label: 'Process (仕組み)', value: focusTags.process, color: 'bg-green-500' },
+                            { label: 'Environment (環境)', value: focusTags.environment, color: 'bg-purple-500' }
+                        ].map((item, i) => (
+                            <div key={i} className="group">
+                                <div className="flex justify-between text-xs font-bold text-gray-500 mb-1">
+                                    <span>{item.label}</span>
+                                    <span>{Math.round(item.value)}%</span>
+                                </div>
+                                <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                                    <div
+                                        className={`h-full ${item.color} transition-all duration-1000 ease-out`}
+                                        style={{ width: `${item.value}%` }}
+                                    />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </Card>
+
+                {/* 3-C: HERO Radar */}
+                <Card className="p-6 bg-white border border-gray-100 shadow-sm">
+                    <h4 className="font-bold text-gray-700 mb-2 flex items-center gap-2">
+                        <Zap className="w-5 h-5 text-yellow-500" /> 心理的資本 (HERO)
+                    </h4>
+                    <div className="h-52 w-full -ml-4">
                         <ResponsiveContainer width="100%" height="100%">
-                            <RadarChart cx="50%" cy="50%" outerRadius="80%" data={[
-                                { subject: '希望 (Hope)', A: heroScores.hope, fullMark: 10 },
-                                { subject: '効力感 (Efficacy)', A: heroScores.efficacy, fullMark: 10 },
-                                { subject: '回復力 (Resilience)', A: heroScores.resilience, fullMark: 10 },
-                                { subject: '楽観性 (Optimism)', A: heroScores.optimism, fullMark: 10 },
+                            <RadarChart cx="50%" cy="50%" outerRadius="70%" data={[
+                                { subject: '希望', A: heroScores.hope, fullMark: 10 },
+                                { subject: '効力感', A: heroScores.efficacy, fullMark: 10 },
+                                { subject: '回復力', A: heroScores.resilience, fullMark: 10 },
+                                { subject: '楽観性', A: heroScores.optimism, fullMark: 10 },
                             ]}>
                                 <PolarGrid stroke="#e2e8f0" />
-                                <PolarAngleAxis dataKey="subject" tick={{ fill: '#64748b', fontSize: 12 }} />
+                                <PolarAngleAxis dataKey="subject" tick={{ fill: '#64748b', fontSize: 10, fontWeight: 'bold' }} />
                                 <PolarRadiusAxis angle={30} domain={[0, 10]} tick={false} axisLine={false} />
                                 <Radar
                                     name="Team"
@@ -252,20 +203,65 @@ export function AnalysisDisplay({ analysis, stats, onSelectQuestion }: AnalysisD
                         </ResponsiveContainer>
                     </div>
                 </Card>
-            </div>
+            </section>
 
-            {/* 6. Growth Potential / ROI (Bottom) */}
-            {(roi > 0 || analysis?.roiScore) && (
-                <div className="bg-gradient-to-r from-slate-800 to-slate-900 rounded-2xl p-6 text-white text-center">
-                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Growth Potential (成長ポテンシャル)</h3>
-                    <p className="text-lg font-medium opacity-90">
-                        期待されるROI係数: <span className="text-3xl font-black text-emerald-400">{roi}x</span>
-                    </p>
-                    <p className="text-xs text-slate-500 mt-2 max-w-lg mx-auto">
-                        心理的資本(HERO)の向上がもたらす、将来的なパフォーマンス向上の予測値です。
-                    </p>
+            {/* SECTION 4: Next Dialogue (The "Action") */}
+            <section>
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="p-2 bg-teal-100 rounded-lg text-teal-600">
+                        <MessageSquare className="w-5 h-5" />
+                    </div>
+                    <div>
+                        <h3 className="text-xl font-bold text-gray-800">次なる対話のステップ</h3>
+                        <p className="text-xs text-gray-500">この状況を打破するために、まず必要な問いかけ</p>
+                    </div>
                 </div>
-            )}
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {/* Primary Question (Highlighted) */}
+                    <Card
+                        className="col-span-1 md:col-span-2 p-8 bg-gradient-to-br from-teal-500 to-emerald-600 text-white shadow-xl hover:scale-[1.01] transition-transform cursor-pointer relative overflow-hidden group"
+                        onClick={() => analysis.interventionQuestions && onSelectQuestion(analysis.interventionQuestions.smallAgreement)}
+                    >
+                        <div className="absolute top-0 right-0 p-16 bg-white opacity-10 rounded-full blur-2xl -mr-8 -mt-8 group-hover:opacity-20 transition-opacity"></div>
+
+                        <div className="relative z-10">
+                            <span className="inline-block px-3 py-1 bg-white/20 rounded-full text-xs font-bold mb-4 backdrop-blur-sm border border-white/20">
+                                おすすめ (小さな合意)
+                            </span>
+                            <h3 className="text-xl md:text-2xl font-bold leading-relaxed mb-6">
+                                "{analysis.interventionQuestions?.smallAgreement}"
+                            </h3>
+                            <div className="flex items-center gap-2 font-bold text-sm bg-white text-teal-600 px-4 py-2 rounded-full w-fit">
+                                この問いから始める <ArrowRight className="w-4 h-4 ml-1" />
+                            </div>
+                        </div>
+                    </Card>
+
+                    {/* Secondary Options */}
+                    <div className="flex flex-col gap-4">
+                        <Card
+                            className="flex-1 p-5 border border-indigo-100 bg-indigo-50/50 hover:bg-indigo-50 hover:border-indigo-300 transition-all cursor-pointer flex flex-col justify-center"
+                            onClick={() => analysis.interventionQuestions && onSelectQuestion(analysis.interventionQuestions.mutualUnderstanding)}
+                        >
+                            <span className="text-xs font-bold text-indigo-400 mb-2 block">相互理解を深めるなら</span>
+                            <p className="text-sm font-bold text-indigo-900 line-clamp-3">
+                                "{analysis.interventionQuestions?.mutualUnderstanding}"
+                            </p>
+                        </Card>
+                        <Card
+                            className="flex-1 p-5 border border-fuchsia-100 bg-fuchsia-50/50 hover:bg-fuchsia-50 hover:border-fuchsia-300 transition-all cursor-pointer flex flex-col justify-center"
+                            onClick={() => analysis.interventionQuestions && onSelectQuestion(analysis.interventionQuestions.suspendedJudgment)}
+                        >
+                            <span className="text-xs font-bold text-fuchsia-400 mb-2 block">判断を保留するなら</span>
+                            <p className="text-sm font-bold text-fuchsia-900 line-clamp-3">
+                                "{analysis.interventionQuestions?.suspendedJudgment}"
+                            </p>
+                        </Card>
+                    </div>
+                </div>
+            </section>
+
         </div>
     )
 }

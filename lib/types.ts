@@ -176,6 +176,7 @@ export interface AnalysisResult {
 
   // New structured fields
   gravityStatus?: string // e.g. "浮遊開始"
+  gapScore?: number // 0-100 indicating gap magnitude
   warmth?: number // 0-100 indicating psychological safety/mood
   structuralBridge?: {
     missingLink?: string
@@ -211,6 +212,12 @@ export interface AnalysisResult {
     suspendedJudgment: string
     smallAgreement: string
   }
+  comparisonTable?: {
+    category: string // "As-Is" | "To-Be" | "Solution"
+    manager: string
+    member: string
+    insight: string
+  }[]
   roiScore?: number
 
   // Legacy or auxiliary fields
