@@ -164,7 +164,7 @@ JSON出力スキーマに厳密に従ってください。
       });
 
       const result = await generateObject({
-        model: google("gemini-pro-latest"),
+        model: google("gemini-1.5-flash"),
         schema: analysisSchema,
         system: systemPrompt,
         prompt: `以下の回答を分析し、チームの現状と次の一手を明確にしてください: \n\n${formattedResponses} `,

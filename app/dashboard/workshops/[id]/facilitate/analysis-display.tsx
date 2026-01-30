@@ -47,48 +47,77 @@ export function AnalysisDisplay({ analysis, stats, onSelectQuestion }: AnalysisD
     return (
         <div className="space-y-12">
 
-            {/* SECTION 1: Gap Score (The "Hook") */}
+            {/* SECTION 1: Gap Score or Error Display */}
             <section className="relative">
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-24 bg-teal-500/20 blur-[100px] rounded-full pointer-events-none"></div>
-                <Card className="relative overflow-hidden border-2 border-slate-900 bg-slate-900 text-white p-8 rounded-[2rem] shadow-2xl">
-                    <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-                        <div className="flex-1 text-center md:text-left">
-                            <h2 className="text-sm font-bold text-teal-400 tracking-widest uppercase mb-2 flex items-center justify-center md:justify-start gap-2">
-                                <AlertCircle className="w-4 h-4" />
-                                Gravity Status
-                            </h2>
-                            <h1 className="text-3xl md:text-4xl font-black mb-4 leading-tight">
+                {analysis.gravityStatus?.includes("エラー") || analysis.gravityStatus?.includes("Error") ? (
+                    <Card className="relative overflow-hidden border-2 border-red-500 bg-red-50 p-8 rounded-[2rem] shadow-2xl">
+                        <div className="flex flex-col gap-4 text-center">
+                            <h2 className="text-xl font-bold text-red-600 flex items-center justify-center gap-2">
+                                <AlertCircle className="w-6 h-6" />
                                 {analysis.gravityStatus}
-                            </h1>
-                            <p className="text-slate-400 text-sm max-w-lg">
-                                {analysis.heroInsight?.pathology}
-                            </p>
-                        </div>
-
-                        {/* Gap Meter */}
-                        <div className="relative w-48 h-48 flex items-center justify-center shrink-0">
-                            <div className="absolute inset-0 rounded-full border-[12px] border-slate-800"></div>
-                            <svg className="absolute inset-0 w-full h-full -rotate-90">
-                                <circle
-                                    cx="96"
-                                    cy="96"
-                                    r="84"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="12"
-                                    strokeDasharray={2 * Math.PI * 84}
-                                    strokeDashoffset={2 * Math.PI * 84 * (1 - gapScore / 100)}
-                                    className={`text-red-500 transition-all duration-1000 ease-out`}
-                                    strokeLinecap="round"
-                                />
-                            </svg>
-                            <div className="text-center">
-                                <span className="block text-5xl font-black">{gapScore}</span>
-                                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Gap Level</span>
+                            </h2>
+                            {/* Detailed Reason */}
+                            <div className="bg-white p-4 rounded-xl border border-red-100 text-left space-y-2">
+                                <p className="font-bold text-red-800">原因と詳細:</p>
+                                <ul className="list-disc list-inside text-red-700 text-sm space-y-1">
+                                    {analysis.keyFindings?.map((finding, i) => (
+                                        <li key={i}>{finding}</li>
+                                    ))}
+                                </ul>
+                            </div>
+                            {/* Action Suggestion */}
+                            <div className="bg-green-50 p-4 rounded-xl border border-green-100 text-left space-y-2">
+                                <p className="font-bold text-green-800">推奨アクション:</p>
+                                <ul className="list-disc list-inside text-green-700 text-sm space-y-1">
+                                    {analysis.recommendations?.map((rec, i) => (
+                                        <li key={i}>{rec}</li>
+                                    ))}
+                                </ul>
                             </div>
                         </div>
-                    </div>
-                </Card>
+                    </Card>
+                ) : (
+                    <Card className="relative overflow-hidden border-2 border-slate-900 bg-slate-900 text-white p-8 rounded-[2rem] shadow-2xl">
+                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-24 bg-teal-500/20 blur-[100px] rounded-full pointer-events-none"></div>
+                        <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+                            <div className="flex-1 text-center md:text-left">
+                                <h2 className="text-sm font-bold text-teal-400 tracking-widest uppercase mb-2 flex items-center justify-center md:justify-start gap-2">
+                                    <AlertCircle className="w-4 h-4" />
+                                    Gravity Status
+                                </h2>
+                                <h1 className="text-3xl md:text-4xl font-black mb-4 leading-tight">
+                                    {analysis.gravityStatus}
+                                </h1>
+                                <p className="text-slate-400 text-sm max-w-lg">
+                                    {analysis.heroInsight?.pathology}
+                                </p>
+                            </div>
+
+                            {/* Gap Meter */}
+                            <div className="relative w-48 h-48 flex items-center justify-center shrink-0">
+                                <div className="absolute inset-0 rounded-full border-[12px] border-slate-800"></div>
+                                <svg className="absolute inset-0 w-full h-full -rotate-90">
+                                    <circle
+                                        cx="96"
+                                        cy="96"
+                                        r="84"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="12"
+                                        strokeDasharray={2 * Math.PI * 84}
+                                        strokeDashoffset={2 * Math.PI * 84 * (1 - gapScore / 100)}
+                                        className={`text-red-500 transition-all duration-1000 ease-out`}
+                                        strokeLinecap="round"
+                                    />
+                                </svg>
+                                <div className="text-center">
+                                    <span className="block text-5xl font-black">{gapScore}</span>
+                                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Gap Level</span>
+                                </div>
+                            </div>
+                        </div>
+                    </Card>
+                )}
             </section>
 
             {/* SECTION 2: Response Summary (The "Why") */}
