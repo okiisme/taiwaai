@@ -151,54 +151,80 @@ const DEMO_SCRIPT = [
 // Mock Mobile Component
 const MockMobileClient = ({ step }: { step: number }) => {
   return (
-    <div className="w-[300px] h-[600px] bg-white rounded-[3rem] border-8 border-gray-800 shadow-2xl overflow-hidden relative mx-auto transform scale-90 sm:scale-100 transition-transform">
+    <div className="w-[300px] h-[600px] bg-slate-900 rounded-[3rem] border-8 border-slate-800 shadow-2xl overflow-hidden relative mx-auto transform scale-90 sm:scale-100 transition-transform">
       {/* Notch */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-gray-800 rounded-b-2xl z-20"></div>
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-slate-800 rounded-b-2xl z-20"></div>
 
       {/* Content */}
-      <div className="h-full w-full bg-slate-50 pt-10 px-4 pb-4 flex flex-col items-center overflow-hidden">
-        {/* Progress Bar */}
-        <div className="w-full flex gap-1 mb-6 px-2">
-          <div className={`h-1 flex-1 rounded-full ${step >= 1 ? 'bg-teal-500' : 'bg-gray-200'}`}></div>
-          <div className={`h-1 flex-1 rounded-full ${step >= 2 ? 'bg-teal-500' : 'bg-gray-200'}`}></div>
-          <div className={`h-1 flex-1 rounded-full ${step >= 3 ? 'bg-teal-500' : 'bg-gray-200'}`}></div>
+      <div className="h-full w-full bg-slate-50 pt-12 px-4 pb-4 flex flex-col overflow-hidden">
+
+        {/* Header */}
+        <div className="flex justify-between items-center mb-6 px-1">
+          <div className="text-xs font-bold text-slate-400">Step {step}/3</div>
+          <div className="flex gap-1">
+            <div className={`h-1 w-8 rounded-full transition-colors ${step >= 1 ? 'bg-teal-500' : 'bg-slate-200'}`}></div>
+            <div className={`h-1 w-8 rounded-full transition-colors ${step >= 2 ? 'bg-teal-500' : 'bg-slate-200'}`}></div>
+            <div className={`h-1 w-8 rounded-full transition-colors ${step >= 3 ? 'bg-teal-500' : 'bg-slate-200'}`}></div>
+          </div>
         </div>
 
         {step === 1 && (
-          <div className="w-full animate-in slide-in-from-right duration-500">
-            <h3 className="font-bold text-center text-lg mb-8">1. 今のコンディションは？</h3>
-            <div className="flex justify-between px-4 mb-8">
-              <span className="text-2xl animate-bounce delay-100">💤</span>
-              <span className="text-2xl animate-bounce delay-200">😐</span>
-              <span className="text-2xl animate-bounce delay-300">🔥</span>
-            </div>
-            <div className="bg-gray-200 h-2 rounded-full mb-8 relative">
-              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-orange-400 rounded-full shadow border-2 border-white"></div>
-            </div>
-            <div className="text-center font-bold text-orange-500 mb-8">50%</div>
-            <h4 className="font-bold text-center text-sm mb-4">今の気分の色</h4>
-            <div className="grid grid-cols-4 gap-2">
-              {[...Array(8)].map((_, i) => (
-                <div key={i} className={`aspect-square rounded-lg ${i === 1 ? 'bg-orange-500 border-4 border-white shadow-lg transform scale-110' : 'bg-gray-300'}`}></div>
+          <div className="w-full animate-in slide-in-from-right duration-500 flex flex-col h-full">
+            <h3 className="font-bold text-slate-800 text-lg mb-2">今の気分は？ (Mood)</h3>
+            <p className="text-xs text-slate-500 mb-8">今の正直な気持ちを色で教えてください。</p>
+
+            <div className="grid grid-cols-2 gap-3 mb-6">
+              {[
+                { emoji: "😤", label: "High Energy", color: "bg-orange-100" },
+                { emoji: "😌", label: "Calm", color: "bg-teal-100" },
+                { emoji: "😰", label: "Anxious", color: "bg-blue-100" },
+                { emoji: "😐", label: "Neutral", color: "bg-gray-100" }
+              ].map((item, i) => (
+                <div key={i} className={`${item.color} p-4 rounded-2xl flex flex-col items-center justify-center gap-2 aspect-square cursor-pointer hover:scale-105 transition-transform border-2 border-transparent hover:border-teal-400`}>
+                  <span className="text-3xl">{item.emoji}</span>
+                  <span className="text-xs font-bold text-slate-600">{item.label}</span>
+                </div>
               ))}
+            </div>
+
+            <div className="mt-auto">
+              <div className="text-center font-bold text-orange-500 mb-2">あなたの選択</div>
+              <div className="w-full h-12 bg-orange-400 rounded-xl shadow-lg flex items-center justify-center text-white font-bold animate-pulse">
+                High Energy
+              </div>
             </div>
           </div>
         )}
 
         {step === 2 && (
           <div className="w-full animate-in slide-in-from-right duration-500">
-            <h3 className="font-bold text-center text-lg mb-6">2. 課題に対する感覚 (HERO)</h3>
+            <h3 className="font-bold text-slate-800 text-lg mb-2">心理的資本 (HERO)</h3>
+            <p className="text-xs text-slate-500 mb-6">以下の4つの質問に直感でスライダーを動かしてください。</p>
+
             <div className="space-y-6">
-              {['Hope (希望)', 'Efficacy (効力感)', 'Resilience (回復力)', 'Optimism (楽観性)'].map((label, i) => (
+              {[
+                { label: 'Hope (将来への希望)', val: 80, col: 'bg-teal-500' },
+                { label: 'Efficacy (自信・効力感)', val: 40, col: 'bg-indigo-500' },
+                { label: 'Resilience (回復力)', val: 30, col: 'bg-orange-500' },
+                { label: 'Optimism (楽観性)', val: 50, col: 'bg-lime-500' }
+              ].map((item, i) => (
                 <div key={i}>
-                  <div className="flex justify-between text-xs font-bold mb-2">
-                    <span>{label}</span>
-                    <span className="text-teal-600">{[8, 4, 3, 5][i]}/10</span>
+                  <div className="flex justify-between text-xs font-bold mb-2 text-slate-700">
+                    <span>{item.label}</span>
+                    <span className="text-slate-400">{item.val}%</span>
                   </div>
-                  <div className="bg-gray-100 h-2 rounded-full relative">
+                  <div className="bg-slate-100 h-3 rounded-full relative overflow-hidden">
+                    {/* Track */}
+                    <div className="absolute inset-0 bg-slate-200"></div>
+                    {/* Fill */}
                     <div
-                      className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-teal-500 rounded-full shadow border-2 border-white transition-all duration-1000"
-                      style={{ left: `${[80, 40, 30, 50][i]}%` }}
+                      className={`absolute top-0 left-0 h-full ${item.col} rounded-full`}
+                      style={{ width: `${item.val}%` }}
+                    ></div>
+                    {/* Knocker */}
+                    <div
+                      className="absolute top-1/2 -translate-y-1/2 h-5 w-5 bg-white rounded-full shadow border border-slate-200"
+                      style={{ left: `calc(${item.val}% - 10px)` }}
                     ></div>
                   </div>
                 </div>
@@ -208,32 +234,37 @@ const MockMobileClient = ({ step }: { step: number }) => {
         )}
 
         {step === 3 && (
-          <div className="w-full animate-in slide-in-from-right duration-500">
-            <h3 className="font-bold text-center text-lg mb-6">3. 思考の構造化</h3>
-            <div className="space-y-4">
-              <div className="bg-red-50 p-3 rounded-xl border border-red-100">
-                <span className="text-xs font-bold text-red-400 block mb-1">As-Is (事実)</span>
-                <div className="h-2 w-3/4 bg-gray-200 rounded animate-pulse mb-1"></div>
-                <div className="h-2 w-1/2 bg-gray-200 rounded animate-pulse"></div>
+          <div className="w-full animate-in slide-in-from-right duration-500 flex flex-col h-full">
+            <h3 className="font-bold text-slate-800 text-lg mb-2">ギャップの構造化</h3>
+            <p className="text-xs text-slate-500 mb-6">課題を「現状・理想・解決策」に分解します。</p>
+
+            <div className="space-y-3 flex-1 overflow-y-auto pr-1">
+              <div className="p-3 bg-red-50 rounded-xl border-l-4 border-red-400">
+                <span className="text-[10px] font-bold text-red-400 uppercase tracking-wider block mb-1">As-Is (現状の事実)</span>
+                <p className="text-sm text-slate-700 font-medium">主体性がなく、指示待ちばかり...</p>
               </div>
-              <div className="bg-teal-50 p-3 rounded-xl border border-teal-100">
-                <span className="text-xs font-bold text-teal-400 block mb-1">To-Be (理想)</span>
-                <div className="h-2 w-full bg-gray-200 rounded animate-pulse mb-1"></div>
+              <div className="p-3 bg-teal-50 rounded-xl border-l-4 border-teal-400">
+                <span className="text-[10px] font-bold text-teal-400 uppercase tracking-wider block mb-1">To-Be (理想の状態)</span>
+                <p className="text-sm text-slate-700 font-medium">全員が自分ごととして...</p>
               </div>
-              <div className="bg-yellow-50 p-3 rounded-xl border border-yellow-100">
-                <span className="text-xs font-bold text-yellow-600 block mb-1">Solution (行動)</span>
-                <div className="h-2 w-5/6 bg-gray-200 rounded animate-pulse"></div>
+              <div className="p-3 bg-yellow-50 rounded-xl border-l-4 border-yellow-400 h-28">
+                <span className="text-[10px] font-bold text-yellow-600 uppercase tracking-wider block mb-1">Solution (解決策)</span>
+                <p className="text-sm text-slate-400 animate-pulse">入力中...</p>
+                <div className="w-2 h-4 bg-slate-400 animate-blink inline-block ml-1"></div>
               </div>
             </div>
-            <Button className="w-full mt-6 bg-gradient-to-r from-teal-500 to-lime-500 text-white font-bold rounded-xl">
-              送信する
+
+            <Button className="w-full mt-4 bg-slate-900 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all">
+              回答を送信
             </Button>
           </div>
         )}
 
         {/* Navigation */}
-        <div className="mt-auto w-full pt-4 border-t">
-          <Button className="w-full bg-teal-500 text-white rounded-full">次へ</Button>
+        <div className="mt-auto w-full pt-4 border-t border-slate-100 bg-white/50 backdrop-blur-sm">
+          <Button disabled={step === 3} className="w-full bg-slate-100 text-slate-400 hover:bg-slate-200 rounded-full font-bold">
+            {step === 3 ? "完了" : "次へ"}
+          </Button>
         </div>
       </div>
     </div>
