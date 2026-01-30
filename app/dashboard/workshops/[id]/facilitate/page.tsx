@@ -922,6 +922,8 @@ export default function FacilitatePage({ params }: { params: { id: string } }) {
       setIsGenerating(true)
       await updateSessionStatus("analysis") // Persist stage change
 
+      console.log("[v0] Sending analysis request for workshop:", workshopId);
+
       const response = await fetch("/api/workshop/analyze-responses", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -933,7 +935,15 @@ export default function FacilitatePage({ params }: { params: { id: string } }) {
         }),
       })
 
+      if (!response.ok) {
+        console.error(`[v0] Analysis API failed with status: ${response.status}`);
+        const errorText = await response.text();
+        console.error(`[v0] Analysis API Error Body:`, errorText);
+        throw new Error(`API analysis failed: ${response.status} ${response.statusText}`);
+      }
+
       const data = await response.json()
+      console.log("[v0] Analysis API Response:", data);
 
       if (data.analysis) {
         setSession((prev) => ({
@@ -941,9 +951,13 @@ export default function FacilitatePage({ params }: { params: { id: string } }) {
           status: "analysis",
           analysis: data.analysis, // Assuming the API returns the full analysis object
         }))
+      } else {
+        console.warn("[v0] Analysis data missing in response:", data);
+        throw new Error("No analysis data received from API");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("[v0] Error analyzing:", error)
+      setError(`分析中にエラーが発生しました: ${error.message || "Unknown error"}. コンソールを確認してください。`);
     } finally {
       setIsGenerating(false)
     }
