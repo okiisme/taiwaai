@@ -59,9 +59,9 @@ export async function POST(request: Request) {
   try {
     console.log("[v0] Analysis API called")
 
-    const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY
+    const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY
     if (!apiKey) {
-      console.error("[v0] GOOGLE_GENERATIVE_AI_API_KEY is missing. Env check:", process.env.NODE_ENV);
+      console.error("[v0] API KEY is missing. Env check:", process.env.NODE_ENV);
       return NextResponse.json({
         analysis: {
           summary: "APIキーが設定されていません。",
@@ -77,8 +77,8 @@ export async function POST(request: Request) {
           gapAnalysis: { managerView: "-", memberView: "-", asymmetryLevel: "-", lemonMarketRisk: "-" },
           heroInsight: { pathology: "-", strength: "-", scores: { hope: 0, efficacy: 0, resilience: 0, optimism: 0 } },
           interventionQuestions: { mutualUnderstanding: "-", suspendedJudgment: "-", smallAgreement: "-" },
-          keyFindings: ["GOOGLE_GENERATIVE_AI_API_KEY environment variable is missing."],
-          recommendations: ["Check your .env.local file."],
+          keyFindings: ["GEMINI_API_KEY 環境変数が設定されていません。"],
+          recommendations: ["Vercelの設定、または .env.local ファイルを確認してください。"],
           roiScore: 0
         }
       })
@@ -152,15 +152,15 @@ JSON出力スキーマに厳密に従ってください。
 `
 
     try {
-      const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+      const validApiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY;
 
-      if (!apiKey) {
+      if (!validApiKey) {
         console.error("API Key missing");
-        throw new Error("API Key not configured (GOOGLE_GENERATIVE_AI_API_KEY).");
+        throw new Error("API Key not configured (GEMINI_API_KEY).");
       }
 
       const google = createGoogleGenerativeAI({
-        apiKey: apiKey,
+        apiKey: validApiKey,
       });
 
       const result = await generateObject({
