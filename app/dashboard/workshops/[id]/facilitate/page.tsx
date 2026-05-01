@@ -847,10 +847,17 @@ export default function FacilitatePage({ params }: { params: Promise<{ id: strin
 
   const handleSelectQuestion = async (question: string) => {
     try {
-      await fetch("/api/workshop/question", {
+      await fetch(`/api/workshop/${workshopId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ workshopId: workshopId, question: question, theme: selectedTheme }),
+        body: JSON.stringify({ 
+          currentQuestion: {
+            id: `q-${Date.now()}`,
+            question,
+            theme: selectedTheme,
+            selected: true,
+          }
+        }),
       })
 
       setSession((prev) => ({

@@ -106,9 +106,14 @@ export default function JoinWorkshopPage() {
         if (response.ok) {
           const data = await response.json()
           console.log("[v0] Polling session data:", data)
-          if (data.session && data.session.currentQuestion && data.session.currentQuestion !== currentQuestion) {
-            setCurrentQuestion(data.session.currentQuestion)
-            console.log("[v0] New question received:", data.session.currentQuestion)
+          
+          // data is the session object itself, so currentQuestion is directly on data
+          const newQuestionObj = data.currentQuestion;
+          const newQuestionText = newQuestionObj ? newQuestionObj.question : "";
+
+          if (newQuestionText && newQuestionText !== currentQuestion) {
+            setCurrentQuestion(newQuestionText)
+            console.log("[v0] New question received:", newQuestionText)
           }
         } else {
           console.error("[v0] Polling failed with status:", response.status)
