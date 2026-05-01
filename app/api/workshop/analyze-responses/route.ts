@@ -197,13 +197,39 @@ JSON出力スキーマに厳密に従ってください。
       // Show exact raw error message from Google for debugging
       const errorMessage = aiError.message?.toLowerCase() || ""
       let friendlyError = "AIエラーが発生しました"
-      let detailedReason = `詳細: ${errorMessage}`
+      let detailedReason = `詳細: ${aiError.message || "詳細不明"}`
       let actionSuggestion = "コンソールのログまたはエラー詳細を確認してください。"
 
       if (errorMessage.includes("api key") || errorMessage.includes("403")) {
         friendlyError = "APIキーが無効、または権限がありません。"
+        detailedReason += " (APIキーが間違っているか、プロジェクトでGemini APIが有効化されていません)"
+      } else if (errorMessage.includes("billing") || errorMessage.includes("payment")) {
+        friendlyError = "課金設定(Billing)のエラーです。"
+        detailedReason += " (Google Cloudプロジェクトにクレジットカード等の支払い設定がされていない可能性があります)"
       } else if (errorMessage.includes("not found") || errorMessage.includes("404")) {
         friendlyError = "指定されたAIモデルが見つかりません。"
+        
+        // 【究極のデバッグ】そのAPIキーで今本当に使えるモデル一覧を自動取得して表示する
+        let availableModelsInfo = "";
+        try {
+          const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${validApiKey}`);
+          const data = await res.json();
+          if (data.models) {
+            const modelNames = data.models
+              .map((m: any) => m.name.replace("models/", ""))
+              .filter((n: string) => n.includes("gemini"))
+              .join(", ");
+            availableModelsInfo = `\n\n💡【現在このAPIキーで使えるモデル一覧】:\n${modelNames || "（なし）"}`;
+          } else if (data.error) {
+            availableModelsInfo = `\n\n(※モデル一覧取得エラー: ${data.error.message})`;
+          }
+        } catch (listError: any) {
+           availableModelsInfo = `\n\n(※利用可能モデル一覧の取得にも失敗しました: ${listError.message})`;
+        }
+        
+        detailedReason = `詳細: ${aiError.message}${availableModelsInfo}`
+        actionSuggestion = "上に表示された「使えるモデル一覧」のどれかに、プログラム内のモデル名表記を合わせる必要があります。"
+
       } else if (errorMessage.includes("quota") || errorMessage.includes("429")) {
         friendlyError = "利用上限(Quota)に達しました。"
       }
