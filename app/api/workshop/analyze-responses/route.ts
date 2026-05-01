@@ -196,16 +196,26 @@ JSON出力スキーマに厳密に従ってください。
       // Analyze specific error causes
       // Show exact raw error message from Google for debugging
       const errorMessage = aiError.message?.toLowerCase() || ""
+      const errorName = aiError.name || ""
       let friendlyError = "AIエラーが発生しました"
       let detailedReason = `詳細: ${aiError.message || "詳細不明"}`
       let actionSuggestion = "コンソールのログまたはエラー詳細を確認してください。"
 
-      if (errorMessage.includes("api key") || errorMessage.includes("403")) {
-        friendlyError = "APIキーが無効、または権限がありません。"
-        detailedReason += " (APIキーが間違っているか、プロジェクトでGemini APIが有効化されていません)"
+      if (errorMessage.includes("api key not configured") || errorMessage.includes("missing")) {
+        friendlyError = "APIキーが設定されていません。"
+        actionSuggestion = "Vercelの環境変数 GEMINI_API_KEY を設定してください。"
+      } else if (errorMessage.includes("invalid api key") || errorMessage.includes("401") || errorMessage.includes("unauthorized")) {
+        friendlyError = "APIキーが不正です (401 Unauthorized)"
+        detailedReason += " (コピペミスや、無効化された古いキーを使っている可能性があります)"
+        actionSuggestion = "APIキーが正確にコピーされているか確認してください。"
+      } else if (errorMessage.includes("permission") || errorMessage.includes("403") || errorMessage.includes("forbidden")) {
+        friendlyError = "権限エラーまたはAPI未有効化 (403 Forbidden)"
+        detailedReason += " (Google Cloudプロジェクトで Generative Language API が有効になっていないか、IP制限に引っかかっています)"
+        actionSuggestion = "Google Cloud Console で API が有効になっているか確認してください。"
       } else if (errorMessage.includes("billing") || errorMessage.includes("payment")) {
         friendlyError = "課金設定(Billing)のエラーです。"
         detailedReason += " (Google Cloudプロジェクトにクレジットカード等の支払い設定がされていない可能性があります)"
+        actionSuggestion = "Google Cloudの課金設定を確認してください。"
       } else if (errorMessage.includes("not found") || errorMessage.includes("404")) {
         friendlyError = "指定されたAIモデルが見つかりません。"
         
@@ -230,8 +240,30 @@ JSON出力スキーマに厳密に従ってください。
         detailedReason = `詳細: ${aiError.message}${availableModelsInfo}`
         actionSuggestion = "上に表示された「使えるモデル一覧」のどれかに、プログラム内のモデル名表記を合わせる必要があります。"
 
-      } else if (errorMessage.includes("quota") || errorMessage.includes("429")) {
-        friendlyError = "利用上限(Quota)に達しました。"
+      } else if (errorMessage.includes("quota") || errorMessage.includes("429") || errorMessage.includes("too many requests")) {
+        friendlyError = "利用上限(Quota)に達しました (429 Too Many Requests)"
+        detailedReason += " (無料枠の制限、または短時間にリクエストを送りすぎました)"
+        actionSuggestion = "しばらく待つか、Google Cloudで上限引き上げ（課金設定）を行ってください。"
+      } else if (errorMessage.includes("bad request") || errorMessage.includes("400")) {
+        friendlyError = "リクエストが不正です (400 Bad Request)"
+        detailedReason += " (送った回答データが多すぎるか、AIへの命令フォーマットが間違っています)"
+        actionSuggestion = "回答の件数を減らして再度お試しください。"
+      } else if (errorMessage.includes("safety") || errorMessage.includes("blocked")) {
+        friendlyError = "セーフティフィルターによるブロック"
+        detailedReason += " (回答データの中に、AIが不適切と判断した言葉が含まれているためブロックされました)"
+        actionSuggestion = "過激な言葉や個人情報が含まれていないか確認してください。"
+      } else if (errorMessage.includes("timeout") || errorMessage.includes("econnreset") || errorMessage.includes("fetch failed")) {
+        friendlyError = "通信エラー・タイムアウト"
+        detailedReason += " (Googleのサーバーへの接続に失敗したか、時間がかかりすぎました)"
+        actionSuggestion = "ネットワークの一時的な問題です。もう一度お試しください。"
+      } else if (errorMessage.includes("json") || errorMessage.includes("parse") || errorName.includes("JSONParseError")) {
+        friendlyError = "AIの出力パース失敗"
+        detailedReason += " (AIがJSONフォーマットを守れず、データの解析に失敗しました)"
+        actionSuggestion = "AIの気まぐれによる一時的なエラーです。もう一度「AI分析を開始」を押してください。"
+      } else if (errorMessage.includes("500") || errorMessage.includes("503")) {
+        friendlyError = "Google側のサーバー障害 (500/503)"
+        detailedReason += " (現在GoogleのGeminiサーバーで障害が起きているか、混雑しています)"
+        actionSuggestion = "Google側の問題です。しばらく時間をおいてから再試行してください。"
       }
 
       return NextResponse.json({
