@@ -164,7 +164,7 @@ JSON出力スキーマに厳密に従ってください。
       });
 
       const result = await generateObject({
-        model: google("gemini-pro"),
+        model: google("gemini-1.5-flash"),
         schema: analysisSchema,
         system: systemPrompt,
         prompt: `以下の回答を分析し、チームの現状と次の一手を明確にしてください: \n\n${formattedResponses} `,
@@ -194,24 +194,18 @@ JSON出力スキーマに厳密に従ってください。
       console.error("[v0] AI generation error:", aiError)
 
       // Analyze specific error causes
-      let friendlyError = "AI利用中に不明なエラーが発生しました。"
-      let detailedReason = aiError.message || "詳細不明"
-      let actionSuggestion = "しばらく待ってから再試行してください。"
-
+      // Show exact raw error message from Google for debugging
       const errorMessage = aiError.message?.toLowerCase() || ""
+      let friendlyError = "AIエラーが発生しました"
+      let detailedReason = `詳細: ${errorMessage}`
+      let actionSuggestion = "コンソールのログまたはエラー詳細を確認してください。"
 
       if (errorMessage.includes("api key") || errorMessage.includes("403")) {
         friendlyError = "APIキーが無効、または権限がありません。"
-        detailedReason = "使用しているAPIキーがGoogleによってブロックされているか、Gemini APIが有効化されていません。"
-        actionSuggestion = "新しいAPIキーを発行し、.env.localを更新してください。"
       } else if (errorMessage.includes("not found") || errorMessage.includes("404")) {
         friendlyError = "指定されたAIモデルが見つかりません。"
-        detailedReason = "モデル名(gemini-pro)が現在のAPIキーまたは地域で利用できない可能性があります。"
-        actionSuggestion = "APIキーを変更するか、モデルを確認してください。"
       } else if (errorMessage.includes("quota") || errorMessage.includes("429")) {
         friendlyError = "利用上限(Quota)に達しました。"
-        detailedReason = "短期間にリクエストを送りすぎています。"
-        actionSuggestion = "1分ほど待ってから再試行してください。"
       }
 
       return NextResponse.json({
