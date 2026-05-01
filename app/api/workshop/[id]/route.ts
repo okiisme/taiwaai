@@ -28,9 +28,15 @@ export async function GET(
       SELECT * FROM participants WHERE workshop_id = ${id} ORDER BY joined_at ASC
     `
 
-        // 3. Fetch Responses
+        // 3. Fetch Responses with their analyses
         const { rows: responses } = await sql`
-      SELECT * FROM responses WHERE workshop_id = ${id} ORDER BY submitted_at ASC
+      SELECT 
+        r.*,
+        a.analysis_result
+      FROM responses r
+      LEFT JOIN response_analyses a ON r.id = a.response_id
+      WHERE r.workshop_id = ${id} 
+      ORDER BY r.submitted_at ASC
     `
 
         // Transform shape to match WorkshopSession type
@@ -69,6 +75,7 @@ export async function GET(
                     honesty: r.vulnerability_honesty,
                     resistance: r.vulnerability_resistance
                 },
+                analysis: r.analysis_result ? r.analysis_result : undefined,
                 submittedAt: r.submitted_at
             }))
         }

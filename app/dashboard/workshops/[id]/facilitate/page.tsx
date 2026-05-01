@@ -1421,6 +1421,44 @@ export default function FacilitatePage({ params }: { params: Promise<{ id: strin
                           </span>
                         </div>
                         <p className="text-gray-700 leading-relaxed text-sm">{response.answer}</p>
+                        
+                        {response.analysis && (
+                          <div className="mt-3 p-3 bg-white/60 rounded-lg text-sm border border-teal-100/50">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Sparkles className="w-4 h-4 text-teal-500" />
+                              <span className="font-semibold text-teal-700 text-xs">Gemini 個別分析</span>
+                              <span className={`ml-auto text-xs px-2 py-0.5 rounded-full ${
+                                response.analysis.sentiment === 'positive' ? 'bg-green-100 text-green-700' :
+                                response.analysis.sentiment === 'negative' ? 'bg-red-100 text-red-700' :
+                                'bg-gray-100 text-gray-700'
+                              }`}>
+                                {response.analysis.sentiment === 'positive' ? 'ポジティブ' : response.analysis.sentiment === 'negative' ? 'ネガティブ' : 'ニュートラル'}
+                              </span>
+                            </div>
+                            <p className="text-gray-600 mb-2">{response.analysis.summary}</p>
+                            
+                            {response.analysis.topics && response.analysis.topics.length > 0 && (
+                              <div className="flex flex-wrap gap-1 mb-2">
+                                {response.analysis.topics.map((t, i) => (
+                                  <span key={i} className="text-[10px] px-2 py-0.5 bg-teal-50 text-teal-600 rounded-full border border-teal-100">
+                                    {t}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+
+                            {response.analysis.next_actions && response.analysis.next_actions.length > 0 && (
+                              <div className="mt-2 text-xs text-gray-500">
+                                <span className="font-semibold text-gray-600 block mb-1">推奨アクション:</span>
+                                <ul className="list-disc pl-4 space-y-0.5">
+                                  {response.analysis.next_actions.map((act, i) => (
+                                    <li key={i}>{act}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>

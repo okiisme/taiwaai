@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { sql } from "@vercel/postgres"
 import { v4 as uuidv4 } from "uuid"
+import { analyzeSingleResponse } from "@/lib/gemini-analyzer"
 
 export async function POST(request: NextRequest) {
   try {
@@ -37,6 +38,27 @@ export async function POST(request: NextRequest) {
         ${submittedAt}
       )
     `
+
+    // Run Gemini analysis asynchronously or wait for it
+    // Using await here to ensure it completes, though it might add some latency
+    try {
+      const analysisResult = await analyzeSingleResponse(body)
+      if (analysisResult) {
+        const analysisId = uuidv4()
+        await sql`
+          INSERT INTO response_analyses (
+            id, response_id, analysis_result, model_name, analyzed_at, version
+          )
+          VALUES (
+            ${analysisId}, ${id}, ${JSON.stringify(analysisResult)}, 'gemini-2.5-flash', ${submittedAt}, 'v1'
+          )
+        `
+        console.log(`[v0] Successfully analyzed and saved response ${id}`)
+      }
+    } catch (analysisError) {
+      // Do not fail the response submission if analysis fails
+      console.error("[v0] Failed to analyze response, but response was saved:", analysisError)
+    }
 
     return NextResponse.json({
       success: true,

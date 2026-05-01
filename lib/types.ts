@@ -146,6 +146,12 @@ export interface Response {
   }
   // New: Analysis results per response
   analysis?: {
+    summary?: string
+    sentiment?: "positive" | "neutral" | "negative"
+    score?: number
+    topics?: string[]
+    risks?: string[]
+    next_actions?: string[]
     tags?: {
       mindset: boolean
       process: boolean
