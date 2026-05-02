@@ -175,13 +175,17 @@ export interface Response {
 }
 
 export interface AnalysisResult {
-  summary: string // General summary
+  overallSummary?: {
+    title: string
+    description: string
+  }
+  summary?: string // Legacy General summary
   consensus: string[] // 合意点 (Consensus)
   conflicts: string[] // 相違点 (Conflict/Gap)
   discussionPoints: string[] // ディスカッションポイント
 
   // New structured fields
-  gravityStatus?: string // e.g. "浮遊開始"
+  gravityStatus?: string // Legacy
   gapScore?: number // 0-100 indicating gap magnitude
   warmth?: number // 0-100 indicating psychological safety/mood
   structuralBridge?: {
@@ -197,6 +201,11 @@ export interface AnalysisResult {
     process: number
     environment: number
   }
+  cognitiveDissonance?: {
+    pointsOfFriction: string[]
+    discussionTopics: string[]
+    lemonMarketRisk: string
+  }
   gapAnalysis?: {
     managerView: string
     memberView: string
@@ -204,7 +213,8 @@ export interface AnalysisResult {
     lemonMarketRisk: string
   }
   heroInsight?: {
-    pathology: string
+    parameterAnalysis?: string
+    pathology?: string
     strength: string
     scores: {
       hope: number

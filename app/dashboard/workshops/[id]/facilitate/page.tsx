@@ -1580,59 +1580,7 @@ export default function FacilitatePage({ params }: { params: Promise<{ id: strin
               </Card>
             )}
 
-            {/* Debug Button for Vercel */}
-            <div className="flex justify-center mb-4">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  const saved = localStorage.getItem(`workshop-sample-workshop-1`) // Try getting from sample
-                  // Hardcoded sample data for robust testing
-                  const sampleParticipants = [
-                    { id: "p1", name: "鈴木マネージャー", role: "manager", joinedAt: new Date().toISOString() },
-                    { id: "p2", name: "佐藤メンバー", role: "member", joinedAt: new Date().toISOString() },
-                    { id: "p3", name: "田中メンバー", role: "member", joinedAt: new Date().toISOString() },
-                  ];
-                  const sampleResponses = [
-                    {
-                      id: "r1", participantId: "p1", participantName: "鈴木マネージャー", participantRole: "manager",
-                      answer: "会議で発言が少ない",
-                      asIs: { fact: "誰も発言しない", score: 3 },
-                      toBe: { will: "全員が活発に議論する", score: 9 },
-                      hero: { hope: 80, efficacy: 60, resilience: 70, optimism: 75 },
-                      vulnerability: { honesty: 90, resistance: 10 },
-                      submittedAt: new Date().toISOString()
-                    },
-                    {
-                      id: "r2", participantId: "p2", participantName: "佐藤メンバー", participantRole: "member",
-                      answer: "心理的安全性が低い",
-                      asIs: { fact: "怒られるのが怖い", score: 2 },
-                      toBe: { will: "安心して失敗できる", score: 8 },
-                      hero: { hope: 40, efficacy: 30, resilience: 40, optimism: 30 },
-                      vulnerability: { honesty: 85, resistance: 20 },
-                      submittedAt: new Date().toISOString()
-                    },
-                    {
-                      id: "r3", participantId: "p3", participantName: "田中メンバー", participantRole: "member",
-                      answer: "目的が曖昧",
-                      asIs: { fact: "何のためにやるかわからない", score: 4 },
-                      toBe: { will: "納得感を持って働きたい", score: 8 },
-                      hero: { hope: 50, efficacy: 40, resilience: 50, optimism: 40 },
-                      vulnerability: { honesty: 80, resistance: 10 },
-                      submittedAt: new Date().toISOString()
-                    }
-                  ];
 
-                  setSession(prev => ({
-                    ...prev,
-                    participants: sampleParticipants as any,
-                    responses: sampleResponses as any
-                  }));
-                }}
-                className="text-xs text-gray-500 border-dashed border-gray-300 hover:border-teal-500 hover:text-teal-600"
-              >
-                🛠️ デバッグ用データをロード (Vercel用)
-              </Button>
-            </div>
 
             <div className="flex justify-center">
               <Button
@@ -1933,42 +1881,7 @@ export default function FacilitatePage({ params }: { params: Promise<{ id: strin
                         </div>
                       </div>
 
-                      {/* Role-based Gap Analysis */}
-                      <div>
-                        <h4 className="font-semibold text-base sm:text-lg mb-3 sm:mb-4 text-gray-700">
-                          役割別ギャップ分析
-                        </h4>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          {["manager", "member"].map((role) => {
-                            const roleResponses = session.responses.filter((r) => {
-                              const p = session.participants.find((p) => p.id === r.participantId)
-                              return p?.role === role
-                            })
-                            const avgGap =
-                              roleResponses.length > 0
-                                ? roleResponses.reduce((sum, r) => {
-                                  const asIsScore = typeof r.asIs === "number" ? r.asIs : r.asIs?.score || 0
-                                  const toBeScore = typeof r.toBe === "number" ? r.toBe : r.toBe?.score || 0
-                                  return sum + (toBeScore - asIsScore)
-                                }, 0) / roleResponses.length
-                                : 0
-                            return (
-                              <div
-                                key={role}
-                                className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl p-4 border border-orange-200"
-                              >
-                                <div className="text-sm text-gray-600 mb-1">
-                                  {role === "manager" ? "マネージャー" : "メンバー"}
-                                </div>
-                                <div className="text-2xl sm:text-3xl font-bold text-orange-600 mb-2">
-                                  +{avgGap.toFixed(1)}
-                                </div>
-                                <div className="text-xs text-gray-500">{roleResponses.length}名の平均</div>
-                              </div>
-                            )
-                          })}
-                        </div>
-                      </div>
+
 
                       {/* Gap Distribution */}
                       <div>
@@ -2061,106 +1974,7 @@ export default function FacilitatePage({ params }: { params: Promise<{ id: strin
                         </div>
                       </div>
 
-                      {/* Stance and Response Correlation */}
-                      <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl p-4 border border-purple-200">
-                        <h4 className="font-semibold text-base mb-3 text-purple-700">スタンスと回答の関連性</h4>
-                        <div className="text-sm text-gray-700 space-y-2">
-                          <p>
-                            高エネルギーレベルの参加者は平均して
-                            <span className="font-bold text-purple-600">
-                              +{(() => {
-                                const highEnergyResponses = session.responses.filter((r) => {
-                                  const p = session.participants.find((p) => p.id === r.participantId)
-                                  return p && p.stance?.energyLevel && p.stance.energyLevel >= 7
-                                })
-                                if (highEnergyResponses.length === 0) return "0.0"
-                                const avgGap =
-                                  highEnergyResponses.reduce((sum, r) => {
-                                    const asIsScore = typeof r.asIs === "number" ? r.asIs : r.asIs?.score || 0
-                                    const toBeScore = typeof r.toBe === "number" ? r.toBe : r.toBe?.score || 0
-                                    return sum + (toBeScore - asIsScore)
-                                  }, 0) / highEnergyResponses.length
-                                return avgGap.toFixed(1)
-                              })()}
-                            </span>
-                            のギャップを持ち、より強い改善意欲を示しています。
-                          </p>
-                        </div>
-                      </div>
 
-                      {/* Manager vs Member Perception Gap */}
-                      <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-4 border border-amber-200">
-                        <h4 className="font-semibold text-base mb-3 text-amber-700">
-                          認識の乖離（マネージャー vs メンバー）
-                        </h4>
-                        <div className="text-sm text-gray-700">
-                          <p>
-                            現状認識の差:{" "}
-                            <span className="font-bold text-amber-600">
-                              {(() => {
-                                const managerResponses = session.responses.filter((r) => {
-                                  const p = session.participants.find((p) => p.id === r.participantId)
-                                  return p?.role === "manager"
-                                })
-                                const memberResponses = session.responses.filter((r) => {
-                                  const p = session.participants.find((p) => p.id === r.participantId)
-                                  return p?.role === "member"
-                                })
-
-                                if (managerResponses.length === 0 || memberResponses.length === 0) return "0.0"
-
-                                const managerAvgAsIs =
-                                  managerResponses.reduce((sum, r) => {
-                                    const asIsScore = typeof r.asIs === "number" ? r.asIs : r.asIs?.score || 0
-                                    return sum + asIsScore
-                                  }, 0) / managerResponses.length
-
-                                const memberAvgAsIs =
-                                  memberResponses.reduce((sum, r) => {
-                                    const asIsScore = typeof r.asIs === "number" ? r.asIs : r.asIs?.score || 0
-                                    return sum + asIsScore
-                                  }, 0) / memberResponses.length
-
-                                return Math.abs(managerAvgAsIs - memberAvgAsIs).toFixed(1)
-                              })()}ポイント
-                            </span>
-                          </p>
-                          <p className="mt-2">
-                            {(() => {
-                              const managerResponses = session.responses.filter((r) => {
-                                const p = session.participants.find((p) => p.id === r.participantId)
-                                return p?.role === "manager"
-                              })
-                              const memberResponses = session.responses.filter((r) => {
-                                const p = session.participants.find((p) => p.id === r.participantId)
-                                return p?.role === "member"
-                              })
-
-                              if (managerResponses.length === 0 || memberResponses.length === 0) {
-                                return "データが不足しています。"
-                              }
-
-                              const managerAvgAsIs =
-                                managerResponses.reduce((sum, r) => {
-                                  const asIsScore = typeof r.asIs === "number" ? r.asIs : r.asIs?.score || 0
-                                  return sum + asIsScore
-                                }, 0) / managerResponses.length
-
-                              const memberAvgAsIs =
-                                memberResponses.reduce((sum, r) => {
-                                  const asIsScore = typeof r.asIs === "number" ? r.asIs : r.asIs?.score || 0
-                                  return sum + asIsScore
-                                }, 0) / memberResponses.length
-
-                              const perceptionGap = Math.abs(managerAvgAsIs - memberAvgAsIs)
-
-                              return perceptionGap > 2
-                                ? "大きな認識のズレが存在します。マネージャーとメンバーの間で対話を深め、相互理解を促進する必要があります。"
-                                : "認識のズレは比較的小さく、マネージャーとメンバーの間で共通の理解が形成されています。"
-                            })()}
-                          </p>
-                        </div>
-                      </div>
                     </div>
                   </AccordionContent>
                 </AccordionItem>

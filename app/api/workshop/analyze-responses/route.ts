@@ -5,8 +5,10 @@ import { z } from "zod"
 
 // Define the schema for the analysis result
 const analysisSchema = z.object({
-  summary: z.string().describe("回答全体の要約"),
-  gravityStatus: z.string().describe("対話の現在の重力状態（例：'浮遊開始：解決への糸口が見え始めた状態'、'停滞：重力が強く議論が噛み合わない状態'など）"),
+  overallSummary: z.object({
+    title: z.string().describe("チームの現状を一言で表すキャッチーなタイトル"),
+    description: z.string().describe("回答全体を要約した総合的なサマリー（200文字程度）")
+  }),
   warmth: z.number().describe("場の温かさ (0-100)。本音度と安心感から算出"),
   consensus: z.array(z.string()).describe("合意点 (Consensus Area): 全員が認めている課題や北極星"),
   conflicts: z.array(z.string()).describe("相違点 (Divergence Area): 立場による認識差やアプローチの違い"),
@@ -26,14 +28,13 @@ const analysisSchema = z.object({
     process: z.number().describe("Process (仕組み・ルール) に関言及した割合または重要度 (0-100)"),
     environment: z.number().describe("Environment (環境・予算) に関言及した割合または重要度 (0-100)")
   }).describe("3軸の観点比重"),
-  gapAnalysis: z.object({
-    managerView: z.string().describe("マネージャー層の支配的な見解"),
-    memberView: z.string().describe("メンバー層の支配的な見解"),
-    asymmetryLevel: z.string().describe("情報の非対称性レベル (High/Medium/Low)"),
+  cognitiveDissonance: z.object({
+    pointsOfFriction: z.array(z.string()).describe("メンバー間で認識がずれている具体的なポイント"),
+    discussionTopics: z.array(z.string()).describe("このズレを埋めるために話し合うべき具体的なトピック"),
     lemonMarketRisk: z.string().describe("レモン市場化（認識のズレによる質の低下）のリスク記述")
   }),
   heroInsight: z.object({
-    pathology: z.string().describe("HEROスコアから読み取れる組織の病理（例：Hope不足、Efficacy欠如）"),
+    parameterAnalysis: z.string().describe("As-Is/To-BeのギャップやHEROスコアなどの定量データから読み取れる総合的な洞察"),
     strength: z.string().describe("チームの強みとなっている心理的要素"),
     scores: z.object({
       hope: z.number().describe("推定されるチーム全体のHopeレベル (0-100)"),
@@ -64,8 +65,10 @@ export async function POST(request: Request) {
       console.error("[v0] API KEY is missing. Env check:", process.env.NODE_ENV);
       return NextResponse.json({
         analysis: {
-          summary: "APIキーが設定されていません。",
-          gravityStatus: "システムエラー",
+          overallSummary: {
+            title: "システムエラー",
+            description: "APIキーが設定されていません。"
+          },
           warmth: 0,
           structuralBridge: { missingLink: "システム管理者に連絡してください", bridgeBalance: "Unknown" },
           assetPrediction: { retentionRate: 0, decisionLog: "API Key Missing" },
@@ -74,8 +77,8 @@ export async function POST(request: Request) {
           discussionPoints: [],
           sentiment: { positive: 0, neutral: 0, negative: 0 },
           tags: { mindset: 0, process: 0, environment: 0 },
-          gapAnalysis: { managerView: "-", memberView: "-", asymmetryLevel: "-", lemonMarketRisk: "-" },
-          heroInsight: { pathology: "-", strength: "-", scores: { hope: 0, efficacy: 0, resilience: 0, optimism: 0 } },
+          cognitiveDissonance: { pointsOfFriction: [], discussionTopics: [], lemonMarketRisk: "-" },
+          heroInsight: { parameterAnalysis: "-", strength: "-", scores: { hope: 0, efficacy: 0, resilience: 0, optimism: 0 } },
           interventionQuestions: { mutualUnderstanding: "-", suspendedJudgment: "-", smallAgreement: "-" },
           keyFindings: ["GEMINI_API_KEY 環境変数が設定されていません。"],
           recommendations: ["Vercelの設定、または .env.local ファイルを確認してください。"],
@@ -127,25 +130,22 @@ Participant ${index + 1} (${r.participantRole || "member"}):
 
 以下の3つの視点で分析を実行し、JSONを出力してください：
 
-1. **断絶の解剖 (The Disconnect Analyzer) -> field: gapAnalysis**
-   - マネージャー(Role: manager)とメンバー(Role: member)の間にある「認知のズレ」を特定せよ。
-   - 特に「解決策の方向性」のズレに着目せよ（例：上司は「意識(Mindset)」の問題とし、部下は「仕組み(Process)」の問題としている等）。
-   - Lemon Market Alertは、このズレが致命的で対話不能なレベルの場合に High とせよ。
+1. **全体サマリー (overallSummary)**
+   - チームの現状を一目で表すキャッチーなタイトルと、全体の総合的な要約を作成せよ。
 
-2. **語られない本音 (The Unspoken Voice) -> field: gravityStatus / heroInsight.pathology**
-   - VulnerabilityのHonesty(本音度)が低い、またはResistance(抵抗感)が高い回答に注目せよ。
-   - テキストが「特に問題ない」等の無難なものでも、スコアが低い場合は「諦め」「学習性無力感」「心理的安全性欠如」と深読みし、それを指摘せよ。
-   - Gravity Statusには、この「空気感」をメタファー（例：冷戦状態、仮面舞踏会）で表現せよ。
+2. **認識のズレと対話のポイント (cognitiveDissonance)**
+   - 参加者それぞれの間にある「認知のズレ（Points of Friction）」を特定せよ。役職ではなく、個々人の前提やアプローチの違いに着目すること。
+   - そのズレを埋めるために「次に何を話し合うべきか（Discussion Topics）」を具体的に提示せよ。
+   - Lemon Market Alertは、このズレが致命的で対話不能なレベルの場合に記載せよ。
 
-3. **ボトルネック特定 (The Action Blocker) -> field: structuralBridge**
-   - HEROスコアとSolutionの整合性を見よ。
-   - Hope(希望)は高いがSolutionが抽象的な場合は「夢見がち(Dreamer)」、Efficacy(効力感)が低くSolutionが他責的な場合は「当事者意識の欠如」と指摘せよ。
-   - Missing Linkには、スコアとテキストの矛盾から見える「議論されていない真の課題」を記述せよ。
+3. **パラメータからの洞察 (heroInsight.parameterAnalysis)**
+   - メンバーのAs-Is/To-Beスコアのギャップ分布や、HEROパラメータ（希望、効力感など）などの「定量的なデータ」から読み取れる深い洞察を記述せよ。
+   - なぜそのスコアになっているのか、スコアの裏に隠された心理状態（例：ギャップが大きいが効力感が低い＝無力感など）を分析せよ。
 
 ■ Intervention (介入) の生成
 - 上記の分析に基づき、ファシリテーターが投げかけるべき「鋭いが愛のある問い」を作成せよ。
 - Mutual Understanding: 互いの「前提」を疑う問い。
-- Suspended Judgment: マネージャーが耳を痛くしてでも聞くべき問い。
+- Suspended Judgment: 耳を痛くしてでも聞くべき構造的な問い。
 - Small Agreement: 壮大な理想ではなく、明日できる具体的な一歩。
 
 JSON出力スキーマに厳密に従ってください。
@@ -268,8 +268,10 @@ JSON出力スキーマに厳密に従ってください。
 
       return NextResponse.json({
         analysis: {
-          summary: "AI分析に失敗しました。",
-          gravityStatus: "システムエラー: " + friendlyError,
+          overallSummary: {
+            title: "AI分析に失敗しました",
+            description: friendlyError
+          },
           warmth: 0,
           structuralBridge: {
             missingLink: `【原因】${detailedReason}`,
@@ -281,8 +283,8 @@ JSON出力スキーマに厳密に従ってください。
           discussionPoints: [],
           sentiment: { positive: 0, neutral: 0, negative: 0 },
           tags: { mindset: 0, process: 0, environment: 0 },
-          gapAnalysis: { managerView: "-", memberView: "-", asymmetryLevel: "-", lemonMarketRisk: "-" },
-          heroInsight: { pathology: "-", strength: "-", scores: { hope: 0, efficacy: 0, resilience: 0, optimism: 0 } },
+          cognitiveDissonance: { pointsOfFriction: [], discussionTopics: [], lemonMarketRisk: "-" },
+          heroInsight: { parameterAnalysis: "-", strength: "-", scores: { hope: 0, efficacy: 0, resilience: 0, optimism: 0 } },
           interventionQuestions: { mutualUnderstanding: "-", suspendedJudgment: "-", smallAgreement: "-" },
           keyFindings: [friendlyError, detailedReason, actionSuggestion],
           recommendations: [actionSuggestion],
