@@ -234,6 +234,11 @@ export interface AnalysisResult {
     member: string
     insight: string
   }[]
+  individualInsights?: {
+    participantId: string
+    summary: string
+    questionToAsk: string
+  }[]
   roiScore?: number
 
   // Legacy or auxiliary fields

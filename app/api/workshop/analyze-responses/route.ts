@@ -52,6 +52,11 @@ const analysisSchema = z.object({
     retentionRate: z.number().describe("資産定着率の予測 (0-100%)"),
     decisionLog: z.string().describe("意思決定ログの案（誰が、いつ、何をするか）")
   }),
+  individualInsights: z.array(z.object({
+    participantId: z.string().describe("対象となる参加者のID（Participant Xなど）"),
+    summary: z.string().describe("この参加者の回答の要点と背景にある思い"),
+    questionToAsk: z.string().describe("この参加者に対してファシリテーターが投げかけるべき問い")
+  })).optional(),
   keyFindings: z.array(z.string()),
   recommendations: z.array(z.string()),
 })
@@ -133,12 +138,16 @@ Participant ${index + 1} (${r.participantRole || "member"}):
 1. **全体サマリー (overallSummary)**
    - チームの現状を一目で表すキャッチーなタイトルと、全体の総合的な要約を作成せよ。
 
-2. **認識のズレと対話のポイント (cognitiveDissonance)**
+2. **個別の回答インサイト (individualInsights)**
+   - 全ての参加者それぞれの回答について、要点（summary）と、そのメンバーに対してファシリテーターがさらに深掘りするための問い（questionToAsk）を生成せよ。
+   - participantId には、入力データの "Participant 1" などの識別子をそのまま使うこと。
+
+3. **認識のズレと対話のポイント (cognitiveDissonance)**
    - 参加者それぞれの間にある「認知のズレ（Points of Friction）」を特定せよ。役職ではなく、個々人の前提やアプローチの違いに着目すること。
    - そのズレを埋めるために「次に何を話し合うべきか（Discussion Topics）」を具体的に提示せよ。
    - Lemon Market Alertは、このズレが致命的で対話不能なレベルの場合に記載せよ。
 
-3. **パラメータからの洞察 (heroInsight.parameterAnalysis)**
+4. **パラメータからの洞察 (heroInsight.parameterAnalysis)**
    - メンバーのAs-Is/To-Beスコアのギャップ分布や、HEROパラメータ（希望、効力感など）などの「定量的なデータ」から読み取れる深い洞察を記述せよ。
    - なぜそのスコアになっているのか、スコアの裏に隠された心理状態（例：ギャップが大きいが効力感が低い＝無力感など）を分析せよ。
 

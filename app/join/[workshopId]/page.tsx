@@ -390,36 +390,68 @@ export default function JoinWorkshopPage() {
                   />
                   <div className="text-center font-bold text-yellow-600">{energyLevel}%</div>
                 </div>
+              </Card>
+            </div>
+          )}
 
-                <div className="space-y-4">
-                  <label className="text-sm font-medium text-gray-700 block text-center">今の気分の色</label>
-                  <div className="grid grid-cols-4 gap-3">
-                    {moodColors.map((m) => (
-                      <button
-                        key={m.color}
-                        onClick={() => setSelectedMoodColor(m.color)}
-                        className={`w-full aspect-square rounded-2xl transition-all flex items-center justify-center ${selectedMoodColor === m.color ? "ring-4 ring-offset-2 ring-gray-200 scale-110 shadow-md" : "hover:scale-105"}`}
-                        style={{ backgroundColor: m.color }}
-                        title={m.label}
-                      >
-                        {selectedMoodColor === m.color && <div className="w-3 h-3 bg-white rounded-full" />}
-                      </button>
-                    ))}
+          {/* STEP 2: Structured Input */}
+          {currentStep === 2 && (
+            <div className="space-y-6 animate-in slide-in-from-right fade-in duration-300">
+              <Card className="bg-white rounded-3xl p-6 shadow-lg space-y-6">
+                <div className="text-center">
+                  <h3 className="text-xl font-bold text-gray-800">2. 思考の構造化</h3>
+                  <p className="text-sm text-gray-500 mt-1">事実と理想を分けて考えましょう</p>
+                </div>
+
+                <div className="space-y-3">
+                  <span className="bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs font-bold">As-Is (事実)</span>
+                  <Textarea
+                    value={asIsFact}
+                    onChange={(e) => setAsIsFact(e.target.value)}
+                    placeholder="今、目の前で何が起きていますか？"
+                    className="bg-gray-50 border-0 rounded-xl resize-none focus:ring-2 focus:ring-red-200"
+                  />
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-500 w-12">Score</span>
+                    <input type="range" min={10} max={100} step={10} value={asIsScore} onChange={(e) => setAsIsScore(Number(e.target.value))} className="flex-1 h-1 bg-gray-200 rounded-full appearance-none accent-red-500" />
+                    <span className="text-xs font-bold w-6">{asIsScore / 10}</span>
                   </div>
-                  <p className="text-center text-sm font-medium" style={{ color: selectedMoodColor }}>
-                    {moodColors.find(m => m.color === selectedMoodColor)?.label}
-                  </p>
+                </div>
+
+                <div className="space-y-3 pt-2 border-t border-gray-100">
+                  <span className="bg-teal-100 text-teal-700 px-3 py-1 rounded-full text-xs font-bold">To-Be (理想)</span>
+                  <Textarea
+                    value={toBeWill}
+                    onChange={(e) => setToBeWill(e.target.value)}
+                    placeholder="制約がないとしたら、どうなっていたいですか？"
+                    className="bg-gray-50 border-0 rounded-xl resize-none focus:ring-2 focus:ring-teal-200"
+                  />
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-500 w-12">Score</span>
+                    <input type="range" min={10} max={100} step={10} value={toBeScore} onChange={(e) => setToBeScore(Number(e.target.value))} className="flex-1 h-1 bg-gray-200 rounded-full appearance-none accent-teal-500" />
+                    <span className="text-xs font-bold w-6">{toBeScore / 10}</span>
+                  </div>
+                </div>
+
+                <div className="space-y-3 pt-2 border-t border-gray-100">
+                  <span className="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-xs font-bold">Solution (行動)</span>
+                  <Textarea
+                    value={solutionAction}
+                    onChange={(e) => setSolutionAction(e.target.value)}
+                    placeholder="理想に近づくために、まず何を変えますか？"
+                    className="bg-gray-50 border-0 rounded-xl resize-none focus:ring-2 focus:ring-orange-200"
+                  />
                 </div>
               </Card>
             </div>
           )}
 
-          {/* STEP 2: HERO Diagnosis */}
-          {currentStep === 2 && (
+          {/* STEP 3: HERO Diagnosis */}
+          {currentStep === 3 && (
             <div className="space-y-6 animate-in slide-in-from-right fade-in duration-300">
               <Card className="bg-white rounded-3xl p-6 shadow-lg space-y-6">
                 <div className="text-center">
-                  <h3 className="text-xl font-bold text-gray-800">2. この課題に対する感覚 (HERO)</h3>
+                  <h3 className="text-xl font-bold text-gray-800">3. この課題に対する感覚 (HERO)</h3>
                   <p className="text-sm text-gray-500 mt-1">直感で答えてください</p>
                 </div>
 
@@ -484,58 +516,6 @@ export default function JoinWorkshopPage() {
                     value={hero.optimism}
                     onChange={(e) => setHero({ ...hero, optimism: Number(e.target.value) })}
                     className="w-full h-2 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-yellow-500"
-                  />
-                </div>
-              </Card>
-            </div>
-          )}
-
-          {/* STEP 3: Structured Input */}
-          {currentStep === 3 && (
-            <div className="space-y-6 animate-in slide-in-from-right fade-in duration-300">
-              <Card className="bg-white rounded-3xl p-6 shadow-lg space-y-6">
-                <div className="text-center">
-                  <h3 className="text-xl font-bold text-gray-800">3. 思考の構造化</h3>
-                  <p className="text-sm text-gray-500 mt-1">事実と理想を分けて考えましょう</p>
-                </div>
-
-                <div className="space-y-3">
-                  <span className="bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs font-bold">As-Is (事実)</span>
-                  <Textarea
-                    value={asIsFact}
-                    onChange={(e) => setAsIsFact(e.target.value)}
-                    placeholder="今、目の前で何が起きていますか？"
-                    className="bg-gray-50 border-0 rounded-xl resize-none focus:ring-2 focus:ring-red-200"
-                  />
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-gray-500 w-12">Score</span>
-                    <input type="range" min={10} max={100} step={10} value={asIsScore} onChange={(e) => setAsIsScore(Number(e.target.value))} className="flex-1 h-1 bg-gray-200 rounded-full appearance-none accent-red-500" />
-                    <span className="text-xs font-bold w-6">{asIsScore / 10}</span>
-                  </div>
-                </div>
-
-                <div className="space-y-3 pt-2 border-t border-gray-100">
-                  <span className="bg-teal-100 text-teal-700 px-3 py-1 rounded-full text-xs font-bold">To-Be (理想)</span>
-                  <Textarea
-                    value={toBeWill}
-                    onChange={(e) => setToBeWill(e.target.value)}
-                    placeholder="制約がないとしたら、どうなっていたいですか？"
-                    className="bg-gray-50 border-0 rounded-xl resize-none focus:ring-2 focus:ring-teal-200"
-                  />
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-gray-500 w-12">Score</span>
-                    <input type="range" min={10} max={100} step={10} value={toBeScore} onChange={(e) => setToBeScore(Number(e.target.value))} className="flex-1 h-1 bg-gray-200 rounded-full appearance-none accent-teal-500" />
-                    <span className="text-xs font-bold w-6">{toBeScore / 10}</span>
-                  </div>
-                </div>
-
-                <div className="space-y-3 pt-2 border-t border-gray-100">
-                  <span className="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-xs font-bold">Solution (行動)</span>
-                  <Textarea
-                    value={solutionAction}
-                    onChange={(e) => setSolutionAction(e.target.value)}
-                    placeholder="理想に近づくために、まず何を変えますか？"
-                    className="bg-gray-50 border-0 rounded-xl resize-none focus:ring-2 focus:ring-orange-200"
                   />
                 </div>
               </Card>

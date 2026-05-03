@@ -1234,7 +1234,10 @@ export default function FacilitatePage({ params }: { params: Promise<{ id: strin
 
               <div className="mt-6 sm:mt-8 flex justify-center">
                 <Button
-                  onClick={() => setSession((prev) => ({ ...prev, status: "theme-selection" }))}
+                  onClick={async () => {
+                    setSession((prev) => ({ ...prev, status: "theme-selection" }))
+                    await updateSessionStatus("theme-selection")
+                  }}
                   size="lg"
                   className="bg-gradient-to-r from-teal-400 to-lime-400 hover:from-teal-500 hover:to-lime-500 text-white font-semibold rounded-2xl px-8 sm:px-12 py-4 sm:py-6 text-base sm:text-lg shadow-lg"
                 >
@@ -1708,106 +1711,7 @@ export default function FacilitatePage({ params }: { params: Promise<{ id: strin
                     </AccordionItem>
                   )}
 
-                {/* Individual Responses with Details */}
-                <AccordionItem value="responses" className="border border-blue-200 rounded-2xl overflow-hidden">
-                  <AccordionTrigger className="px-4 sm:px-6 py-3 sm:py-4 bg-gradient-to-r from-blue-50 to-cyan-50 hover:from-blue-100 hover:to-cyan-100 font-semibold text-base sm:text-lg text-gray-700">
-                    <span className="flex items-center gap-2">
-                      <MessageCircle className="h-5 w-5 text-blue-600" />
-                      参加者の回答詳細
-                    </span>
-                  </AccordionTrigger>
-                  <AccordionContent className="px-4 sm:px-6 py-4 sm:py-6 bg-white">
-                    <div className="space-y-4 sm:space-y-6">
-                      {session.responses.map((response, idx) => {
-                        const participant = session.participants.find((p) => p.id === response.participantId)
-                        const asIsScore = typeof response.asIs === "number" ? response.asIs : response.asIs?.score || 0
-                        const toBeScore = typeof response.toBe === "number" ? response.toBe : response.toBe?.score || 0
-                        const gap = toBeScore - asIsScore
-                        return (
-                          <div
-                            key={response.id}
-                            className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-2xl p-4 sm:p-6 border border-blue-200"
-                          >
-                            <div className="flex items-center gap-3 mb-4">
-                              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center text-white font-bold text-base sm:text-lg">
-                                {response.participantName.charAt(0)}
-                              </div>
-                              <div className="flex-1">
-                                <div className="font-bold text-base sm:text-lg text-gray-800">
-                                  {response.participantName}
-                                </div>
-                                <div className="text-xs sm:text-sm text-gray-500">
-                                  {participant?.role || "member"} • Gap:{" "}
-                                  <span className="font-semibold text-orange-600">+{gap}</span>
-                                </div>
-                              </div>
-                            </div>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4">
-                              <div className="bg-white rounded-xl p-3 sm:p-4 border border-red-200">
-                                <div className="text-xs text-gray-600 mb-1">As is (現状)</div>
-                                <div className="text-xl sm:text-2xl font-bold text-red-600">{asIsScore}/10</div>
-                                <div className="mt-2 bg-gray-200 rounded-full h-2">
-                                  <div
-                                    className="bg-gradient-to-r from-red-400 to-red-500 h-2 rounded-full transition-all"
-                                    style={{ width: `${(asIsScore / 10) * 100}%` }}
-                                  />
-                                </div>
-                              </div>
-                              <div className="bg-white rounded-xl p-3 sm:p-4 border border-teal-200">
-                                <div className="text-xs text-gray-600 mb-1">To be (理想)</div>
-                                <div className="text-xl sm:text-2xl font-bold text-teal-600">{toBeScore}/10</div>
-                                <div className="mt-2 bg-gray-200 rounded-full h-2">
-                                  <div
-                                    className="bg-gradient-to-r from-teal-400 to-teal-500 h-2 rounded-full transition-all"
-                                    style={{ width: `${(toBeScore / 10) * 100}%` }}
-                                  />
-                                </div>
-                              </div>
-                              <div className="bg-white rounded-xl p-3 sm:p-4 border border-orange-200">
-                                <div className="text-xs text-gray-600 mb-1">Gap (ギャップ)</div>
-                                <div className="text-xl sm:text-2xl font-bold text-orange-600">+{gap}</div>
-                                <div className="mt-2 bg-gray-200 rounded-full h-2">
-                                  <div
-                                    className="bg-gradient-to-r from-orange-400 to-red-400 h-2 rounded-full transition-all"
-                                    style={{ width: `${(gap / 10) * 100}%` }}
-                                  />
-                                </div>
-                              </div>
-                            </div>
-
-                            <div className="bg-white rounded-xl p-3 sm:p-4 border border-gray-200">
-                              <div className="text-xs font-semibold text-gray-600 mb-2">回答内容</div>
-                              <p className="text-sm sm:text-base text-gray-700 leading-relaxed">{response.answer}</p>
-                            </div>
-
-                            {response.perspective && (
-                              <div className="mt-3 flex flex-wrap gap-2">
-                                <span className="text-xs bg-purple-100 text-purple-700 px-3 py-1 rounded-full font-medium">
-                                  視点: {response.perspective?.interpretation}
-                                </span>
-                              </div>
-                            )}
-
-                            <div className="mt-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-3 sm:p-4 border border-purple-100">
-                              <div className="flex items-start gap-2">
-                                <Lightbulb className="h-5 w-5 text-purple-600 flex-shrink-0 mt-0.5" />
-                                <div>
-                                  <div className="text-xs font-semibold text-purple-700 mb-1">個別インサイト</div>
-                                  <p className="text-xs sm:text-sm text-gray-700">
-                                    {gap > 3
-                                      ? `大きなギャップ(+${gap})が認識されています。${participant?.role === "manager" ? "マネージャーとして" : "メンバーとして"}、現状と理想の間に強い改善意欲が見られます。`
-                                      : `ギャップは比較的小さく(+${gap})、現状に対する満足度が高い、または改善の必要性を強く感じていない可能性があります。`}
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
 
                 {/* Quantitative Data Comparison */}
                 <AccordionItem value="quantitative" className="border border-indigo-200 rounded-2xl overflow-hidden">
@@ -2008,6 +1912,97 @@ export default function FacilitatePage({ params }: { params: Promise<{ id: strin
                     </AccordionItem>
                   )}
               </Accordion>
+
+              {/* Individual Responses List Out of Accordion */}
+              <div className="mt-12 space-y-6">
+                <h2 className="text-2xl font-bold mb-6 flex items-center gap-3 text-gray-800">
+                  <div className="bg-gradient-to-r from-blue-400 to-cyan-400 p-2 sm:p-3 rounded-2xl shadow-sm">
+                    <MessageCircle className="h-6 w-6 text-white" />
+                  </div>
+                  参加者の回答と個別インサイト
+                </h2>
+                
+                <div className="grid grid-cols-1 gap-6">
+                  {session.responses.map((response, idx) => {
+                    const participantIdStr = `Participant ${idx + 1}`
+                    const aiInsight = session.analysis?.individualInsights?.find(i => i.participantId === participantIdStr)
+                    const participant = session.participants.find((p) => p.id === response.participantId)
+                    const asIsScore = typeof response.asIs === "number" ? response.asIs : response.asIs?.score || 0
+                    const toBeScore = typeof response.toBe === "number" ? response.toBe : response.toBe?.score || 0
+                    const gap = toBeScore - asIsScore
+
+                    return (
+                      <Card key={response.id} className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-gray-100 overflow-hidden relative">
+                        {/* Status Strip */}
+                        <div className={`absolute left-0 top-0 bottom-0 w-2 ${gap > 4 ? "bg-red-400" : gap > 2 ? "bg-yellow-400" : "bg-teal-400"}`} />
+                        
+                        <div className="pl-4">
+                          <div className="flex items-center gap-4 mb-6">
+                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center font-bold text-xl text-gray-600 shadow-inner">
+                              {response.participantName.charAt(0)}
+                            </div>
+                            <div className="flex-1">
+                              <h3 className="font-bold text-xl text-gray-800">{response.participantName}</h3>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            {/* Left Column: Scores & Answer */}
+                            <div className="space-y-4">
+                              <div className="grid grid-cols-3 gap-3">
+                                <div className="bg-gray-50 rounded-xl p-3 border border-gray-100 text-center">
+                                  <div className="text-xs text-gray-500 mb-1">As-Is</div>
+                                  <div className="text-lg font-bold text-gray-800">{asIsScore}/10</div>
+                                </div>
+                                <div className="bg-gray-50 rounded-xl p-3 border border-gray-100 text-center">
+                                  <div className="text-xs text-gray-500 mb-1">To-Be</div>
+                                  <div className="text-lg font-bold text-gray-800">{toBeScore}/10</div>
+                                </div>
+                                <div className="bg-gray-50 rounded-xl p-3 border border-gray-100 text-center">
+                                  <div className="text-xs text-gray-500 mb-1">Gap</div>
+                                  <div className="text-lg font-bold text-orange-600">+{gap}</div>
+                                </div>
+                              </div>
+                              
+                              <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                                <div className="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wider">Original Answer</div>
+                                <p className="text-gray-700 whitespace-pre-wrap">{response.answer}</p>
+                              </div>
+                            </div>
+
+                            {/* Right Column: AI Insights */}
+                            {aiInsight ? (
+                              <div className="space-y-4 bg-gradient-to-br from-blue-50/50 to-purple-50/50 rounded-2xl p-5 border border-blue-100">
+                                <div>
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <Sparkles className="w-4 h-4 text-purple-500" />
+                                    <span className="text-xs font-bold text-purple-700 uppercase tracking-wider">AI Summary</span>
+                                  </div>
+                                  <p className="text-sm text-gray-700 leading-relaxed">{aiInsight.summary}</p>
+                                </div>
+                                
+                                <div className="pt-3 border-t border-blue-100/50">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <Lightbulb className="w-4 h-4 text-blue-500" />
+                                    <span className="text-xs font-bold text-blue-700 uppercase tracking-wider">Question to Ask</span>
+                                  </div>
+                                  <p className="text-sm font-medium text-blue-900 leading-relaxed italic border-l-2 border-blue-400 pl-3 py-1">
+                                    「{aiInsight.questionToAsk}」
+                                  </p>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="space-y-4 bg-gray-50 rounded-2xl p-5 border border-gray-100 flex items-center justify-center text-sm text-gray-400 italic">
+                                AIによる個別インサイトは生成されていません
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </Card>
+                    )
+                  })}
+                </div>
+              </div>
               <div className="flex justify-center mt-6">
                 <Button
                   onClick={() => downloadReport(session, selectedTheme)}
