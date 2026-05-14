@@ -1578,6 +1578,76 @@ export default function FacilitatePage({ params }: { params: Promise<{ id: strin
               // ... inside component ...
               // const stats = calculateAnalysisStats(session)
 
+              {/* メタ指標バッジ（sticky） */}
+              {(() => {
+                const responses = session.responses || []
+                const participants = session.participants || []
+                const respCount = responses.length
+                const partCount = participants.length
+
+                // 本音度・抵抗感の平均（0-100にclamp）
+                const clamp = (v: number) => Math.min(100, Math.max(0, v || 0))
+                const avgHonesty = respCount > 0
+                  ? Math.round(responses.reduce((sum, r) => sum + clamp(r.vulnerability?.honesty ?? 50), 0) / respCount)
+                  : 50
+                const avgResistance = respCount > 0
+                  ? Math.round(responses.reduce((sum, r) => sum + clamp(r.vulnerability?.resistance ?? 50), 0) / respCount)
+                  : 50
+
+                // エネルギーレベルの平均（participantのstanceから）
+                const avgEnergy = partCount > 0
+                  ? Math.round(participants.reduce((sum, p) => sum + clamp(p.stance?.energyLevel ?? 50), 0) / partCount)
+                  : 50
+
+                const honestyColor = avgHonesty >= 70 ? 'text-green-600 bg-green-50 border-green-200' : avgHonesty >= 40 ? 'text-yellow-600 bg-yellow-50 border-yellow-200' : 'text-red-600 bg-red-50 border-red-200'
+                const resistanceColor = avgResistance < 30 ? 'text-green-600 bg-green-50 border-green-200' : avgResistance <= 70 ? 'text-yellow-600 bg-yellow-50 border-yellow-200' : 'text-red-600 bg-red-50 border-red-200'
+                const energyColor = avgEnergy >= 70 ? 'text-green-600 bg-green-50 border-green-200' : avgEnergy >= 40 ? 'text-yellow-600 bg-yellow-50 border-yellow-200' : 'text-red-600 bg-red-50 border-red-200'
+
+                return (
+                  <>
+                    <div className="sticky top-0 z-20 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-2xl p-4 shadow-sm">
+                      <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
+                        <div className={`flex items-center gap-2 px-4 py-2 rounded-xl border font-semibold text-sm ${honestyColor}`}>
+                          <span className="text-lg">💬</span>
+                          <span>本音度</span>
+                          <span className="text-xl font-black">{avgHonesty}%</span>
+                        </div>
+                        <div className="hidden sm:block w-px h-8 bg-gray-200" />
+                        <div className={`flex items-center gap-2 px-4 py-2 rounded-xl border font-semibold text-sm ${resistanceColor}`}>
+                          <span className="text-lg">😰</span>
+                          <span>抵抗感</span>
+                          <span className="text-xl font-black">{avgResistance}%</span>
+                        </div>
+                        <div className="hidden sm:block w-px h-8 bg-gray-200" />
+                        <div className={`flex items-center gap-2 px-4 py-2 rounded-xl border font-semibold text-sm ${energyColor}`}>
+                          <span className="text-lg">🔥</span>
+                          <span>エネルギー</span>
+                          <span className="text-xl font-black">{avgEnergy}%</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 条件付きアラート */}
+                    {(avgHonesty < 40 || avgResistance > 70) && (
+                      <div className="space-y-3">
+                        {avgHonesty < 40 && (
+                          <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl p-4 text-amber-800 text-sm leading-relaxed">
+                            <span className="text-lg shrink-0">⚠️</span>
+                            <span><strong>建前モードの可能性。</strong>深い対話の前に、場の安心感づくりを推奨</span>
+                          </div>
+                        )}
+                        {avgResistance > 70 && (
+                          <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl p-4 text-amber-800 text-sm leading-relaxed">
+                            <span className="text-lg shrink-0">⚠️</span>
+                            <span><strong>共有への不安が強い。</strong>匿名化や少人数の対話から始めるべき</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </>
+                )
+              })()}
+
               {session.analysis && (
                 <AnalysisDisplay
                   analysis={session.analysis}
@@ -1748,6 +1818,24 @@ export default function FacilitatePage({ params }: { params: Promise<{ id: strin
                             </div>
                             <div className="flex-1">
                               <h3 className="font-bold text-xl text-gray-800">{response.participantName}</h3>
+                              {/* 本音度・抵抗感バッジ */}
+                              {(() => {
+                                const clamp = (v: number) => Math.min(100, Math.max(0, v || 0))
+                                const honesty = clamp(response.vulnerability?.honesty ?? 50)
+                                const resistance = clamp(response.vulnerability?.resistance ?? 50)
+                                const hColor = honesty >= 70 ? 'text-green-600 bg-green-50' : honesty >= 40 ? 'text-yellow-600 bg-yellow-50' : 'text-red-600 bg-red-50'
+                                const rColor = resistance < 30 ? 'text-green-600 bg-green-50' : resistance <= 70 ? 'text-yellow-600 bg-yellow-50' : 'text-red-600 bg-red-50'
+                                return (
+                                  <div className="flex items-center gap-2 mt-1">
+                                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${hColor}`}>
+                                      💬 本音度 {honesty}%
+                                    </span>
+                                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${rColor}`}>
+                                      😰 抵抗感 {resistance}%
+                                    </span>
+                                  </div>
+                                )
+                              })()}
                             </div>
                           </div>
 

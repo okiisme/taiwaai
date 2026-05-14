@@ -175,90 +175,45 @@ export function AnalysisDisplay({ analysis, stats, onSelectQuestion }: AnalysisD
                 </section>
             )}
 
-            {/* SECTION 3: Visualization (The "Data") and Parameter Analysis */}
+            {/* SECTION 3: HERO Parameter Analysis */}
             <section className="space-y-6">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* 3-A: Mood / Warmth */}
-                    <Card className="p-6 bg-white border border-gray-100 shadow-sm">
-                        <h4 className="font-bold text-gray-700 mb-6 flex items-center gap-2">
-                            <span className="text-xl">🌡️</span> チームの温度感
-                        </h4>
-                        <div className="flex flex-col items-center justify-center h-48">
-                            <div className="relative w-full max-w-[200px] aspect-square rounded-full border-8 border-gray-100 flex items-center justify-center">
-                                <div
-                                    className={`text-4xl font-black ${warmth >= 70 ? 'text-orange-500' : 'text-blue-500'}`}
-                                >
-                                    {warmth}<span className="text-lg text-gray-400 font-bold">%</span>
-                                </div>
-                                {/* Simple visual indicator rings could go here */}
-                            </div>
-                            <p className="mt-4 text-sm text-center text-gray-500 font-medium">
-                                {warmth >= 70 ? "心理的安全性は高い状態です" : "本音を言いづらい冷えた状態です"}
-                            </p>
-                        </div>
-                    </Card>
-
-                    {/* 3-B: Focus Areas (Bubble Chart substitute) */}
-                    <Card className="p-6 bg-white border border-gray-100 shadow-sm">
-                        <h4 className="font-bold text-gray-700 mb-6 flex items-center gap-2">
-                            <Target className="w-5 h-5 text-gray-700" /> 関心の所在
-                        </h4>
-                        <div className="space-y-6 h-48 flex flex-col justify-center">
-                            {[
-                                { label: 'Mindset (意識)', value: focusTags.mindset, color: 'bg-blue-500' },
-                                { label: 'Process (仕組み)', value: focusTags.process, color: 'bg-green-500' },
-                                { label: 'Environment (環境)', value: focusTags.environment, color: 'bg-purple-500' }
-                            ].map((item, i) => (
-                                <div key={i} className="group">
-                                    <div className="flex justify-between text-xs font-bold text-gray-500 mb-1">
-                                        <span>{item.label}</span>
-                                        <span>{Math.round(item.value)}%</span>
-                                    </div>
-                                    <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
-                                        <div
-                                            className={`h-full ${item.color} transition-all duration-1000 ease-out`}
-                                            style={{ width: `${item.value}%` }}
-                                        />
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </Card>
-
-                    {/* 3-C: HERO Radar */}
+                <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
+                    {/* HERO Radar */}
                     <Card className="p-6 bg-white border border-gray-100 shadow-sm">
                         <h4 className="font-bold text-gray-700 mb-2 flex items-center gap-2">
                             <Zap className="w-5 h-5 text-yellow-500" /> 心理的資本 (HERO)
                         </h4>
-                        <div className="h-52 w-full -ml-4">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <RadarChart cx="50%" cy="50%" outerRadius="70%" data={[
-                                    { subject: '希望', A: heroScores.hope, fullMark: 10 },
-                                    { subject: '効力感', A: heroScores.efficacy, fullMark: 10 },
-                                    { subject: '回復力', A: heroScores.resilience, fullMark: 10 },
-                                    { subject: '楽観性', A: heroScores.optimism, fullMark: 10 },
-                                ]}>
-                                    <PolarGrid stroke="#e2e8f0" />
-                                    <PolarAngleAxis dataKey="subject" tick={{ fill: '#64748b', fontSize: 10, fontWeight: 'bold' }} />
-                                    <PolarRadiusAxis angle={30} domain={[0, 10]} tick={false} axisLine={false} />
-                                    <Radar
-                                        name="Team"
-                                        dataKey="A"
-                                        stroke="#8b5cf6"
-                                        strokeWidth={3}
-                                        fill="#8b5cf6"
-                                        fillOpacity={0.2}
-                                    />
-                                </RadarChart>
-                            </ResponsiveContainer>
-                        </div>
-                        <div className="mt-4 pt-4 border-t border-gray-100">
-                            <h5 className="font-bold text-sm text-purple-700 mb-1">
-                                {heroProfile.name}
-                            </h5>
-                            <p className="text-xs text-gray-600 leading-relaxed">
-                                {heroProfile.description}
-                            </p>
+                        <div className="flex flex-col lg:flex-row items-center gap-6">
+                            <div className="h-52 w-full lg:w-1/2 -ml-4">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <RadarChart cx="50%" cy="50%" outerRadius="70%" data={[
+                                        { subject: 'Hope (希望)', A: heroScores.hope, fullMark: 10 },
+                                        { subject: 'Efficacy (効力感)', A: heroScores.efficacy, fullMark: 10 },
+                                        { subject: 'Resilience (回復力)', A: heroScores.resilience, fullMark: 10 },
+                                        { subject: 'Optimism (楽観性)', A: heroScores.optimism, fullMark: 10 },
+                                    ]}>
+                                        <PolarGrid stroke="#e2e8f0" />
+                                        <PolarAngleAxis dataKey="subject" tick={{ fill: '#64748b', fontSize: 10, fontWeight: 'bold' }} />
+                                        <PolarRadiusAxis angle={30} domain={[0, 10]} tick={false} axisLine={false} />
+                                        <Radar
+                                            name="Team"
+                                            dataKey="A"
+                                            stroke="#8b5cf6"
+                                            strokeWidth={3}
+                                            fill="#8b5cf6"
+                                            fillOpacity={0.2}
+                                        />
+                                    </RadarChart>
+                                </ResponsiveContainer>
+                            </div>
+                            <div className="flex-1">
+                                <h5 className="font-bold text-lg text-purple-700 mb-2">
+                                    {heroProfile.name}
+                                </h5>
+                                <p className="text-sm text-gray-600 leading-relaxed">
+                                    {heroProfile.description}
+                                </p>
+                            </div>
                         </div>
                     </Card>
                 </div>
