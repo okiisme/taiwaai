@@ -37,9 +37,9 @@ const calculateAnalysisStats = (session: WorkshopSession): LocalAnalysisStats | 
   let warmCount = 0
   session.participants.forEach(p => {
     if (p.stance) {
-      // Normalize 0-5 scale to 0-100
-      const openness = (p.stance.openness || 0) * 20
-      const energy = (p.stance.energyLevel || 0) * 20
+      // スタンス値は0-100スケール
+      const openness = p.stance.openness || 0
+      const energy = p.stance.energyLevel || 0
       totalWarmth += (openness + energy) / 2
       warmCount++
     }
@@ -1591,39 +1591,6 @@ export default function FacilitatePage({ params }: { params: Promise<{ id: strin
                 defaultValue={["sentiment", "findings", "responses", "quantitative", "insights", "triggers"]}
                 className="space-y-4"
               >
-                {/* Sentiment Analysis */}
-                {session.analysis?.sentiment && (
-                  <AccordionItem value="sentiment" className="border border-teal-200 rounded-2xl overflow-hidden">
-                    <AccordionTrigger className="px-4 sm:px-6 py-3 sm:py-4 bg-gradient-to-r from-teal-50 to-lime-50 hover:from-teal-100 hover:to-lime-100 font-semibold text-base sm:text-lg text-gray-700">
-                      📊 感情分析
-                    </AccordionTrigger>
-                    <AccordionContent className="px-4 sm:px-6 py-4 sm:py-6 bg-white">
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <div className="text-center p-4 sm:p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-2xl shadow-sm border border-green-200">
-                          <div className="text-4xl sm:text-5xl font-bold text-green-600 mb-2">
-                            {session.analysis.sentiment.positive || 0}%
-                          </div>
-                          <p className="text-xs sm:text-sm text-gray-700 font-medium">ポジティブ</p>
-                          <div className="mt-2 sm:mt-3 text-3xl">😊</div>
-                        </div>
-                        <div className="text-center p-4 sm:p-6 bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl shadow-sm border border-gray-200">
-                          <div className="text-4xl sm:text-5xl font-bold text-gray-600 mb-2">
-                            {session.analysis.sentiment.neutral || 0}%
-                          </div>
-                          <p className="text-xs sm:text-sm text-gray-700 font-medium">ニュートラル</p>
-                          <div className="mt-2 sm:mt-3 text-3xl">😐</div>
-                        </div>
-                        <div className="text-center p-4 sm:p-6 bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl shadow-sm border border-orange-200">
-                          <div className="text-4xl sm:text-5xl font-bold text-orange-600 mb-2">
-                            {session.analysis.sentiment.negative || 0}%
-                          </div>
-                          <p className="text-xs sm:text-sm text-gray-700 font-medium">要注意</p>
-                          <div className="mt-2 sm:mt-3 text-3xl">😟</div>
-                        </div>
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                )}
 
                 {/* Key Findings */}
                 {session.analysis?.keyFindings &&
