@@ -45,7 +45,7 @@ export function AnalysisDisplay({ analysis, stats, onSelectQuestion }: AnalysisD
 
     if (!isMounted) return null; // Prevent server-side rendering of Recharts
 
-    const heroProfile = getHeroProfile(heroScores.hope, heroScores.efficacy, heroScores.resilience, heroScores.optimism)
+    const heroProfile = getHeroProfile(heroScores.hope / 10, heroScores.efficacy / 10, heroScores.resilience / 10, heroScores.optimism / 10)
 
     return (
         <div className="space-y-12">
@@ -187,10 +187,10 @@ export function AnalysisDisplay({ analysis, stats, onSelectQuestion }: AnalysisD
                             <div className="h-52 w-full lg:w-1/2 -ml-4">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <RadarChart cx="50%" cy="50%" outerRadius="70%" data={[
-                                        { subject: 'Hope (希望)', A: heroScores.hope, fullMark: 10 },
-                                        { subject: 'Efficacy (効力感)', A: heroScores.efficacy, fullMark: 10 },
-                                        { subject: 'Resilience (回復力)', A: heroScores.resilience, fullMark: 10 },
-                                        { subject: 'Optimism (楽観性)', A: heroScores.optimism, fullMark: 10 },
+                                        { subject: 'Hope (希望)', A: heroScores.hope / 10, fullMark: 10 },
+                                        { subject: 'Efficacy (効力感)', A: heroScores.efficacy / 10, fullMark: 10 },
+                                        { subject: 'Resilience (回復力)', A: heroScores.resilience / 10, fullMark: 10 },
+                                        { subject: 'Optimism (楽観性)', A: heroScores.optimism / 10, fullMark: 10 },
                                     ]}>
                                         <PolarGrid stroke="#e2e8f0" />
                                         <PolarAngleAxis dataKey="subject" tick={{ fill: '#64748b', fontSize: 10, fontWeight: 'bold' }} />

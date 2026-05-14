@@ -1795,8 +1795,8 @@ export default function FacilitatePage({ params }: { params: Promise<{ id: strin
                     const toBeScore = typeof response.toBe === "number" ? response.toBe : response.toBe?.score || 0
                     const gap = toBeScore - asIsScore
 
-                    const hero = response.hero || { hope: 5, efficacy: 5, resilience: 5, optimism: 5 }
-                    const heroProfile = getHeroProfile(hero.hope, hero.efficacy, hero.resilience, hero.optimism)
+                    const hero = response.hero || { hope: 50, efficacy: 50, resilience: 50, optimism: 50 }
+                    const heroProfile = getHeroProfile(hero.hope / 10, hero.efficacy / 10, hero.resilience / 10, hero.optimism / 10)
 
                     const isHighlighted = highlightedCardId === response.participantId
 
