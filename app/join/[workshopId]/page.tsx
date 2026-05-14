@@ -411,11 +411,7 @@ export default function JoinWorkshopPage() {
                     placeholder="今、目の前で何が起きていますか？"
                     className="bg-gray-50 border-0 rounded-xl resize-none focus:ring-2 focus:ring-red-200"
                   />
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-gray-500 w-12">Score</span>
-                    <input type="range" min={10} max={100} step={10} value={asIsScore} onChange={(e) => setAsIsScore(Number(e.target.value))} className="flex-1 h-1 bg-gray-200 rounded-full appearance-none accent-red-500" />
-                    <span className="text-xs font-bold w-6">{asIsScore / 10}</span>
-                  </div>
+
                 </div>
 
                 <div className="space-y-3 pt-2 border-t border-gray-100">
@@ -426,11 +422,7 @@ export default function JoinWorkshopPage() {
                     placeholder="制約がないとしたら、どうなっていたいですか？"
                     className="bg-gray-50 border-0 rounded-xl resize-none focus:ring-2 focus:ring-teal-200"
                   />
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-gray-500 w-12">Score</span>
-                    <input type="range" min={10} max={100} step={10} value={toBeScore} onChange={(e) => setToBeScore(Number(e.target.value))} className="flex-1 h-1 bg-gray-200 rounded-full appearance-none accent-teal-500" />
-                    <span className="text-xs font-bold w-6">{toBeScore / 10}</span>
-                  </div>
+
                 </div>
 
                 <div className="space-y-3 pt-2 border-t border-gray-100">

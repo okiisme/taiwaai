@@ -1528,77 +1528,6 @@ export default function FacilitatePage({ params }: { params: Promise<{ id: strin
               </Card>
             </div>
 
-            {session.responses.length > 0 && session.responses.some((r) => r.asIs && r.toBe) && (
-              <Card className="bg-white rounded-3xl p-4 sm:p-6 shadow-sm border border-gray-100">
-                <h3 className="font-semibold flex items-center gap-1 sm:gap-2 text-gray-700 mb-4 sm:mb-6 text-sm sm:text-base">
-                  <BarChart className="h-4 w-4 sm:h-5 sm:w-5 text-teal-400" />
-                  回答データの可視化
-                </h3>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-                  {/* As is vs To be Scores */}
-                  <div className="space-y-4">
-                    <h4 className="text-xs sm:text-sm font-medium text-gray-600">As is / To be スコア比較</h4>
-                    <div className="space-y-3">
-                      {session.responses
-                        .filter((response) => response.asIs && response.toBe)
-                        .map((response, idx) => (
-                          <div key={idx} className="space-y-2">
-                            <div className="flex items-center justify-between text-xs text-gray-600">
-                              <span>{response.participantName}</span>
-                              <span className="font-semibold">Gap: {response.toBe!.score - response.asIs!.score}</span>
-                            </div>
-                            <div className="relative h-8 bg-gray-100 rounded-lg overflow-hidden">
-                              <div
-                                className="absolute left-0 h-full bg-red-400 flex items-center justify-center text-xs font-semibold text-white"
-                                style={{ width: `${(response.asIs!.score / 10) * 100}%` }}
-                              >
-                                As is: {response.asIs!.score}
-                              </div>
-                              <div
-                                className="absolute right-0 h-full bg-teal-400 flex items-center justify-center text-xs font-semibold text-white"
-                                style={{ width: `${(response.toBe!.score / 10) * 100}%` }}
-                              >
-                                To be: {response.toBe!.score}
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                    </div>
-                  </div>
-
-                  {/* Gap Distribution */}
-                  <div className="space-y-4">
-                    <h4 className="text-xs sm:text-sm font-medium text-gray-600">ギャップ分布</h4>
-                    <div className="space-y-3">
-                      {session.responses
-                        .filter((response) => response.asIs && response.toBe)
-                        .sort((a, b) => b.toBe!.score - b.asIs!.score - (a.toBe!.score - a.asIs!.score))
-                        .map((response, idx) => {
-                          const gap = response.toBe!.score - response.asIs!.score
-                          return (
-                            <div key={idx} className="flex items-center gap-2">
-                              <span className="text-xs text-gray-600 w-20 truncate">{response.participantName}</span>
-                              <div className="flex-1 bg-gray-100 rounded-full h-6 overflow-hidden">
-                                <div
-                                  className="h-full bg-gradient-to-r from-orange-400 to-red-500 flex items-center justify-center text-xs font-semibold text-white"
-                                  style={{ width: `${Math.min((gap / 10) * 100, 100)}%` }}
-                                >
-                                  {gap > 1 ? `+${gap}` : ""}
-                                </div>
-                              </div>
-                              <span className="text-sm font-semibold text-gray-700 w-12">+{gap}</span>
-                            </div>
-                          )
-                        })}
-                    </div>
-                  </div>
-                </div>
-              </Card>
-            )}
-
-
-
             <div className="flex justify-center">
               <Button
                 onClick={handleAnalyze}
@@ -1725,125 +1654,6 @@ export default function FacilitatePage({ params }: { params: Promise<{ id: strin
                     </AccordionItem>
                   )}
 
-
-
-                {/* Quantitative Data Comparison */}
-                <AccordionItem value="quantitative" className="border border-indigo-200 rounded-2xl overflow-hidden">
-                  <AccordionTrigger className="px-4 sm:px-6 py-3 sm:py-4 bg-gradient-to-r from-indigo-50 to-purple-50 hover:from-indigo-100 hover:to-purple-100 font-semibold text-base sm:text-lg text-gray-700">
-                    📈 定量データ比較
-                  </AccordionTrigger>
-                  <AccordionContent className="px-4 sm:px-6 py-4 sm:py-6 bg-white">
-                    <div className="space-y-6">
-                      {/* Average Scores */}
-                      <div>
-                        <h4 className="font-semibold text-base sm:text-lg mb-3 sm:mb-4 text-gray-700">平均スコア</h4>
-                        <div className="space-y-3">
-                          <div>
-                            <div className="flex justify-between items-center mb-2">
-                              <span className="text-sm font-medium text-gray-600">As is (現状)</span>
-                              <span className="text-lg font-bold text-red-600">
-                                {(
-                                  session.responses.reduce((sum, r) => {
-                                    const asIsScore = typeof r.asIs === "number" ? r.asIs : r.asIs?.score || 0
-                                    return sum + asIsScore
-                                  }, 0) / Math.max(session.responses.length, 1)
-                                ).toFixed(1)}
-                                /10
-                              </span>
-                            </div>
-                            <div className="bg-gray-200 rounded-full h-3">
-                              <div
-                                className="bg-gradient-to-r from-red-400 to-red-500 h-3 rounded-full"
-                                style={{
-                                  width: `${(session.responses.reduce((sum, r) => {
-                                    const asIsScore = typeof r.asIs === "number" ? r.asIs : r.asIs?.score || 0
-                                    return sum + asIsScore
-                                  }, 0) /
-                                    Math.max(session.responses.length, 1) /
-                                    10) *
-                                    100
-                                    }%`,
-                                }}
-                              />
-                            </div>
-                          </div>
-                          <div>
-                            <div className="flex justify-between items-center mb-2">
-                              <span className="text-sm font-medium text-gray-600">To be (理想)</span>
-                              <span className="text-lg font-bold text-teal-600">
-                                {(
-                                  session.responses.reduce((sum, r) => {
-                                    const toBeScore = typeof r.toBe === "number" ? r.toBe : r.toBe?.score || 0
-                                    return sum + toBeScore
-                                  }, 0) / Math.max(session.responses.length, 1)
-                                ).toFixed(1)}
-                                /10
-                              </span>
-                            </div>
-                            <div className="bg-gray-200 rounded-full h-3">
-                              <div
-                                className="bg-gradient-to-r from-teal-400 to-teal-500 h-3 rounded-full"
-                                style={{
-                                  width: `${(session.responses.reduce((sum, r) => {
-                                    const toBeScore = typeof r.toBe === "number" ? r.toBe : r.toBe?.score || 0
-                                    return sum + toBeScore
-                                  }, 0) /
-                                    Math.max(session.responses.length, 1) /
-                                    10) *
-                                    100
-                                    }%`,
-                                }}
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-
-
-                      {/* Gap Distribution */}
-                      <div>
-                        <h4 className="font-semibold text-base sm:text-lg mb-3 sm:mb-4 text-gray-700">ギャップ分布</h4>
-                        <div className="space-y-2">
-                          {session.responses
-                            .map((r) => {
-                              const asIsScore = typeof r.asIs === "number" ? r.asIs : r.asIs?.score || 0
-                              const toBeScore = typeof r.toBe === "number" ? r.toBe : r.toBe?.score || 0
-                              return { ...r, calculatedGap: toBeScore - asIsScore }
-                            })
-                            .sort((a, b) => b.calculatedGap - a.calculatedGap)
-                            .map((response, idx) => {
-                              return (
-                                <div key={response.id} className="flex items-center gap-3">
-                                  <button
-                                    onClick={() => scrollToParticipant(response.participantId)}
-                                    className="w-24 sm:w-32 text-xs sm:text-sm text-blue-600 hover:text-blue-800 hover:underline truncate text-left focus:outline-none"
-                                  >
-                                    {response.participantName}
-                                  </button>
-                                  <div className="flex-1 bg-gray-200 rounded-full h-2">
-                                    <div
-                                      className={`h-2 rounded-full ${response.calculatedGap > 4
-                                        ? "bg-gradient-to-r from-red-400 to-orange-500"
-                                        : response.calculatedGap > 2
-                                          ? "bg-gradient-to-r from-orange-400 to-yellow-500"
-                                          : "bg-gradient-to-r from-yellow-400 to-green-500"
-                                        }`}
-                                      style={{ width: `${Math.min((response.calculatedGap / 10) * 100, 100)}%` }}
-                                    />
-                                  </div>
-                                  <div className="w-12 text-right text-xs sm:text-sm font-semibold text-orange-600">
-                                    +{response.calculatedGap.toFixed(1)}
-                                  </div>
-                                </div>
-                              )
-                            })}
-                        </div>
-                      </div>
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-
                 {/* Pattern Analysis and Cross-Analysis */}
                 <AccordionItem value="insights" className="border border-pink-200 rounded-2xl overflow-hidden">
                   <AccordionTrigger className="px-4 sm:px-6 py-3 sm:py-4 bg-gradient-to-r from-pink-50 to-rose-50 hover:from-pink-100 hover:to-rose-100 font-semibold text-base sm:text-lg text-gray-700">
@@ -1962,7 +1772,7 @@ export default function FacilitatePage({ params }: { params: Promise<{ id: strin
                         }`}
                       >
                         {/* Status Strip */}
-                        <div className={`absolute left-0 top-0 bottom-0 w-2 ${gap > 4 ? "bg-red-400" : gap > 2 ? "bg-yellow-400" : "bg-teal-400"}`} />
+                        <div className="absolute left-0 top-0 bottom-0 w-2 bg-teal-400" />
                         
                         <div className="pl-4">
                           <div className="flex items-center gap-4 mb-6">
@@ -1975,22 +1785,8 @@ export default function FacilitatePage({ params }: { params: Promise<{ id: strin
                           </div>
 
                           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            {/* Left Column: Scores & Answer */}
+                            {/* Left Column: Answer */}
                             <div className="space-y-4">
-                              <div className="grid grid-cols-3 gap-3">
-                                <div className="bg-gray-50 rounded-xl p-3 border border-gray-100 text-center">
-                                  <div className="text-xs text-gray-500 mb-1">As-Is</div>
-                                  <div className="text-lg font-bold text-gray-800">{asIsScore}/10</div>
-                                </div>
-                                <div className="bg-gray-50 rounded-xl p-3 border border-gray-100 text-center">
-                                  <div className="text-xs text-gray-500 mb-1">To-Be</div>
-                                  <div className="text-lg font-bold text-gray-800">{toBeScore}/10</div>
-                                </div>
-                                <div className="bg-gray-50 rounded-xl p-3 border border-gray-100 text-center">
-                                  <div className="text-xs text-gray-500 mb-1">Gap</div>
-                                  <div className="text-lg font-bold text-orange-600">+{gap}</div>
-                                </div>
-                              </div>
                               
                               <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                                 <div className="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wider">Original Answer</div>
