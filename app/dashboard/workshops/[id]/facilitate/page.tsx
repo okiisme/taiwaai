@@ -1,5 +1,5 @@
 "use client"
-import React, { useState, useEffect, useCallback } from "react"
+import React, { useState, useEffect, useCallback, useRef } from "react"
 import { AnalysisDisplay } from "./analysis-display"
 import { DashboardLayout } from "@/components/dashboard-layout"
 import { Button } from "@/components/ui/button"
@@ -23,6 +23,7 @@ import {
 } from "@/components/icons"
 import type { WorkshopSession, LocalAnalysisStats } from "@/lib/types"
 import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer } from "recharts"
+import { getHeroProfile } from "@/lib/hero-profile"
 import { ErrorBoundary } from "react-error-boundary"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { QRCodeSVG } from "qrcode.react"
@@ -677,6 +678,19 @@ export default function FacilitatePage({ params }: { params: Promise<{ id: strin
   const [predefinedQuestions, setPredefinedQuestions] = useState<string[]>([])
   const [customQuestion, setCustomQuestion] = useState("")
   const [isGenerating, setIsGenerating] = useState(false)
+  const [highlightedCardId, setHighlightedCardId] = useState<string | null>(null)
+
+  const scrollToParticipant = (participantId: string) => {
+    const elementId = `participant-card-${participantId}`
+    const element = document.getElementById(elementId)
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      setHighlightedCardId(participantId)
+      setTimeout(() => {
+        setHighlightedCardId(null)
+      }, 3000)
+    }
+  }
 
   const workshopUrl = typeof window !== "undefined" ? `${window.location.origin}/join/${workshopId}` : ""
   const encodedUrl = encodeURIComponent(workshopUrl)
@@ -1801,9 +1815,12 @@ export default function FacilitatePage({ params }: { params: Promise<{ id: strin
                             .map((response, idx) => {
                               return (
                                 <div key={response.id} className="flex items-center gap-3">
-                                  <div className="w-24 sm:w-32 text-xs sm:text-sm text-gray-600 truncate">
+                                  <button
+                                    onClick={() => scrollToParticipant(response.participantId)}
+                                    className="w-24 sm:w-32 text-xs sm:text-sm text-blue-600 hover:text-blue-800 hover:underline truncate text-left focus:outline-none"
+                                  >
                                     {response.participantName}
-                                  </div>
+                                  </button>
                                   <div className="flex-1 bg-gray-200 rounded-full h-2">
                                     <div
                                       className={`h-2 rounded-full ${response.calculatedGap > 4
@@ -1931,8 +1948,19 @@ export default function FacilitatePage({ params }: { params: Promise<{ id: strin
                     const toBeScore = typeof response.toBe === "number" ? response.toBe : response.toBe?.score || 0
                     const gap = toBeScore - asIsScore
 
+                    const hero = response.hero || { hope: 5, efficacy: 5, resilience: 5, optimism: 5 }
+                    const heroProfile = getHeroProfile(hero.hope, hero.efficacy, hero.resilience, hero.optimism)
+
+                    const isHighlighted = highlightedCardId === response.participantId
+
                     return (
-                      <Card key={response.id} className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-gray-100 overflow-hidden relative">
+                      <Card
+                        id={`participant-card-${response.participantId}`}
+                        key={response.id}
+                        className={`rounded-3xl p-6 sm:p-8 shadow-sm border overflow-hidden relative transition-all duration-1000 ${
+                          isHighlighted ? 'bg-blue-50 border-blue-400 ring-2 ring-blue-400 shadow-lg' : 'bg-white border-gray-100'
+                        }`}
+                      >
                         {/* Status Strip */}
                         <div className={`absolute left-0 top-0 bottom-0 w-2 ${gap > 4 ? "bg-red-400" : gap > 2 ? "bg-yellow-400" : "bg-teal-400"}`} />
                         
@@ -1967,6 +1995,40 @@ export default function FacilitatePage({ params }: { params: Promise<{ id: strin
                               <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                                 <div className="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wider">Original Answer</div>
                                 <p className="text-gray-700 whitespace-pre-wrap">{response.answer}</p>
+                              </div>
+
+                              {/* Personal HERO Radar Chart */}
+                              <div className="bg-gray-50 rounded-xl p-4 border border-gray-100 flex flex-col sm:flex-row gap-4 items-center">
+                                <div className="w-32 h-32 flex-shrink-0">
+                                  <ResponsiveContainer width="100%" height="100%">
+                                    <RadarChart cx="50%" cy="50%" outerRadius="70%" data={[
+                                        { subject: '希望', A: hero.hope, fullMark: 10 },
+                                        { subject: '効力感', A: hero.efficacy, fullMark: 10 },
+                                        { subject: '回復力', A: hero.resilience, fullMark: 10 },
+                                        { subject: '楽観性', A: hero.optimism, fullMark: 10 },
+                                    ]}>
+                                        <PolarGrid stroke="#e2e8f0" />
+                                        <PolarAngleAxis dataKey="subject" tick={{ fill: '#64748b', fontSize: 9, fontWeight: 'bold' }} />
+                                        <PolarRadiusAxis angle={30} domain={[0, 10]} tick={false} axisLine={false} />
+                                        <Radar
+                                            name="Participant"
+                                            dataKey="A"
+                                            stroke="#0ea5e9"
+                                            strokeWidth={2}
+                                            fill="#0ea5e9"
+                                            fillOpacity={0.2}
+                                        />
+                                    </RadarChart>
+                                  </ResponsiveContainer>
+                                </div>
+                                <div className="flex-1 text-center sm:text-left">
+                                  <h4 className="font-bold text-sm text-sky-700 mb-1">
+                                    {heroProfile.name}
+                                  </h4>
+                                  <p className="text-xs text-gray-600 leading-relaxed">
+                                    {heroProfile.description}
+                                  </p>
+                                </div>
                               </div>
                             </div>
 

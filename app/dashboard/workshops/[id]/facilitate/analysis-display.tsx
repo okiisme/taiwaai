@@ -20,6 +20,7 @@ import {
     ResponsiveContainer,
 } from "recharts"
 import type { AnalysisResult, LocalAnalysisStats } from "@/lib/types"
+import { getHeroProfile } from "@/lib/hero-profile"
 
 interface AnalysisDisplayProps {
     analysis: AnalysisResult | null
@@ -43,6 +44,8 @@ export function AnalysisDisplay({ analysis, stats, onSelectQuestion }: AnalysisD
     const focusTags = stats ? stats.focusTags : (analysis.tags || { mindset: 0, process: 0, environment: 0 })
 
     if (!isMounted) return null; // Prevent server-side rendering of Recharts
+
+    const heroProfile = getHeroProfile(heroScores.hope, heroScores.efficacy, heroScores.resilience, heroScores.optimism)
 
     return (
         <div className="space-y-12">
@@ -248,6 +251,14 @@ export function AnalysisDisplay({ analysis, stats, onSelectQuestion }: AnalysisD
                                     />
                                 </RadarChart>
                             </ResponsiveContainer>
+                        </div>
+                        <div className="mt-4 pt-4 border-t border-gray-100">
+                            <h5 className="font-bold text-sm text-purple-700 mb-1">
+                                {heroProfile.name}
+                            </h5>
+                            <p className="text-xs text-gray-600 leading-relaxed">
+                                {heroProfile.description}
+                            </p>
                         </div>
                     </Card>
                 </div>
