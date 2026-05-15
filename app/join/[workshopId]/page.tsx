@@ -55,7 +55,7 @@ export default function JoinWorkshopPage() {
         const res = await fetch(`/api/workshop/${workshopId}`)
         if (res.ok) {
           const data = await res.json()
-          if (data.status === 'analysis' && data.responses && data.responses.length > 0) {
+          if ((data.status === 'analysis' || data.status === 'summary' || data.analysis) && data.responses && data.responses.length > 0) {
             setSessionData(data)
             setAnalysisReady(true)
             if (analysisPollingRef.current) {
