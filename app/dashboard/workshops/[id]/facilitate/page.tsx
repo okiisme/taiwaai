@@ -1828,9 +1828,20 @@ export default function FacilitatePage({ params }: { params: Promise<{ id: strin
                 />
               )}
 
+              {/* [Phase5] 詳細分析セクション — デフォルト閉じ。"sentiment"/"quantitative" は削除済み */}
+              <div>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 bg-purple-100 rounded-lg text-purple-600">
+                    <BarChart className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-800">詳細分析</h3>
+                    <p className="text-xs text-gray-500">クリックで展開 — 主要な発見・パターン分析</p>
+                  </div>
+                </div>
               <Accordion
                 type="multiple"
-                defaultValue={["sentiment", "findings", "responses", "quantitative", "insights", "triggers"]}
+                defaultValue={[]}
                 className="space-y-4"
               >
 
@@ -1863,7 +1874,8 @@ export default function FacilitatePage({ params }: { params: Promise<{ id: strin
                     </AccordionItem>
                   )}
 
-                {/* Pattern Analysis and Cross-Analysis */}
+                {/* Pattern Analysis and Cross-Analysis — 2人以上の場合のみ表示 [Phase5] */}
+                {session.responses.length >= 2 && (
                 <AccordionItem value="insights" className="border border-pink-200 rounded-2xl overflow-hidden">
                   <AccordionTrigger className="px-4 sm:px-6 py-3 sm:py-4 bg-gradient-to-r from-pink-50 to-rose-50 hover:from-pink-100 hover:to-rose-100 font-semibold text-base sm:text-lg text-gray-700">
                     <span className="flex items-center gap-2">
@@ -1918,6 +1930,7 @@ export default function FacilitatePage({ params }: { params: Promise<{ id: strin
                     </div>
                   </AccordionContent>
                 </AccordionItem>
+                )}
 
                 {/* [Phase4削除] Curiosity Triggers 独立セクション: 個別カードのQuestion to Askと重複するため非表示 */}
                 {false && session.analysis?.discussionPoints &&
@@ -1948,6 +1961,7 @@ export default function FacilitatePage({ params }: { params: Promise<{ id: strin
                     </AccordionItem>
                   )}
               </Accordion>
+              </div>
 
               {/* [Phase3削除] 個別回答セクション - Phase3でテーマと声の直下に移動済み */}
               {false && <div className="mt-12 space-y-6">
