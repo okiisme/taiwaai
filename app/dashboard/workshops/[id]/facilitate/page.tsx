@@ -1703,6 +1703,123 @@ export default function FacilitatePage({ params }: { params: Promise<{ id: strin
                 )}
               </section>
 
+              {/* [Phase3] Section 2: 個別回答 — テーマと声の直下に移動 */}
+              {session.responses.length > 0 && (
+                <section className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-gradient-to-r from-blue-400 to-cyan-400 p-2 rounded-2xl shadow-sm">
+                      <MessageCircle className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-800">個別回答</h3>
+                      <p className="text-xs text-gray-500">参加者ごとの回答・HEROスコア・AIインサイト</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 gap-6">
+                    {session.responses.map((response, idx) => {
+                      const participantIdStr = `Participant ${idx + 1}`
+                      const aiInsight = session.analysis?.individualInsights?.find(i => i.participantId === participantIdStr)
+                      const asIsScore = typeof response.asIs === "number" ? response.asIs : response.asIs?.score || 0
+                      const toBeScore = typeof response.toBe === "number" ? response.toBe : response.toBe?.score || 0
+                      const hero = response.hero || { hope: 50, efficacy: 50, resilience: 50, optimism: 50 }
+                      const heroProfile = getHeroProfile(hero.hope / 10, hero.efficacy / 10, hero.resilience / 10, hero.optimism / 10)
+                      const isHighlighted = highlightedCardId === response.participantId
+                      return (
+                        <Card
+                          id={`participant-card-${response.participantId}`}
+                          key={response.id}
+                          className={`rounded-3xl p-6 sm:p-8 shadow-sm border overflow-hidden relative transition-all duration-1000 ${
+                            isHighlighted ? 'bg-blue-50 border-blue-400 ring-2 ring-blue-400 shadow-lg' : 'bg-white border-gray-100'
+                          }`}
+                        >
+                          <div className="absolute left-0 top-0 bottom-0 w-2 bg-teal-400" />
+                          <div className="pl-4">
+                            <div className="flex items-center gap-4 mb-6">
+                              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center font-bold text-xl text-gray-600 shadow-inner">
+                                {response.participantName.charAt(0)}
+                              </div>
+                              <div className="flex-1">
+                                <h3 className="font-bold text-xl text-gray-800">{response.participantName}</h3>
+                                {(() => {
+                                  const clamp = (v: number) => Math.min(100, Math.max(0, v || 0))
+                                  const honesty = clamp(response.vulnerability?.honesty ?? 50)
+                                  const resistance = clamp(response.vulnerability?.resistance ?? 50)
+                                  const hColor = honesty >= 70 ? 'text-green-600 bg-green-50' : honesty >= 40 ? 'text-yellow-600 bg-yellow-50' : 'text-red-600 bg-red-50'
+                                  const rColor = resistance < 30 ? 'text-green-600 bg-green-50' : resistance <= 70 ? 'text-yellow-600 bg-yellow-50' : 'text-red-600 bg-red-50'
+                                  return (
+                                    <div className="flex items-center gap-2 mt-1">
+                                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${hColor}`}>
+                                        💬 本音度 {honesty}%
+                                      </span>
+                                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${rColor}`}>
+                                        😰 抵抗感 {resistance}%
+                                      </span>
+                                    </div>
+                                  )
+                                })()}
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                              <div className="space-y-4">
+                                <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                                  <div className="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wider">Original Answer</div>
+                                  <p className="text-gray-700 whitespace-pre-wrap">{response.answer}</p>
+                                </div>
+                                <div className="bg-gray-50 rounded-xl p-4 border border-gray-100 flex flex-col sm:flex-row gap-4 items-center">
+                                  <div className="w-32 h-32 flex-shrink-0">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                      <RadarChart cx="50%" cy="50%" outerRadius="70%" data={[
+                                          { subject: '希望', A: hero.hope / 10, fullMark: 10 },
+                                          { subject: '効力感', A: hero.efficacy / 10, fullMark: 10 },
+                                          { subject: '回復力', A: hero.resilience / 10, fullMark: 10 },
+                                          { subject: '楽観性', A: hero.optimism / 10, fullMark: 10 },
+                                      ]}>
+                                          <PolarGrid stroke="#e2e8f0" />
+                                          <PolarAngleAxis dataKey="subject" tick={{ fill: '#64748b', fontSize: 9, fontWeight: 'bold' }} />
+                                          <PolarRadiusAxis angle={30} domain={[0, 10]} tick={false} axisLine={false} />
+                                          <Radar name="Participant" dataKey="A" stroke="#0ea5e9" strokeWidth={2} fill="#0ea5e9" fillOpacity={0.2} />
+                                      </RadarChart>
+                                    </ResponsiveContainer>
+                                  </div>
+                                  <div className="flex-1 text-center sm:text-left">
+                                    <h4 className="font-bold text-sm text-sky-700 mb-1">{heroProfile.name}</h4>
+                                    <p className="text-xs text-gray-600 leading-relaxed">{heroProfile.description}</p>
+                                  </div>
+                                </div>
+                              </div>
+                              {aiInsight ? (
+                                <div className="space-y-4 bg-gradient-to-br from-blue-50/50 to-purple-50/50 rounded-2xl p-5 border border-blue-100">
+                                  <div>
+                                    <div className="flex items-center gap-2 mb-2">
+                                      <Sparkles className="w-4 h-4 text-purple-500" />
+                                      <span className="text-xs font-bold text-purple-700 uppercase tracking-wider">AI Summary</span>
+                                    </div>
+                                    <p className="text-sm text-gray-700 leading-relaxed">{aiInsight.summary}</p>
+                                  </div>
+                                  <div className="pt-3 border-t border-blue-100/50">
+                                    <div className="flex items-center gap-2 mb-2">
+                                      <Lightbulb className="w-4 h-4 text-blue-500" />
+                                      <span className="text-xs font-bold text-blue-700 uppercase tracking-wider">Question to Ask</span>
+                                    </div>
+                                    <p className="text-sm font-medium text-blue-900 leading-relaxed italic border-l-2 border-blue-400 pl-3 py-1">
+                                      「{aiInsight.questionToAsk}」
+                                    </p>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="space-y-4 bg-gray-50 rounded-2xl p-5 border border-gray-100 flex items-center justify-center text-sm text-gray-400 italic">
+                                  AIによる個別インサイトは生成されていません
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </Card>
+                      )
+                    })}
+                  </div>
+                </section>
+              )}
+
               {session.analysis && (
                 <AnalysisDisplay
                   analysis={session.analysis}
@@ -1832,8 +1949,8 @@ export default function FacilitatePage({ params }: { params: Promise<{ id: strin
                   )}
               </Accordion>
 
-              {/* Individual Responses List Out of Accordion */}
-              <div className="mt-12 space-y-6">
+              {/* [Phase3削除] 個別回答セクション - Phase3でテーマと声の直下に移動済み */}
+              {false && <div className="mt-12 space-y-6">
                 <h2 className="text-2xl font-bold mb-6 flex items-center gap-3 text-gray-800">
                   <div className="bg-gradient-to-r from-blue-400 to-cyan-400 p-2 sm:p-3 rounded-2xl shadow-sm">
                     <MessageCircle className="h-6 w-6 text-white" />
@@ -1970,7 +2087,7 @@ export default function FacilitatePage({ params }: { params: Promise<{ id: strin
                     )
                   })}
                 </div>
-              </div>
+              </div>}
               <div className="flex justify-center mt-6">
                 <Button
                   onClick={() => downloadReport(session, selectedTheme)}
