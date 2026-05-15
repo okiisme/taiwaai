@@ -3,10 +3,8 @@ import { useState, useEffect } from "react"
 
 import { Card } from "@/components/ui/card"
 import {
-    Target,
     Zap,
     AlertCircle,
-    CheckCircle,
     Info,
     ArrowRight,
     MessageSquare
@@ -29,37 +27,31 @@ interface AnalysisDisplayProps {
 }
 
 export function AnalysisDisplay({ analysis, stats, onSelectQuestion }: AnalysisDisplayProps) {
-    // Recharts hydration fix
     const [isMounted, setIsMounted] = useState(false);
-    useEffect(() => {
-        setIsMounted(true);
-    }, []);
+    useEffect(() => { setIsMounted(true); }, []);
 
     if (!analysis) return null
 
-    // Fallback values
-    const gapScore = analysis.gapScore || 0
-    const warmth = stats ? stats.warmth : (analysis.warmth || 0)
     const heroScores = stats ? stats.heroScores : (analysis.heroInsight?.scores || { hope: 0, efficacy: 0, resilience: 0, optimism: 0 })
-    const focusTags = stats ? stats.focusTags : (analysis.tags || { mindset: 0, process: 0, environment: 0 })
 
-    if (!isMounted) return null; // Prevent server-side rendering of Recharts
+    if (!isMounted) return null;
 
     const heroProfile = getHeroProfile(heroScores.hope / 10, heroScores.efficacy / 10, heroScores.resilience / 10, heroScores.optimism / 10)
 
-    return (
-        <div className="space-y-12">
+    const isError = analysis.overallSummary?.title.includes("エラー") || analysis.overallSummary?.title.includes("Error")
 
-            {/* SECTION 1: Gap Score or Error Display */}
-            <section className="relative">
-                {analysis.overallSummary?.title.includes("エラー") || analysis.overallSummary?.title.includes("Error") ? (
+    return (
+        <div className="space-y-10">
+
+            {/* エラー時のみ表示。通常のoverallSummary/GapMeterはページ側テーマと声セクションに置換 [Phase2] */}
+            {isError && (
+                <section className="relative">
                     <Card className="relative overflow-hidden border-2 border-red-500 bg-red-50 p-5 sm:p-8 rounded-[2rem] shadow-2xl">
                         <div className="flex flex-col gap-4 text-center">
                             <h2 className="text-xl font-bold text-red-600 flex items-center justify-center gap-2">
                                 <AlertCircle className="w-6 h-6" />
                                 {analysis.overallSummary?.title}
                             </h2>
-                            {/* Detailed Reason */}
                             <div className="bg-white p-4 rounded-xl border border-red-100 text-left space-y-2">
                                 <p className="font-bold text-red-800">原因と詳細:</p>
                                 <ul className="list-disc list-inside text-red-700 text-sm space-y-1">
@@ -68,7 +60,6 @@ export function AnalysisDisplay({ analysis, stats, onSelectQuestion }: AnalysisD
                                     ))}
                                 </ul>
                             </div>
-                            {/* Action Suggestion */}
                             <div className="bg-green-50 p-4 rounded-xl border border-green-100 text-left space-y-2">
                                 <p className="font-bold text-green-800">推奨アクション:</p>
                                 <ul className="list-disc list-inside text-green-700 text-sm space-y-1">
@@ -79,7 +70,12 @@ export function AnalysisDisplay({ analysis, stats, onSelectQuestion }: AnalysisD
                             </div>
                         </div>
                     </Card>
-                ) : (
+                </section>
+            )}
+
+            {/* [Phase2削除] 通常の overallSummary + Gap Meter — テーマと声セクションに置換済み */}
+            {false && !isError && (
+                <section className="relative">
                     <Card className="relative overflow-hidden border-2 border-slate-900 bg-slate-900 text-white p-5 sm:p-8 rounded-[2rem] shadow-2xl">
                         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-24 bg-teal-500/20 blur-[100px] rounded-full pointer-events-none"></div>
                         <div className="flex flex-col md:flex-row items-center justify-between gap-6 sm:gap-8">
@@ -95,36 +91,26 @@ export function AnalysisDisplay({ analysis, stats, onSelectQuestion }: AnalysisD
                                     {analysis.overallSummary?.description}
                                 </p>
                             </div>
-
-                            {/* Gap Meter */}
                             <div className="relative w-32 h-32 sm:w-48 sm:h-48 flex items-center justify-center shrink-0">
                                 <div className="absolute inset-0 rounded-full border-[10px] sm:border-[12px] border-slate-800"></div>
                                 <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 192 192">
-                                    <circle
-                                        cx="96"
-                                        cy="96"
-                                        r="84"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        strokeWidth="12"
+                                    <circle cx="96" cy="96" r="84" fill="none" stroke="currentColor" strokeWidth="12"
                                         strokeDasharray={2 * Math.PI * 84}
-                                        strokeDashoffset={2 * Math.PI * 84 * (1 - gapScore / 100)}
-                                        className={`text-red-500 transition-all duration-1000 ease-out`}
-                                        strokeLinecap="round"
-                                    />
+                                        strokeDashoffset={2 * Math.PI * 84 * (1 - (analysis.gapScore || 0) / 100)}
+                                        className="text-red-500 transition-all duration-1000 ease-out" strokeLinecap="round" />
                                 </svg>
                                 <div className="text-center">
-                                    <span className="block text-3xl sm:text-5xl font-black">{gapScore}</span>
+                                    <span className="block text-3xl sm:text-5xl font-black">{analysis.gapScore || 0}</span>
                                     <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Gap Level</span>
                                 </div>
                             </div>
                         </div>
                     </Card>
-                )}
-            </section>
+                </section>
+            )}
 
-            {/* SECTION 2: Cognitive Dissonance (認識のズレ) */}
-            {analysis.cognitiveDissonance && (
+            {/* SECTION: 全体の構造 — 認識のズレ (Friction) [Phase3でセクション3に] */}
+            {analysis.cognitiveDissonance && !isError && (
                 <section>
                     <div className="flex items-center gap-3 mb-6">
                         <div className="p-2 bg-indigo-100 rounded-lg text-indigo-600">
@@ -137,7 +123,6 @@ export function AnalysisDisplay({ analysis, stats, onSelectQuestion }: AnalysisD
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* ズレのポイント */}
                         <Card className="p-4 sm:p-6 bg-white border border-indigo-100 shadow-sm rounded-2xl">
                             <h4 className="font-bold text-indigo-700 mb-4 flex items-center gap-2">
                                 <span className="text-xl">⚠️</span> 具体的な認識のズレ (Friction)
@@ -152,7 +137,6 @@ export function AnalysisDisplay({ analysis, stats, onSelectQuestion }: AnalysisD
                             </ul>
                         </Card>
 
-                        {/* 話し合うべきこと */}
                         <Card className="p-4 sm:p-6 bg-white border border-teal-100 shadow-sm rounded-2xl">
                             <h4 className="font-bold text-teal-700 mb-4 flex items-center gap-2">
                                 <span className="text-xl">💬</span> 話し合うべきトピック
@@ -167,7 +151,8 @@ export function AnalysisDisplay({ analysis, stats, onSelectQuestion }: AnalysisD
                             </ul>
                         </Card>
                     </div>
-                    {analysis.cognitiveDissonance.lemonMarketRisk && analysis.cognitiveDissonance.lemonMarketRisk !== "-" && (
+                    {/* [Phase1削除] 対話不全アラート */}
+                    {false && analysis.cognitiveDissonance.lemonMarketRisk && analysis.cognitiveDissonance.lemonMarketRisk !== "-" && (
                         <div className="mt-4 bg-orange-50 border border-orange-200 text-orange-800 p-4 rounded-xl text-sm leading-relaxed">
                             <strong>[対話不全アラート]</strong> {analysis.cognitiveDissonance.lemonMarketRisk}
                         </div>
@@ -175,10 +160,9 @@ export function AnalysisDisplay({ analysis, stats, onSelectQuestion }: AnalysisD
                 </section>
             )}
 
-            {/* SECTION 3: HERO Parameter Analysis */}
-            <section className="space-y-6">
-                <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
-                    {/* HERO Radar */}
+            {/* SECTION: HEROレーダー（チーム平均） */}
+            {!isError && (
+                <section className="space-y-6">
                     <Card className="p-6 bg-white border border-gray-100 shadow-sm">
                         <h4 className="font-bold text-gray-700 mb-2 flex items-center gap-2">
                             <Zap className="w-5 h-5 text-yellow-500" /> 心理的資本 (HERO)
@@ -195,103 +179,91 @@ export function AnalysisDisplay({ analysis, stats, onSelectQuestion }: AnalysisD
                                         <PolarGrid stroke="#e2e8f0" />
                                         <PolarAngleAxis dataKey="subject" tick={{ fill: '#64748b', fontSize: 9, fontWeight: 'bold' }} />
                                         <PolarRadiusAxis angle={30} domain={[0, 10]} tick={false} axisLine={false} />
-                                        <Radar
-                                            name="Team"
-                                            dataKey="A"
-                                            stroke="#8b5cf6"
-                                            strokeWidth={3}
-                                            fill="#8b5cf6"
-                                            fillOpacity={0.2}
-                                        />
+                                        <Radar name="Team" dataKey="A" stroke="#8b5cf6" strokeWidth={3} fill="#8b5cf6" fillOpacity={0.2} />
                                     </RadarChart>
                                 </ResponsiveContainer>
                             </div>
                             <div className="flex-1">
-                                <h5 className="font-bold text-lg text-purple-700 mb-2">
-                                    {heroProfile.name}
-                                </h5>
-                                <p className="text-sm text-gray-600 leading-relaxed">
-                                    {heroProfile.description}
-                                </p>
-                            </div>
-                        </div>
-                    </Card>
-                </div>
-                
-                {/* AI Parameter Insight */}
-                {analysis.heroInsight?.parameterAnalysis && analysis.heroInsight.parameterAnalysis !== "-" && (
-                    <Card className="p-4 sm:p-6 bg-gradient-to-r from-slate-50 to-gray-100 border border-slate-200 shadow-sm">
-                        <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
-                            <div className="p-2 bg-slate-800 rounded-lg text-white shrink-0 mt-1">
-                                <Zap className="w-5 h-5" />
-                            </div>
-                            <div>
-                                <h4 className="font-bold text-slate-800 mb-2">パラメーターからの洞察 (Parameter Insight)</h4>
-                                <p className="text-slate-700 text-sm leading-relaxed whitespace-pre-wrap">
-                                    {analysis.heroInsight.parameterAnalysis}
-                                </p>
-                            </div>
-                        </div>
-                    </Card>
-                )}
-            </section>
-
-            {/* SECTION 4: Next Dialogue (The "Action") */}
-            <section>
-                <div className="flex items-center gap-3 mb-6">
-                    <div className="p-2 bg-teal-100 rounded-lg text-teal-600">
-                        <MessageSquare className="w-5 h-5" />
-                    </div>
-                    <div>
-                        <h3 className="text-xl font-bold text-gray-800">次なる対話のステップ</h3>
-                        <p className="text-xs text-gray-500">この状況を打破するために、まず必要な問いかけ</p>
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {/* Primary Question (Highlighted) */}
-                    <Card
-                        className="col-span-1 md:col-span-2 p-5 sm:p-8 bg-gradient-to-br from-teal-500 to-emerald-600 text-white shadow-xl hover:scale-[1.01] transition-transform cursor-pointer relative overflow-hidden group"
-                        onClick={() => analysis.interventionQuestions && onSelectQuestion(analysis.interventionQuestions.smallAgreement)}
-                    >
-                        <div className="absolute top-0 right-0 p-16 bg-white opacity-10 rounded-full blur-2xl -mr-8 -mt-8 group-hover:opacity-20 transition-opacity"></div>
-
-                        <div className="relative z-10">
-                            <span className="inline-block px-3 py-1 bg-white/20 rounded-full text-xs font-bold mb-4 backdrop-blur-sm border border-white/20">
-                                おすすめ (小さな合意)
-                            </span>
-                            <h3 className="text-base sm:text-xl md:text-2xl font-bold leading-relaxed mb-6 break-words">
-                                "{analysis.interventionQuestions?.smallAgreement}"
-                            </h3>
-                            <div className="inline-flex items-center gap-2 font-bold text-xs sm:text-sm bg-white text-teal-600 px-3 sm:px-4 py-2 rounded-full">
-                                この問いから始める <ArrowRight className="w-4 h-4 ml-1 shrink-0" />
+                                <h5 className="font-bold text-lg text-purple-700 mb-2">{heroProfile.name}</h5>
+                                <p className="text-sm text-gray-600 leading-relaxed">{heroProfile.description}</p>
                             </div>
                         </div>
                     </Card>
 
-                    {/* Secondary Options */}
-                    <div className="flex flex-col gap-4">
-                        <Card
-                            className="flex-1 p-5 border border-indigo-100 bg-indigo-50/50 hover:bg-indigo-50 hover:border-indigo-300 transition-all cursor-pointer flex flex-col justify-center"
-                            onClick={() => analysis.interventionQuestions && onSelectQuestion(analysis.interventionQuestions.mutualUnderstanding)}
-                        >
-                            <span className="text-xs font-bold text-indigo-400 mb-2 block">相互理解を深めるなら</span>
-                            <p className="text-sm font-bold text-indigo-900 break-words">
-                                "{analysis.interventionQuestions?.mutualUnderstanding}"
-                            </p>
+                    {/* [Phase1削除] パラメータ洞察独立セクション */}
+                    {false && analysis.heroInsight?.parameterAnalysis && analysis.heroInsight.parameterAnalysis !== "-" && (
+                        <Card className="p-4 sm:p-6 bg-gradient-to-r from-slate-50 to-gray-100 border border-slate-200 shadow-sm">
+                            <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
+                                <div className="p-2 bg-slate-800 rounded-lg text-white shrink-0 mt-1">
+                                    <Zap className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <h4 className="font-bold text-slate-800 mb-2">パラメーターからの洞察 (Parameter Insight)</h4>
+                                    <p className="text-slate-700 text-sm leading-relaxed whitespace-pre-wrap">
+                                        {analysis.heroInsight.parameterAnalysis}
+                                    </p>
+                                </div>
+                            </div>
                         </Card>
-                        <Card
-                            className="flex-1 p-5 border border-fuchsia-100 bg-fuchsia-50/50 hover:bg-fuchsia-50 hover:border-fuchsia-300 transition-all cursor-pointer flex flex-col justify-center"
-                            onClick={() => analysis.interventionQuestions && onSelectQuestion(analysis.interventionQuestions.suspendedJudgment)}
-                        >
-                            <span className="text-xs font-bold text-fuchsia-400 mb-2 block">判断を保留するなら</span>
-                            <p className="text-sm font-bold text-fuchsia-900 break-words">
-                                "{analysis.interventionQuestions?.suspendedJudgment}"
-                            </p>
-                        </Card>
+                    )}
+                </section>
+            )}
+
+            {/* SECTION: 次なる対話のステップ */}
+            {!isError && (
+                <section>
+                    <div className="flex items-center gap-3 mb-6">
+                        <div className="p-2 bg-teal-100 rounded-lg text-teal-600">
+                            <MessageSquare className="w-5 h-5" />
+                        </div>
+                        <div>
+                            <h3 className="text-xl font-bold text-gray-800">次なる対話のステップ</h3>
+                            <p className="text-xs text-gray-500">この状況を打破するために、まず必要な問いかけ</p>
+                        </div>
                     </div>
-                </div>
-            </section>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <Card
+                            className="col-span-1 md:col-span-2 p-5 sm:p-8 bg-gradient-to-br from-teal-500 to-emerald-600 text-white shadow-xl hover:scale-[1.01] transition-transform cursor-pointer relative overflow-hidden group"
+                            onClick={() => analysis.interventionQuestions && onSelectQuestion(analysis.interventionQuestions.smallAgreement)}
+                        >
+                            <div className="absolute top-0 right-0 p-16 bg-white opacity-10 rounded-full blur-2xl -mr-8 -mt-8 group-hover:opacity-20 transition-opacity"></div>
+                            <div className="relative z-10">
+                                <span className="inline-block px-3 py-1 bg-white/20 rounded-full text-xs font-bold mb-4 backdrop-blur-sm border border-white/20">
+                                    おすすめ (小さな合意)
+                                </span>
+                                <h3 className="text-base sm:text-xl md:text-2xl font-bold leading-relaxed mb-6 break-words">
+                                    "{analysis.interventionQuestions?.smallAgreement}"
+                                </h3>
+                                <div className="inline-flex items-center gap-2 font-bold text-xs sm:text-sm bg-white text-teal-600 px-3 sm:px-4 py-2 rounded-full">
+                                    この問いから始める <ArrowRight className="w-4 h-4 ml-1 shrink-0" />
+                                </div>
+                            </div>
+                        </Card>
+
+                        <div className="flex flex-col gap-4">
+                            <Card
+                                className="flex-1 p-5 border border-indigo-100 bg-indigo-50/50 hover:bg-indigo-50 hover:border-indigo-300 transition-all cursor-pointer flex flex-col justify-center"
+                                onClick={() => analysis.interventionQuestions && onSelectQuestion(analysis.interventionQuestions.mutualUnderstanding)}
+                            >
+                                <span className="text-xs font-bold text-indigo-400 mb-2 block">相互理解を深めるなら</span>
+                                <p className="text-sm font-bold text-indigo-900 break-words">
+                                    "{analysis.interventionQuestions?.mutualUnderstanding}"
+                                </p>
+                            </Card>
+                            <Card
+                                className="flex-1 p-5 border border-fuchsia-100 bg-fuchsia-50/50 hover:bg-fuchsia-50 hover:border-fuchsia-300 transition-all cursor-pointer flex flex-col justify-center"
+                                onClick={() => analysis.interventionQuestions && onSelectQuestion(analysis.interventionQuestions.suspendedJudgment)}
+                            >
+                                <span className="text-xs font-bold text-fuchsia-400 mb-2 block">判断を保留するなら</span>
+                                <p className="text-sm font-bold text-fuchsia-900 break-words">
+                                    "{analysis.interventionQuestions?.suspendedJudgment}"
+                                </p>
+                            </Card>
+                        </div>
+                    </div>
+                </section>
+            )}
 
         </div>
     )

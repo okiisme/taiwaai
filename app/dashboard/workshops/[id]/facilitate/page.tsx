@@ -1648,6 +1648,61 @@ export default function FacilitatePage({ params }: { params: Promise<{ id: strin
                 )
               })()}
 
+              {/* Section 1: 今回のテーマと声 [Phase2] */}
+              <section className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-teal-100 rounded-lg text-teal-600">
+                    <MessageCircle className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-800">今回のテーマと声</h3>
+                    <p className="text-xs text-gray-500">参加者から寄せられた生の声</p>
+                  </div>
+                </div>
+
+                {session.currentQuestion && (
+                  <Card className="p-4 sm:p-6 bg-slate-900 text-white rounded-2xl">
+                    <div className="text-xs font-bold text-teal-400 uppercase tracking-widest mb-2">今回の問い</div>
+                    <p className="text-lg sm:text-xl font-bold leading-relaxed break-words">{session.currentQuestion.question}</p>
+                    {session.currentQuestion.theme && (
+                      <div className="mt-3">
+                        <span className="inline-block px-3 py-1 bg-teal-500/20 text-teal-300 rounded-full text-xs font-semibold border border-teal-500/30">
+                          {session.currentQuestion.theme}
+                        </span>
+                      </div>
+                    )}
+                  </Card>
+                )}
+
+                {session.responses.length > 0 && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {session.responses.map((response) => {
+                      const clamp = (v: number) => Math.min(100, Math.max(0, v || 0))
+                      const honesty = clamp(response.vulnerability?.honesty ?? 50)
+                      const hColor = honesty >= 70
+                        ? 'text-green-600 bg-green-50 border-green-200'
+                        : honesty >= 40
+                        ? 'text-yellow-600 bg-yellow-50 border-yellow-200'
+                        : 'text-red-600 bg-red-50 border-red-200'
+                      return (
+                        <Card key={response.id} className="p-4 sm:p-5 bg-white border border-gray-100 rounded-2xl">
+                          <div className="flex items-center gap-2 mb-3">
+                            <div className="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center font-bold text-sm text-teal-700 shrink-0">
+                              {response.participantName.charAt(0)}
+                            </div>
+                            <span className="font-semibold text-gray-700 text-sm">{response.participantName}</span>
+                            <span className={`ml-auto inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold border shrink-0 ${hColor}`}>
+                              💬 {honesty}%
+                            </span>
+                          </div>
+                          <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap break-words">{response.answer}</p>
+                        </Card>
+                      )
+                    })}
+                  </div>
+                )}
+              </section>
+
               {session.analysis && (
                 <AnalysisDisplay
                   analysis={session.analysis}
