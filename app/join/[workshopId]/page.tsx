@@ -501,25 +501,27 @@ export default function JoinWorkshopPage() {
                       <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{r.answer}</p>
                     </div>
                     {/* HERO + Profile */}
-                    <div className="bg-gray-50 rounded-xl p-3 border border-gray-100 flex items-center gap-3">
-                      <div className="w-28 h-28 shrink-0">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <RadarChart cx="50%" cy="50%" outerRadius="70%" data={[
-                            {subject:'希望',A:rHero.hope/10,fullMark:10},
-                            {subject:'効力感',A:rHero.efficacy/10,fullMark:10},
-                            {subject:'回復力',A:rHero.resilience/10,fullMark:10},
-                            {subject:'楽観性',A:rHero.optimism/10,fullMark:10}
-                          ]}>
-                            <PolarGrid stroke="#e2e8f0"/>
-                            <PolarAngleAxis dataKey="subject" tick={{fill:'#64748b',fontSize:9,fontWeight:'bold'}}/>
-                            <PolarRadiusAxis angle={30} domain={[0,10]} tick={false} axisLine={false}/>
-                            <Radar dataKey="A" stroke="#0ea5e9" strokeWidth={2} fill="#0ea5e9" fillOpacity={0.2}/>
-                          </RadarChart>
-                        </ResponsiveContainer>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-bold text-sm text-sky-700 mb-1">{rProfile.name}</h4>
-                        <p className="text-xs text-gray-600 leading-relaxed">{rProfile.description}</p>
+                    <div className="bg-gray-50 rounded-xl p-3 border border-gray-100">
+                      <div className="flex flex-col sm:flex-row items-center gap-3">
+                        <div className="w-36 h-36 shrink-0">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <RadarChart cx="50%" cy="50%" outerRadius="70%" data={[
+                              {subject:'希望',A:rHero.hope/10,fullMark:10},
+                              {subject:'効力感',A:rHero.efficacy/10,fullMark:10},
+                              {subject:'回復力',A:rHero.resilience/10,fullMark:10},
+                              {subject:'楽観性',A:rHero.optimism/10,fullMark:10}
+                            ]}>
+                              <PolarGrid stroke="#e2e8f0"/>
+                              <PolarAngleAxis dataKey="subject" tick={{fill:'#64748b',fontSize:10,fontWeight:'bold'}}/>
+                              <PolarRadiusAxis angle={30} domain={[0,10]} tick={false} axisLine={false}/>
+                              <Radar dataKey="A" stroke="#0ea5e9" strokeWidth={2} fill="#0ea5e9" fillOpacity={0.2}/>
+                            </RadarChart>
+                          </ResponsiveContainer>
+                        </div>
+                        <div className="flex-1 min-w-0 text-center sm:text-left">
+                          <h4 className="font-bold text-sm text-sky-700 mb-1">{rProfile.name}</h4>
+                          <p className="text-xs text-gray-600 leading-relaxed">{rProfile.description}</p>
+                        </div>
                       </div>
                     </div>
                     {/* AI Insight */}
@@ -548,47 +550,56 @@ export default function JoinWorkshopPage() {
           </section>
 
           {/* S3: 認識のズレと対話のポイント */}
-          {analysis?.cognitiveDissonance && (
-            <section className="space-y-3">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-indigo-100 rounded-lg text-indigo-600"><span className="text-lg">⚡</span></div>
-                <div>
-                  <h2 className="text-base font-bold text-gray-800">認識のズレと対話のポイント</h2>
-                  <p className="text-xs text-gray-500">メンバー間で生じている認知のズレと、次に話し合うべきこと</p>
-                </div>
+          <section className="space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-indigo-100 rounded-lg text-indigo-600"><span className="text-lg">⚡</span></div>
+              <div>
+                <h2 className="text-base font-bold text-gray-800">認識のズレと対話のポイント</h2>
+                <p className="text-xs text-gray-500">メンバー間で生じている認知のズレと、次に話し合うべきこと</p>
               </div>
-              {analysis.cognitiveDissonance.pointsOfFriction?.length > 0 && (
-                <Card className="p-4 bg-white rounded-2xl border border-indigo-100 space-y-3">
-                  <h3 className="font-bold text-indigo-700 text-sm flex items-center gap-2"><span>⚠️</span> 具体的な認識のズレ (Friction)</h3>
-                  <ul className="space-y-2">
-                    {analysis.cognitiveDissonance.pointsOfFriction.map((p: string, i: number) => (
-                      <li key={i} className="flex items-start gap-2 text-sm text-gray-700 leading-relaxed bg-indigo-50/50 p-3 rounded-lg border border-indigo-50">
-                        <span className="text-indigo-400 font-bold mt-0.5">•</span>{p}
-                      </li>
-                    ))}
-                  </ul>
-                </Card>
-              )}
-              {analysis.cognitiveDissonance.discussionTopics?.length > 0 && (
-                <Card className="p-4 bg-white rounded-2xl border border-teal-100 space-y-3">
-                  <h3 className="font-bold text-teal-700 text-sm flex items-center gap-2"><span>💬</span> 話し合うべきトピック</h3>
-                  <ul className="space-y-2">
-                    {analysis.cognitiveDissonance.discussionTopics.map((t: string, i: number) => (
-                      <li key={i} className="flex items-start gap-2 text-sm text-gray-700 leading-relaxed bg-teal-50/50 p-3 rounded-lg border border-teal-50">
-                        <span className="text-teal-400 font-bold mt-0.5">•</span>{t}
-                      </li>
-                    ))}
-                  </ul>
-                </Card>
-              )}
-            </section>
-          )}
+            </div>
+            {analysis?.cognitiveDissonance ? (
+              <>
+                {analysis.cognitiveDissonance.pointsOfFriction?.length > 0 && (
+                  <Card className="p-4 bg-white rounded-2xl border border-indigo-100 space-y-3">
+                    <h3 className="font-bold text-indigo-700 text-sm flex items-center gap-2"><span>⚠️</span> 具体的な認識のズレ (Friction)</h3>
+                    <ul className="space-y-2">
+                      {analysis.cognitiveDissonance.pointsOfFriction.map((p: string, i: number) => (
+                        <li key={i} className="flex items-start gap-2 text-sm text-gray-700 leading-relaxed bg-indigo-50/50 p-3 rounded-lg border border-indigo-50">
+                          <span className="text-indigo-400 font-bold mt-0.5">•</span>{p}
+                        </li>
+                      ))}
+                    </ul>
+                  </Card>
+                )}
+                {analysis.cognitiveDissonance.discussionTopics?.length > 0 && (
+                  <Card className="p-4 bg-white rounded-2xl border border-teal-100 space-y-3">
+                    <h3 className="font-bold text-teal-700 text-sm flex items-center gap-2"><span>💬</span> 話し合うべきトピック</h3>
+                    <ul className="space-y-2">
+                      {analysis.cognitiveDissonance.discussionTopics.map((t: string, i: number) => (
+                        <li key={i} className="flex items-start gap-2 text-sm text-gray-700 leading-relaxed bg-teal-50/50 p-3 rounded-lg border border-teal-50">
+                          <span className="text-teal-400 font-bold mt-0.5">•</span>{t}
+                        </li>
+                      ))}
+                    </ul>
+                  </Card>
+                )}
+              </>
+            ) : (
+              <Card className="p-4 bg-white rounded-2xl border border-gray-100 text-center text-sm text-gray-400 italic">
+                AIによる認識のズレ分析は生成されていません
+              </Card>
+            )}
+          </section>
 
           {/* S4: チームHERO */}
           <section className="space-y-3">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-yellow-100 rounded-lg text-yellow-600"><span className="text-lg">⚡</span></div>
-              <h2 className="text-base font-bold text-gray-800">心理的資本 (HERO)</h2>
+              <div>
+                <h2 className="text-base font-bold text-gray-800">心理的資本 (HERO)</h2>
+                <p className="text-xs text-gray-500">チーム全体の心理的資本スコア</p>
+              </div>
             </div>
             <Card className="p-4 bg-white rounded-2xl border border-gray-100 space-y-3">
               <div className="flex flex-col items-center gap-3">
@@ -616,15 +627,15 @@ export default function JoinWorkshopPage() {
           </section>
 
           {/* S5: 次なる対話のステップ */}
-          {analysis?.interventionQuestions && (
-            <section className="space-y-3">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-teal-100 rounded-lg text-teal-600"><span className="text-lg">🗣</span></div>
-                <div>
-                  <h2 className="text-base font-bold text-gray-800">次なる対話のステップ</h2>
-                  <p className="text-xs text-gray-500">この状況を打破するために、まず必要な問いかけ</p>
-                </div>
+          <section className="space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-teal-100 rounded-lg text-teal-600"><span className="text-lg">🗣</span></div>
+              <div>
+                <h2 className="text-base font-bold text-gray-800">次なる対話のステップ</h2>
+                <p className="text-xs text-gray-500">この状況を打破するために、まず必要な問いかけ</p>
               </div>
+            </div>
+            {analysis?.interventionQuestions ? (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Card className="col-span-1 md:col-span-2 p-5 bg-gradient-to-br from-teal-500 to-emerald-600 text-white rounded-2xl relative overflow-hidden">
                   <div className="absolute top-0 right-0 p-16 bg-white opacity-10 rounded-full blur-2xl -mr-8 -mt-8"></div>
@@ -645,19 +656,23 @@ export default function JoinWorkshopPage() {
                   </Card>
                 </div>
               </div>
-            </section>
-          )}
+            ) : (
+              <Card className="p-4 bg-white rounded-2xl border border-gray-100 text-center text-sm text-gray-400 italic">
+                AIによる対話ステップは生成されていません
+              </Card>
+            )}
+          </section>
 
           {/* S6: 主要な発見 */}
-          {analysis?.keyFindings && analysis.keyFindings.length > 0 && (
-            <section className="space-y-3">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-purple-100 rounded-lg text-purple-600"><span className="text-lg">✅</span></div>
-                <div>
-                  <h2 className="text-base font-bold text-gray-800">主要な発見</h2>
-                  <p className="text-xs text-gray-500">AI分析による重要なインサイト</p>
-                </div>
+          <section className="space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-purple-100 rounded-lg text-purple-600"><span className="text-lg">✅</span></div>
+              <div>
+                <h2 className="text-base font-bold text-gray-800">主要な発見</h2>
+                <p className="text-xs text-gray-500">AI分析による重要なインサイト</p>
               </div>
+            </div>
+            {analysis?.keyFindings && analysis.keyFindings.length > 0 ? (
               <Card className="p-4 bg-white rounded-2xl border border-gray-100 space-y-3">
                 {analysis.keyFindings.map((f: string, i: number) => (
                   <div key={i} className="flex items-start gap-3 bg-gradient-to-r from-purple-50 to-pink-50 p-3 rounded-xl border border-purple-100">
@@ -666,8 +681,12 @@ export default function JoinWorkshopPage() {
                   </div>
                 ))}
               </Card>
-            </section>
-          )}
+            ) : (
+              <Card className="p-4 bg-white rounded-2xl border border-gray-100 text-center text-sm text-gray-400 italic">
+                AIによる主要な発見は生成されていません
+              </Card>
+            )}
+          </section>
 
           {/* S6.5: パターン分析とクロス分析 */}
           {allResponses.length >= 2 && (
