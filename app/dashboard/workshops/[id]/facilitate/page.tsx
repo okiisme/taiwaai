@@ -1919,8 +1919,8 @@ export default function FacilitatePage({ params }: { params: Promise<{ id: strin
                   </AccordionContent>
                 </AccordionItem>
 
-                {/* Curiosity Triggers */}
-                {session.analysis?.discussionPoints &&
+                {/* [Phase4削除] Curiosity Triggers 独立セクション: 個別カードのQuestion to Askと重複するため非表示 */}
+                {false && session.analysis?.discussionPoints &&
                   Array.isArray(session.analysis.discussionPoints) &&
                   session.analysis.discussionPoints.length > 0 && (
                     <AccordionItem value="triggers" className="border border-violet-200 rounded-2xl overflow-hidden">
