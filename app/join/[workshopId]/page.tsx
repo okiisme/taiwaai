@@ -393,226 +393,142 @@ export default function JoinWorkshopPage() {
     const myHonesty = clamp(vulnerability.honesty)
     const myResistance = clamp(vulnerability.resistance)
     const myEnergy = clamp(energyLevel)
-
-    const myHeroScaled = {
-      hope: hero.hope / 10,
-      efficacy: hero.efficacy / 10,
-      resilience: hero.resilience / 10,
-      optimism: hero.optimism / 10,
-    }
+    const myHeroScaled = { hope: hero.hope / 10, efficacy: hero.efficacy / 10, resilience: hero.resilience / 10, optimism: hero.optimism / 10 }
     const myHeroProfile = getHeroProfile(myHeroScaled.hope, myHeroScaled.efficacy, myHeroScaled.resilience, myHeroScaled.optimism)
-
     const allResponses = sessionData.responses || []
     const allParticipants = sessionData.participants || []
     const analysis = sessionData.analysis || null
-
-    // チーム平均
     const respCount = allResponses.length
     const avgHonesty = respCount > 0 ? Math.round(allResponses.reduce((s: number, r: any) => s + clamp(r.vulnerability?.honesty ?? 50), 0) / respCount) : 50
     const avgResistance = respCount > 0 ? Math.round(allResponses.reduce((s: number, r: any) => s + clamp(r.vulnerability?.resistance ?? 50), 0) / respCount) : 50
     const avgEnergy = allParticipants.length > 0 ? Math.round(allParticipants.reduce((s: number, p: any) => s + clamp(p.stance?.energyLevel ?? 50), 0) / allParticipants.length) : 50
-
-    // 自分のindividualInsight
-    const myInsightIdx = allResponses.findIndex((r: any) => r.participantId === participantId)
-    const myInsightKey = `Participant ${myInsightIdx + 1}`
-    const myInsight = analysis?.individualInsights?.find((i: any) => i.participantId === myInsightKey)
-
+    const heroScoresTeam = analysis?.heroInsight?.scores || { hope: 0, efficacy: 0, resilience: 0, optimism: 0 }
+    const teamHeroProfile = getHeroProfile(heroScoresTeam.hope / 10, heroScoresTeam.efficacy / 10, heroScoresTeam.resilience / 10, heroScoresTeam.optimism / 10)
     const badgeColor = (val: number, type: 'honesty' | 'resistance' | 'energy') => {
-      if (type === 'resistance') {
-        return val < 30 ? 'text-green-700 bg-green-50 border-green-200' : val <= 70 ? 'text-yellow-700 bg-yellow-50 border-yellow-200' : 'text-red-700 bg-red-50 border-red-200'
-      }
+      if (type === 'resistance') return val < 30 ? 'text-green-700 bg-green-50 border-green-200' : val <= 70 ? 'text-yellow-700 bg-yellow-50 border-yellow-200' : 'text-red-700 bg-red-50 border-red-200'
       return val >= 70 ? 'text-green-700 bg-green-50 border-green-200' : val >= 40 ? 'text-yellow-700 bg-yellow-50 border-yellow-200' : 'text-red-700 bg-red-50 border-red-200'
     }
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-teal-50 via-lime-50 to-cyan-50 p-4">
-        <div className="max-w-lg mx-auto py-6 space-y-6">
+      <div className="min-h-screen bg-gradient-to-br from-teal-50 via-lime-50 to-cyan-50">
+        {/* Sticky メタ指標 */}
+        <div className="sticky top-0 z-20 bg-white/90 backdrop-blur-sm border-b border-gray-200 px-4 py-3">
+          <div className="max-w-lg mx-auto flex flex-wrap items-center justify-center gap-2">
+            <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold border ${badgeColor(avgHonesty, 'honesty')}`}>💬 本音度 {avgHonesty}%</span>
+            <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold border ${badgeColor(avgResistance, 'resistance')}`}>😰 抵抗感 {avgResistance}%</span>
+            <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold border ${badgeColor(avgEnergy, 'energy')}`}>🔥 エネルギー {avgEnergy}%</span>
+          </div>
+        </div>
+        <div className="max-w-lg mx-auto px-4 py-6 space-y-6">
+          {/* アラート */}
+          {avgHonesty < 40 && (<div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-xl p-3 text-amber-800 text-xs">⚠️ <span><strong>建前モードの可能性。</strong>場の安心感づくりを推奨</span></div>)}
+          {avgResistance > 70 && (<div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-xl p-3 text-amber-800 text-xs">⚠️ <span><strong>共有への不安が強い。</strong>匿名化や少人数の対話から始めるべき</span></div>)}
 
-          {/* ━━ セクション1: あなたの声が届きました ━━ */}
-          <Card className="bg-white rounded-3xl p-6 shadow-lg space-y-4 border-l-4 border-teal-400">
-            <div className="flex items-center gap-3">
-              <div className="bg-teal-100 text-teal-600 w-10 h-10 rounded-full flex items-center justify-center text-xl font-bold">1</div>
-              <h2 className="text-lg font-bold text-gray-800">あなたの声が、チームに届きました</h2>
-            </div>
-            <div className="bg-gray-50 rounded-xl p-4 space-y-3">
-              <div>
-                <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">今回のテーマ</div>
-                <p className="text-sm text-gray-700">{currentQuestion}</p>
-              </div>
-              <div className="border-t border-gray-100 pt-3">
-                <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">あなたの回答</div>
-                <div className="space-y-2">
-                  <div className="bg-white rounded-lg p-3 border border-gray-100">
-                    <span className="text-xs text-red-500 font-bold">As-Is（現状）</span>
-                    <p className="text-sm text-gray-800 mt-1">{asIsFact}</p>
-                  </div>
-                  <div className="bg-white rounded-lg p-3 border border-gray-100">
-                    <span className="text-xs text-teal-500 font-bold">To-Be（理想）</span>
-                    <p className="text-sm text-gray-800 mt-1">{toBeWill}</p>
-                  </div>
-                  {solutionAction && (
-                    <div className="bg-white rounded-lg p-3 border border-gray-100">
-                      <span className="text-xs text-orange-500 font-bold">Solution（行動）</span>
-                      <p className="text-sm text-gray-800 mt-1">{solutionAction}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </Card>
-
-          {/* ━━ セクション2: あなたの状態 ━━ */}
-          <Card className="bg-white rounded-3xl p-6 shadow-lg space-y-4 border-l-4 border-purple-400">
-            <div className="flex items-center gap-3">
-              <div className="bg-purple-100 text-purple-600 w-10 h-10 rounded-full flex items-center justify-center text-xl font-bold">2</div>
-              <h2 className="text-lg font-bold text-gray-800">あなたの状態: 自己理解の鏡</h2>
-            </div>
-
-            {/* メタ指標バッジ */}
-            <div className="flex flex-wrap gap-2">
-              <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border ${badgeColor(myHonesty, 'honesty')}`}>
-                💬 本音度 {myHonesty}%
-              </span>
-              <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border ${badgeColor(myResistance, 'resistance')}`}>
-                😰 抵抗感 {myResistance}%
-              </span>
-              <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border ${badgeColor(myEnergy, 'energy')}`}>
-                🔥 エネルギー {myEnergy}%
-              </span>
-            </div>
-
-            {/* HEROレーダー */}
-            <div className="bg-gray-50 rounded-xl p-4">
-              <div className="h-48 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <RadarChart cx="50%" cy="50%" outerRadius="65%" data={[
-                    { subject: '希望', A: myHeroScaled.hope, fullMark: 10 },
-                    { subject: '効力感', A: myHeroScaled.efficacy, fullMark: 10 },
-                    { subject: '回復力', A: myHeroScaled.resilience, fullMark: 10 },
-                    { subject: '楽観性', A: myHeroScaled.optimism, fullMark: 10 },
-                  ]}>
-                    <PolarGrid stroke="#e2e8f0" />
-                    <PolarAngleAxis dataKey="subject" tick={{ fill: '#64748b', fontSize: 11, fontWeight: 'bold' }} />
-                    <PolarRadiusAxis angle={30} domain={[0, 10]} tick={false} axisLine={false} />
-                    <Radar name="You" dataKey="A" stroke="#8b5cf6" strokeWidth={2} fill="#8b5cf6" fillOpacity={0.25} />
-                  </RadarChart>
-                </ResponsiveContainer>
-              </div>
-              <p className="text-sm text-gray-700 leading-relaxed mt-3">
-                {myHeroProfile.description}
-              </p>
-              <p className="text-xs text-gray-400 mt-2 italic">
-                このプロファイルは「診断」ではなく、次の動きを設計するための鏡です。
-              </p>
-            </div>
-          </Card>
-
-          {/* ━━ セクション3: チームの全体像 ━━ */}
-          <Card className="bg-white rounded-3xl p-6 shadow-lg space-y-4 border-l-4 border-blue-400">
-            <div className="flex items-center gap-3">
-              <div className="bg-blue-100 text-blue-600 w-10 h-10 rounded-full flex items-center justify-center text-xl font-bold">3</div>
-              <h2 className="text-lg font-bold text-gray-800">チームの全体像: 一人じゃない</h2>
-            </div>
-
-            {/* チーム平均 */}
-            <div className="flex flex-wrap gap-2">
-              <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border ${badgeColor(avgHonesty, 'honesty')}`}>
-                💬 チーム本音度 {avgHonesty}%
-              </span>
-              <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border ${badgeColor(avgResistance, 'resistance')}`}>
-                😰 チーム抵抗感 {avgResistance}%
-              </span>
-              <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border ${badgeColor(avgEnergy, 'energy')}`}>
-                🔥 チームエネルギー {avgEnergy}%
-              </span>
-            </div>
-
-            {/* メンバーの声 */}
-            <div className="space-y-3">
-              <h3 className="text-sm font-bold text-gray-600">メンバーの声</h3>
-              {allResponses.map((r: any, idx: number) => {
-                const rHonesty = clamp(r.vulnerability?.honesty ?? 50)
-                const isMe = r.participantId === participantId
-                return (
-                  <div key={r.id} className={`rounded-xl p-3 border text-sm ${isMe ? 'bg-purple-50 border-purple-200' : 'bg-gray-50 border-gray-100'}`}>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="font-bold text-gray-800">
-                        {r.participantName}{isMe && <span className="text-purple-500 text-xs ml-1">(あなた)</span>}
-                      </span>
-                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${badgeColor(rHonesty, 'honesty')}`}>
-                        本音度 {rHonesty}%
-                      </span>
-                    </div>
-                    <p className="text-gray-700 text-xs leading-relaxed">{r.asIs?.fact || r.answer}</p>
-                    {rHonesty < 50 && !isMe && (
-                      <p className="text-xs text-blue-600 mt-1 italic">
-                        💡 {r.participantName}さんが力を出しやすくなるには?
-                      </p>
-                    )}
-                  </div>
-                )
+          {/* S1: テーマと声 */}
+          <section className="space-y-3">
+            <h2 className="text-base font-bold text-gray-800 flex items-center gap-2"><span className="bg-teal-100 text-teal-600 w-7 h-7 rounded-lg flex items-center justify-center text-sm">💬</span>今回のテーマと声</h2>
+            {sessionData.currentQuestion && (<Card className="p-4 bg-slate-900 text-white rounded-2xl"><div className="text-xs font-bold text-teal-400 uppercase tracking-widest mb-1">今回の問い</div><p className="text-sm font-bold leading-relaxed">{sessionData.currentQuestion.question}</p></Card>)}
+            <div className="space-y-2">
+              {allResponses.map((r: any) => {
+                const rH = clamp(r.vulnerability?.honesty ?? 50); const isMe = r.participantId === participantId
+                return (<Card key={r.id} className={`p-3 rounded-xl border ${isMe ? 'bg-purple-50 border-purple-200' : 'bg-white border-gray-100'}`}><div className="flex items-center gap-2 mb-1"><div className="w-6 h-6 rounded-full bg-teal-100 flex items-center justify-center font-bold text-xs text-teal-700 shrink-0">{r.participantName?.charAt(0)}</div><span className="font-semibold text-gray-700 text-xs">{r.participantName}{isMe && <span className="text-purple-500 ml-1">(あなた)</span>}</span><span className={`ml-auto text-xs font-semibold px-1.5 py-0.5 rounded-full ${badgeColor(rH, 'honesty')}`}>💬 {rH}%</span></div><p className="text-xs text-gray-700 leading-relaxed">{r.asIs?.fact || r.answer}</p></Card>)
               })}
             </div>
+          </section>
 
-            {/* 認識のズレ */}
-            {analysis?.cognitiveDissonance?.pointsOfFriction && analysis.cognitiveDissonance.pointsOfFriction.length > 0 && (
-              <div className="bg-amber-50 rounded-xl p-4 border border-amber-200">
-                <h3 className="text-sm font-bold text-amber-700 mb-2">⚡ 認識のズレ</h3>
-                <ul className="space-y-1">
-                  {analysis.cognitiveDissonance.pointsOfFriction.map((point: string, i: number) => (
-                    <li key={i} className="text-xs text-gray-700 leading-relaxed flex gap-2">
-                      <span className="text-amber-500 shrink-0">•</span>
-                      {point}
-                    </li>
-                  ))}
-                </ul>
+          {/* S2: あなたの状態 */}
+          <section className="space-y-3">
+            <h2 className="text-base font-bold text-gray-800 flex items-center gap-2"><span className="bg-purple-100 text-purple-600 w-7 h-7 rounded-lg flex items-center justify-center text-sm">🪞</span>あなたの状態</h2>
+            <Card className="p-4 bg-white rounded-2xl border border-gray-100 space-y-3">
+              <div className="flex flex-wrap gap-2">
+                <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold border ${badgeColor(myHonesty, 'honesty')}`}>💬 本音度 {myHonesty}%</span>
+                <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold border ${badgeColor(myResistance, 'resistance')}`}>😰 抵抗感 {myResistance}%</span>
+                <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold border ${badgeColor(myEnergy, 'energy')}`}>🔥 エネルギー {myEnergy}%</span>
               </div>
-            )}
-          </Card>
+              <div className="h-44 w-full"><ResponsiveContainer width="100%" height="100%"><RadarChart cx="50%" cy="50%" outerRadius="65%" data={[{subject:'希望',A:myHeroScaled.hope,fullMark:10},{subject:'効力感',A:myHeroScaled.efficacy,fullMark:10},{subject:'回復力',A:myHeroScaled.resilience,fullMark:10},{subject:'楽観性',A:myHeroScaled.optimism,fullMark:10}]}><PolarGrid stroke="#e2e8f0"/><PolarAngleAxis dataKey="subject" tick={{fill:'#64748b',fontSize:11,fontWeight:'bold'}}/><PolarRadiusAxis angle={30} domain={[0,10]} tick={false} axisLine={false}/><Radar name="You" dataKey="A" stroke="#8b5cf6" strokeWidth={2} fill="#8b5cf6" fillOpacity={0.25}/></RadarChart></ResponsiveContainer></div>
+              <p className="text-sm text-gray-700 leading-relaxed">{myHeroProfile.description}</p>
+              <p className="text-xs text-gray-400 italic">このプロファイルは「診断」ではなく、次の動きを設計するための鏡です。</p>
+            </Card>
+          </section>
 
-          {/* ━━ セクション4: 次の一歩 ━━ */}
-          <Card className="bg-white rounded-3xl p-6 shadow-lg space-y-4 border-l-4 border-emerald-400">
-            <div className="flex items-center gap-3">
-              <div className="bg-emerald-100 text-emerald-600 w-10 h-10 rounded-full flex items-center justify-center text-xl font-bold">4</div>
-              <h2 className="text-lg font-bold text-gray-800">次の一歩: あなたが試せる小さな実験</h2>
-            </div>
+          {/* S3: 認識のズレ */}
+          {analysis?.cognitiveDissonance && (
+            <section className="space-y-3">
+              <h2 className="text-base font-bold text-gray-800 flex items-center gap-2"><span className="bg-indigo-100 text-indigo-600 w-7 h-7 rounded-lg flex items-center justify-center text-sm">⚡</span>認識のズレと対話のポイント</h2>
+              {analysis.cognitiveDissonance.pointsOfFriction?.length > 0 && (<Card className="p-4 bg-white rounded-2xl border border-indigo-100 space-y-2"><h3 className="text-xs font-bold text-indigo-700">⚠️ 具体的な認識のズレ</h3>{analysis.cognitiveDissonance.pointsOfFriction.map((p: string, i: number) => (<div key={i} className="flex items-start gap-2 text-xs text-gray-700 bg-indigo-50/50 p-2 rounded-lg"><span className="text-indigo-400 font-bold shrink-0">•</span>{p}</div>))}</Card>)}
+              {analysis.cognitiveDissonance.discussionTopics?.length > 0 && (<Card className="p-4 bg-white rounded-2xl border border-teal-100 space-y-2"><h3 className="text-xs font-bold text-teal-700">💬 話し合うべきトピック</h3>{analysis.cognitiveDissonance.discussionTopics.map((t: string, i: number) => (<div key={i} className="flex items-start gap-2 text-xs text-gray-700 bg-teal-50/50 p-2 rounded-lg"><span className="text-teal-400 font-bold shrink-0">•</span>{t}</div>))}</Card>)}
+            </section>
+          )}
 
-            {/* 自分への問い */}
-            {myInsight?.questionToAsk && (
-              <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl p-4 border border-purple-100">
-                <h3 className="text-xs font-bold text-purple-600 uppercase tracking-wider mb-2">あなたへの問い</h3>
-                <p className="text-sm font-medium text-gray-800 leading-relaxed italic border-l-2 border-purple-400 pl-3">
-                  「{myInsight.questionToAsk}」
-                </p>
+          {/* S4: チームHERO */}
+          <section className="space-y-3">
+            <h2 className="text-base font-bold text-gray-800 flex items-center gap-2"><span className="bg-yellow-100 text-yellow-600 w-7 h-7 rounded-lg flex items-center justify-center text-sm">⚡</span>チームの心理的資本 (HERO)</h2>
+            <Card className="p-4 bg-white rounded-2xl border border-gray-100 space-y-3">
+              <div className="h-44 w-full"><ResponsiveContainer width="100%" height="100%"><RadarChart cx="50%" cy="50%" outerRadius="65%" data={[{subject:'希望',A:heroScoresTeam.hope/10,fullMark:10},{subject:'効力感',A:heroScoresTeam.efficacy/10,fullMark:10},{subject:'回復力',A:heroScoresTeam.resilience/10,fullMark:10},{subject:'楽観性',A:heroScoresTeam.optimism/10,fullMark:10}]}><PolarGrid stroke="#e2e8f0"/><PolarAngleAxis dataKey="subject" tick={{fill:'#64748b',fontSize:11,fontWeight:'bold'}}/><PolarRadiusAxis angle={30} domain={[0,10]} tick={false} axisLine={false}/><Radar name="Team" dataKey="A" stroke="#8b5cf6" strokeWidth={2} fill="#8b5cf6" fillOpacity={0.2}/></RadarChart></ResponsiveContainer></div>
+              <h4 className="font-bold text-sm text-purple-700">{teamHeroProfile.name}</h4>
+              <p className="text-xs text-gray-600 leading-relaxed">{teamHeroProfile.description}</p>
+            </Card>
+          </section>
+
+          {/* S5: 次なる対話のステップ */}
+          {analysis?.interventionQuestions && (
+            <section className="space-y-3">
+              <h2 className="text-base font-bold text-gray-800 flex items-center gap-2"><span className="bg-teal-100 text-teal-600 w-7 h-7 rounded-lg flex items-center justify-center text-sm">🗣</span>次なる対話のステップ</h2>
+              <Card className="p-4 bg-gradient-to-br from-teal-500 to-emerald-600 text-white rounded-2xl space-y-2"><span className="inline-block px-2 py-0.5 bg-white/20 rounded-full text-xs font-bold">おすすめ（小さな合意）</span><p className="text-sm font-bold leading-relaxed">"{analysis.interventionQuestions.smallAgreement}"</p></Card>
+              <div className="grid grid-cols-2 gap-2">
+                <Card className="p-3 bg-indigo-50 border border-indigo-100 rounded-xl"><span className="text-xs font-bold text-indigo-400 block mb-1">相互理解を深めるなら</span><p className="text-xs font-bold text-indigo-900">"{analysis.interventionQuestions.mutualUnderstanding}"</p></Card>
+                <Card className="p-3 bg-fuchsia-50 border border-fuchsia-100 rounded-xl"><span className="text-xs font-bold text-fuchsia-400 block mb-1">判断を保留するなら</span><p className="text-xs font-bold text-fuchsia-900">"{analysis.interventionQuestions.suspendedJudgment}"</p></Card>
               </div>
-            )}
+            </section>
+          )}
 
-            {/* リーダーが取り組むテーマ */}
-            {analysis?.interventionQuestions?.smallAgreement && (
-              <div className="bg-gradient-to-br from-teal-50 to-emerald-50 rounded-xl p-4 border border-teal-100">
-                <h3 className="text-xs font-bold text-teal-600 uppercase tracking-wider mb-2">リーダーが取り組むテーマ（チーム全体の問い）</h3>
-                <p className="text-sm font-medium text-gray-800 leading-relaxed italic border-l-2 border-teal-400 pl-3">
-                  「{analysis.interventionQuestions.smallAgreement}」
-                </p>
-              </div>
-            )}
+          {/* S6: 主要な発見 */}
+          {analysis?.keyFindings && analysis.keyFindings.length > 0 && (
+            <section className="space-y-3">
+              <h2 className="text-base font-bold text-gray-800 flex items-center gap-2"><span className="bg-purple-100 text-purple-600 w-7 h-7 rounded-lg flex items-center justify-center text-sm">✅</span>主要な発見</h2>
+              <Card className="p-4 bg-white rounded-2xl border border-gray-100 space-y-2">{analysis.keyFindings.map((f: string, i: number) => (<div key={i} className="flex items-start gap-2 bg-purple-50 p-2.5 rounded-xl border border-purple-100"><div className="w-5 h-5 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white flex items-center justify-center font-bold text-xs shrink-0">{i+1}</div><p className="text-xs text-gray-700 leading-relaxed">{f}</p></div>))}</Card>
+            </section>
+          )}
 
-            {/* 話し合うべきトピック */}
-            {analysis?.cognitiveDissonance?.discussionTopics && analysis.cognitiveDissonance.discussionTopics.length > 0 && (
-              <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
-                <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">チームで話し合うべきトピック</h3>
-                <ul className="space-y-2">
-                  {analysis.cognitiveDissonance.discussionTopics.map((topic: string, i: number) => (
-                    <li key={i} className="text-xs text-gray-700 leading-relaxed flex gap-2">
-                      <span className="bg-teal-400 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold shrink-0">{i + 1}</span>
-                      {topic}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </Card>
-
+          {/* S7: 個別回答 */}
+          <section className="space-y-3">
+            <h2 className="text-base font-bold text-gray-800 flex items-center gap-2"><span className="bg-blue-100 text-blue-600 w-7 h-7 rounded-lg flex items-center justify-center text-sm">👥</span>個別回答</h2>
+            {allResponses.map((r: any, idx: number) => {
+              const rHero = r.hero || {hope:50,efficacy:50,resilience:50,optimism:50}
+              const rProfile = getHeroProfile(rHero.hope/10, rHero.efficacy/10, rHero.resilience/10, rHero.optimism/10)
+              const rH = clamp(r.vulnerability?.honesty ?? 50); const rR = clamp(r.vulnerability?.resistance ?? 50)
+              const isMe = r.participantId === participantId
+              const aiInsight = analysis?.individualInsights?.find((i: any) => i.participantId === `Participant ${idx+1}`)
+              return (
+                <Card key={r.id} className={`rounded-2xl p-4 border overflow-hidden relative ${isMe ? 'bg-purple-50/50 border-purple-200' : 'bg-white border-gray-100'}`}>
+                  <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-teal-400" />
+                  <div className="pl-3 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center font-bold text-sm text-gray-600">{r.participantName?.charAt(0)}</div>
+                      <div className="flex-1 min-w-0">
+                        <span className="font-bold text-sm text-gray-800">{r.participantName}{isMe && <span className="text-purple-500 text-xs ml-1">(あなた)</span>}</span>
+                        <div className="flex gap-1 mt-0.5">
+                          <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-full ${badgeColor(rH, 'honesty')}`}>💬{rH}%</span>
+                          <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-full ${badgeColor(rR, 'resistance')}`}>😰{rR}%</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-2.5 border border-gray-100"><p className="text-xs text-gray-700 leading-relaxed">{r.asIs?.fact || r.answer}</p></div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-24 h-24 shrink-0"><ResponsiveContainer width="100%" height="100%"><RadarChart cx="50%" cy="50%" outerRadius="70%" data={[{subject:'H',A:rHero.hope/10,fullMark:10},{subject:'E',A:rHero.efficacy/10,fullMark:10},{subject:'R',A:rHero.resilience/10,fullMark:10},{subject:'O',A:rHero.optimism/10,fullMark:10}]}><PolarGrid stroke="#e2e8f0"/><PolarAngleAxis dataKey="subject" tick={{fill:'#64748b',fontSize:8,fontWeight:'bold'}}/><PolarRadiusAxis angle={30} domain={[0,10]} tick={false} axisLine={false}/><Radar dataKey="A" stroke="#0ea5e9" strokeWidth={1.5} fill="#0ea5e9" fillOpacity={0.2}/></RadarChart></ResponsiveContainer></div>
+                      <div className="flex-1 min-w-0"><h4 className="font-bold text-xs text-sky-700">{rProfile.name}</h4><p className="text-xs text-gray-500 leading-relaxed mt-0.5">{rProfile.description}</p></div>
+                    </div>
+                    {aiInsight && (
+                      <div className="bg-blue-50/50 rounded-lg p-2.5 border border-blue-100 space-y-2">
+                        <div><span className="text-xs font-bold text-purple-600">✨ AI Summary</span><p className="text-xs text-gray-700 leading-relaxed mt-0.5">{aiInsight.summary}</p></div>
+                        <div className="border-t border-blue-100 pt-2"><span className="text-xs font-bold text-blue-600">💡 この人への問い</span><p className="text-xs text-blue-900 italic mt-0.5 border-l-2 border-blue-400 pl-2">「{aiInsight.questionToAsk}」</p></div>
+                      </div>
+                    )}
+                  </div>
+                </Card>
+              )
+            })}
+          </section>
         </div>
       </div>
     )
