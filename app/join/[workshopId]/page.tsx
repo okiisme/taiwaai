@@ -2,6 +2,52 @@
 
 import type React from "react"
 import { useState, useEffect, useRef } from "react"
+import { useParams } from "next/navigation"
+
+type ResponseData = {
+  id: string
+  participantId: string
+  participantName: string
+  participantRole?: "manager" | "member"
+  answer: string
+  asIs?: { fact: string; score: number }
+  toBe?: { will: string; score: number }
+  solution?: { action: string; tags: string[] }
+  hero?: { hope: number; efficacy: number; resilience: number; optimism: number }
+  vulnerability?: { honesty: number; resistance: number }
+  moodColor?: string
+  submittedAt: string
+}
+
+type ParticipantData = {
+  id: string
+  name: string
+  role?: "manager" | "member"
+  stance?: { energyLevel: number; currentMode: string; openness: number }
+  joinedAt: string
+}
+
+type IndividualInsight = {
+  participantId: string
+  name?: string
+  heroProfile?: string
+  insight?: string
+}
+
+type SessionData = {
+  status: string
+  participants: ParticipantData[]
+  currentQuestion: string | null
+  responses: ResponseData[]
+  analysis?: {
+    heroInsight?: { scores?: { hope: number; efficacy: number; resilience: number; optimism: number } }
+    cognitiveDissonance?: { pattern?: string; interpretation?: string; suggestions?: string[] }
+    themes?: { keyword?: string; voices?: string[] }[]
+    nextDialogue?: { title?: string; description?: string; featured?: boolean }[]
+    crossAnalysis?: { pattern?: string; insight?: string }[]
+    individualInsights?: IndividualInsight[]
+  }
+}
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -11,8 +57,9 @@ import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Responsi
 import { getHeroProfile } from "@/lib/hero-profile"
 
 export default function JoinWorkshopPage() {
+  const params = useParams()
+  const workshopId = (params.workshopId as string) || ""
   const [mounted, setMounted] = useState(false)
-  const [workshopId, setWorkshopId] = useState<string>("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
 
@@ -32,7 +79,7 @@ export default function JoinWorkshopPage() {
   const [hasSubmitted, setHasSubmitted] = useState(false)
 
   // 分析結果表示用
-  const [sessionData, setSessionData] = useState<any>(null)
+  const [sessionData, setSessionData] = useState<SessionData | null>(null)
   const [analysisReady, setAnalysisReady] = useState(false)
   const analysisPollingRef = useRef<NodeJS.Timeout | null>(null)
 
@@ -123,12 +170,7 @@ export default function JoinWorkshopPage() {
   }
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const path = window.location.pathname
-      const id = path.split("/").filter(Boolean).pop() || ""
-      setWorkshopId(id)
-      setMounted(true)
-    }
+    setMounted(true)
   }, [])
 
   useEffect(() => {
@@ -356,9 +398,9 @@ export default function JoinWorkshopPage() {
     const allParticipants = sessionData.participants || []
     const analysis = sessionData.analysis || null
     const respCount = allResponses.length
-    const avgHonesty = respCount > 0 ? Math.round(allResponses.reduce((s: number, r: any) => s + clamp(r.vulnerability?.honesty ?? 50), 0) / respCount) : 50
-    const avgResistance = respCount > 0 ? Math.round(allResponses.reduce((s: number, r: any) => s + clamp(r.vulnerability?.resistance ?? 50), 0) / respCount) : 50
-    const avgEnergy = allParticipants.length > 0 ? Math.round(allParticipants.reduce((s: number, p: any) => s + clamp(p.stance?.energyLevel ?? 50), 0) / allParticipants.length) : 50
+    const avgHonesty = respCount > 0 ? Math.round(allResponses.reduce((s: number, r: ResponseData) => s + clamp(r.vulnerability?.honesty ?? 50), 0) / respCount) : 50
+    const avgResistance = respCount > 0 ? Math.round(allResponses.reduce((s: number, r: ResponseData) => s + clamp(r.vulnerability?.resistance ?? 50), 0) / respCount) : 50
+    const avgEnergy = allParticipants.length > 0 ? Math.round(allParticipants.reduce((s: number, p: ParticipantData) => s + clamp(p.stance?.energyLevel ?? 50), 0) / allParticipants.length) : 50
     const heroScoresTeam = analysis?.heroInsight?.scores || { hope: 0, efficacy: 0, resilience: 0, optimism: 0 }
     const teamHeroProfile = getHeroProfile(heroScoresTeam.hope / 10, heroScoresTeam.efficacy / 10, heroScoresTeam.resilience / 10, heroScoresTeam.optimism / 10)
     const badgeColor = (val: number, type: 'honesty' | 'resistance' | 'energy') => {
@@ -404,7 +446,7 @@ export default function JoinWorkshopPage() {
               </Card>
             )}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {allResponses.map((r: any) => {
+              {allResponses.map((r: ResponseData) => {
                 const rH = clamp(r.vulnerability?.honesty ?? 50)
                 const isMe = r.participantId === participantId
                 return (
@@ -430,13 +472,13 @@ export default function JoinWorkshopPage() {
                 <p className="text-xs text-gray-500">参加者ごとの回答・HEROスコア・AIインサイト</p>
               </div>
             </div>
-            {allResponses.map((r: any, idx: number) => {
+            {allResponses.map((r: ResponseData, idx: number) => {
               const rHero = r.hero || {hope:50,efficacy:50,resilience:50,optimism:50}
               const rProfile = getHeroProfile(rHero.hope/10, rHero.efficacy/10, rHero.resilience/10, rHero.optimism/10)
               const rH = clamp(r.vulnerability?.honesty ?? 50)
               const rR = clamp(r.vulnerability?.resistance ?? 50)
               const isMe = r.participantId === participantId
-              const aiInsight = analysis?.individualInsights?.find((i: any) => i.participantId === `Participant ${idx+1}`)
+              const aiInsight = analysis?.individualInsights?.find((i: IndividualInsight) => i.participantId === `Participant ${idx+1}`)
               return (
                 <Card key={r.id} className={`rounded-2xl p-4 border overflow-hidden relative ${isMe ? 'bg-purple-50/30 border-purple-200' : 'bg-white border-gray-100'}`}>
                   <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-teal-400" />
@@ -661,7 +703,7 @@ export default function JoinWorkshopPage() {
                   <div className="space-y-2 text-sm text-gray-700">
                     <p>
                       <span className="font-semibold">高ギャップ群（+4以上）:</span>{" "}
-                      {allResponses.filter((r: any) => {
+                      {allResponses.filter((r: ResponseData) => {
                         const a = typeof r.asIs === "number" ? r.asIs : r.asIs?.score || 0
                         const b = typeof r.toBe === "number" ? r.toBe : r.toBe?.score || 0
                         return b - a >= 4
@@ -669,7 +711,7 @@ export default function JoinWorkshopPage() {
                     </p>
                     <p>
                       <span className="font-semibold">中ギャップ群（+2〜3）:</span>{" "}
-                      {allResponses.filter((r: any) => {
+                      {allResponses.filter((r: ResponseData) => {
                         const a = typeof r.asIs === "number" ? r.asIs : r.asIs?.score || 0
                         const b = typeof r.toBe === "number" ? r.toBe : r.toBe?.score || 0
                         const gap = b - a
@@ -678,7 +720,7 @@ export default function JoinWorkshopPage() {
                     </p>
                     <p>
                       <span className="font-semibold">低ギャップ群（+1以下）:</span>{" "}
-                      {allResponses.filter((r: any) => {
+                      {allResponses.filter((r: ResponseData) => {
                         const a = typeof r.asIs === "number" ? r.asIs : r.asIs?.score || 0
                         const b = typeof r.toBe === "number" ? r.toBe : r.toBe?.score || 0
                         return b - a < 2

@@ -1,13 +1,18 @@
 import { NextResponse } from "next/server"
+import { createGoogleGenerativeAI } from "@ai-sdk/google"
 import { generateText } from "ai"
 
 export async function POST(request: Request) {
-  try {
-    const { theme } = await request.json()
+  const { theme } = await request.json()
 
+  try {
+    const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY
+    if (!apiKey) throw new Error("API key not configured")
+
+    const google = createGoogleGenerativeAI({ apiKey })
 
     const { text } = await generateText({
-      model: "openai/gpt-4o-mini",
+      model: google("gemini-2.5-flash"),
       prompt: `あなたは経験豊富なファシリテーターです。以下のテーマに基づいて、チームの対話を深める「魔法の質問」を3つ生成してください。
 
 テーマ: ${theme}
@@ -27,11 +32,10 @@ export async function POST(request: Request) {
 質問だけを出力してください。説明は不要です。`,
     })
 
-
     const questions = text
       .split('\n')
       .filter(line => line.match(/^\d+\./))
-      .map((line, index) => ({
+      .map((line) => ({
         id: crypto.randomUUID(),
         theme,
         question: line.replace(/^\d+\.\s*/, '').trim(),
@@ -41,55 +45,18 @@ export async function POST(request: Request) {
 
     if (questions.length === 0) {
       questions.push(
-        {
-          id: crypto.randomUUID(),
-          theme,
-          question: getQuestionForTheme(theme, 1),
-          intent: theme,
-          followUps: [],
-        },
-        {
-          id: crypto.randomUUID(),
-          theme,
-          question: getQuestionForTheme(theme, 2),
-          intent: theme,
-          followUps: [],
-        },
-        {
-          id: crypto.randomUUID(),
-          theme,
-          question: getQuestionForTheme(theme, 3),
-          intent: theme,
-          followUps: [],
-        }
+        { id: crypto.randomUUID(), theme, question: getQuestionForTheme(theme, 1), intent: theme, followUps: [] },
+        { id: crypto.randomUUID(), theme, question: getQuestionForTheme(theme, 2), intent: theme, followUps: [] },
+        { id: crypto.randomUUID(), theme, question: getQuestionForTheme(theme, 3), intent: theme, followUps: [] },
       )
     }
 
     return NextResponse.json({ questions })
   } catch (error) {
-    const { theme } = await request.json().catch(() => ({ theme: "心理的安全性" }))
     const fallbackQuestions = [
-      {
-        id: crypto.randomUUID(),
-        theme,
-        question: getQuestionForTheme(theme, 1),
-        intent: theme,
-        followUps: [],
-      },
-      {
-        id: crypto.randomUUID(),
-        theme,
-        question: getQuestionForTheme(theme, 2),
-        intent: theme,
-        followUps: [],
-      },
-      {
-        id: crypto.randomUUID(),
-        theme,
-        question: getQuestionForTheme(theme, 3),
-        intent: theme,
-        followUps: [],
-      },
+      { id: crypto.randomUUID(), theme, question: getQuestionForTheme(theme, 1), intent: theme, followUps: [] },
+      { id: crypto.randomUUID(), theme, question: getQuestionForTheme(theme, 2), intent: theme, followUps: [] },
+      { id: crypto.randomUUID(), theme, question: getQuestionForTheme(theme, 3), intent: theme, followUps: [] },
     ]
     return NextResponse.json({ questions: fallbackQuestions })
   }

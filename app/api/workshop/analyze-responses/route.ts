@@ -100,7 +100,7 @@ export async function POST(request: Request) {
 
     // Format responses for the AI prompt
     const formattedResponses = responses
-      .map((r: any, index: number) => {
+      .map((r: { participantRole?: string; answer?: string; asIs?: { fact?: string; score?: number }; toBe?: { will?: string; score?: number }; solution?: { action?: string; tags?: string[] }; hero?: { hope?: number; efficacy?: number; resilience?: number; optimism?: number }; vulnerability?: { honesty?: number; resistance?: number } }, index: number) => {
         const solutionText = r.solution
           ? `Solution(解決策): ${r.solution.action} (Tags: ${r.solution.tags?.join(", ")})`
           : "No explicit solution provided"
@@ -168,19 +168,19 @@ JSON出力スキーマに厳密に従ってください。
         apiKey: validApiKey,
       });
 
-      const isRetryableError = (err: any) => {
-        const msg = err?.message?.toLowerCase() || ""
+      const isRetryableError = (err: unknown) => {
+        const msg = (err as { message?: string })?.message?.toLowerCase() || ""
         return msg.includes("429") || msg.includes("too many requests") ||
           msg.includes("500") || msg.includes("503") ||
           msg.includes("timeout") || msg.includes("econnreset") ||
           msg.includes("fetch failed") || msg.includes("json") ||
-          err?.name?.includes("JSONParseError")
+          (err as { name?: string })?.name?.includes("JSONParseError")
       }
 
       const sleep = (ms: number) => new Promise(r => setTimeout(r, ms))
 
-      let result: any
-      let lastError: any
+      let result: Awaited<ReturnType<typeof generateObject>> | undefined
+      let lastError: unknown
       for (let attempt = 0; attempt < 3; attempt++) {
         try {
           result = await generateObject({
@@ -190,7 +190,7 @@ JSON出力スキーマに厳密に従ってください。
             prompt: `以下の回答を分析し、チームの現状と次の一手を明確にしてください: \n\n${formattedResponses} `,
           })
           break
-        } catch (err: any) {
+        } catch (err) {
           lastError = err
           if (attempt < 2 && isRetryableError(err)) {
             await sleep(2000 * (attempt + 1))
@@ -204,8 +204,8 @@ JSON出力スキーマに厳密に従ってください。
       // Calculate HERO ROI logic (updated)
       // Proxy: Quality = Bridge Balance (AI eval) + Gap Clarity
       // Vulnerability = Avg Honesty
-      const avgVulnerability = responses.reduce((acc: number, r: any) => acc + (r.vulnerability?.honesty || 0), 0) / (responses.length || 1)
-      const avgGap = responses.reduce((acc: number, r: any) => acc + Math.abs((r.toBe?.score || 0) - (r.asIs?.score || 0)), 0) / (responses.length || 1)
+      const avgVulnerability = responses.reduce((acc: number, r: { vulnerability?: { honesty?: number }; toBe?: { score?: number }; asIs?: { score?: number } }) => acc + (r.vulnerability?.honesty || 0), 0) / (responses.length || 1)
+      const avgGap = responses.reduce((acc: number, r: { vulnerability?: { honesty?: number }; toBe?: { score?: number }; asIs?: { score?: number } }) => acc + Math.abs((r.toBe?.score || 0) - (r.asIs?.score || 0)), 0) / (responses.length || 1)
 
       // ROI Calculation: Base + (Vulnerability * GapCoef)
       // If no vulnerability data, assume 50
@@ -220,14 +220,15 @@ JSON出力スキーマに厳密に従ってください。
       }
 
       return NextResponse.json({ analysis: analysisWithRoi })
-    } catch (aiError: any) {
+    } catch (aiError) {
 
       // Analyze specific error causes
       // Show exact raw error message from Google for debugging
-      const errorMessage = aiError.message?.toLowerCase() || ""
-      const errorName = aiError.name || ""
+      const aiErr = aiError as { message?: string; name?: string }
+      const errorMessage = aiErr.message?.toLowerCase() || ""
+      const errorName = aiErr.name || ""
       let friendlyError = "AIエラーが発生しました"
-      let detailedReason = `詳細: ${aiError.message || "詳細不明"}`
+      let detailedReason = `詳細: ${aiErr.message || "詳細不明"}`
       let actionSuggestion = "コンソールのログまたはエラー詳細を確認してください。"
 
       if (errorMessage.includes("api key not configured") || errorMessage.includes("missing")) {
@@ -255,18 +256,18 @@ JSON出力スキーマに厳密に従ってください。
           const data = await res.json();
           if (data.models) {
             const modelNames = data.models
-              .map((m: any) => m.name.replace("models/", ""))
+              .map((m: { name: string }) => m.name.replace("models/", ""))
               .filter((n: string) => n.includes("gemini"))
               .join(", ");
             availableModelsInfo = `\n\n💡【現在このAPIキーで使えるモデル一覧】:\n${modelNames || "（なし）"}`;
           } else if (data.error) {
             availableModelsInfo = `\n\n(※モデル一覧取得エラー: ${data.error.message})`;
           }
-        } catch (listError: any) {
-           availableModelsInfo = `\n\n(※利用可能モデル一覧の取得にも失敗しました: ${listError.message})`;
+        } catch (listError) {
+           availableModelsInfo = `\n\n(※利用可能モデル一覧の取得にも失敗しました: ${listError instanceof Error ? listError.message : "不明"})`;
         }
         
-        detailedReason = `詳細: ${aiError.message}${availableModelsInfo}`
+        detailedReason = `詳細: ${aiErr.message}${availableModelsInfo}`
         actionSuggestion = "上に表示された「使えるモデル一覧」のどれかに、プログラム内のモデル名表記を合わせる必要があります。"
 
       } else if (errorMessage.includes("quota") || errorMessage.includes("429") || errorMessage.includes("too many requests")) {
@@ -322,7 +323,7 @@ JSON出力スキーマに厳密に従ってください。
       })
     }
 
-  } catch (error: any) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to analyze responses", analysis: null },
       { status: 500 },

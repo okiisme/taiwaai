@@ -124,7 +124,7 @@ const loadFromLocalStorage = (key: string) => {
 }
 
 // Helper function to save data to localStorage
-const saveToLocalStorage = (key: string, data: any) => {
+const saveToLocalStorage = (key: string, data: unknown) => {
   if (typeof window === "undefined") {
     return
   }
@@ -917,8 +917,8 @@ export default function FacilitatePage({ params }: { params: Promise<{ id: strin
       } else {
         throw new Error("No analysis data received from API");
       }
-    } catch (error: any) {
-      setError(`分析中にエラーが発生しました: ${error.message || "Unknown error"}. コンソールを確認してください。`);
+    } catch (error) {
+      setError(`分析中にエラーが発生しました: ${error instanceof Error ? error.message : "Unknown error"}. コンソールを確認してください。`);
     } finally {
       setIsGenerating(false)
     }
