@@ -184,27 +184,6 @@ export default function JoinWorkshopPage() {
           currentMode,
           openness,
           moodColor: selectedMoodColor,
-          // Wait, the requirement says "Step 1: Self-State Check-in". This seems to be part of the flow AFTER joining.
-          // However, existing code had stance in Join. Let's keep basic stance in Join but maybe moodColor is part of the Response flow?
-          // Re-reading specs: "1-1. Step 1: Self-state check-in... Condition... Mood Color". This is likely per-question or at start of session?
-          // The current implementation puts the 4-step wizard at 'Response' time.
-          // Yet, check-in is usually done once involved.
-          // Be careful: The updated UI puts the check-in as Step 1 of the wizard.
-          // So we don't need to send it in handleJoin unless we want to persist it early.
-          // Let's remove stance from handleJoin or keep as baseline.
-          // The user's spec says "Input UI... 4-step flow". This 4-step flow seems to replace the single page form.
-          // So `moodColor` should be in the `Response` payload, NOT `Join` payload?
-          // Actually, "1. Input UI... 4-step flow" implies the main activity.
-          // Let's assume these are sent with the response for now, or updated.
-          // Since I put the UI in the Response section, I should send it with Response.
-          // BUT, looking at `types.ts` I added `moodColor` to `Participant.stance`.
-          // If I want to save it there, I might need a separate call or update `Participant` on response.
-          // Let's send it with Response and handle it on backend to update participant if needed.
-          // For now, I'll allow `moodColor` in Join if I want, but I'll stick to sending it with Response as per my UI change.
-          // ACTUALLY, I missed adding `moodColor` to `Response` type?
-          // I added `moodColor` to `Participant` in `types.ts`.
-          // If the UI is in the "Answer Question" phase, then updating Participant stance (Mood) makes sense there.
-          // I will NOT update handleJoin for now, as the new UI is in the response phase.
         },
       }
 
@@ -217,7 +196,10 @@ export default function JoinWorkshopPage() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => null)
-        throw new Error(errorData?.error || "Failed to join workshop")
+        if (response.status === 404) throw new Error("ワークショップが見つかりません。URLを確認してください。")
+        if (response.status === 409) throw new Error("すでに参加済みです。")
+        if (response.status >= 500) throw new Error("サーバーエラーが発生しました。しばらくしてから再試行してください。")
+        throw new Error(errorData?.error || "参加に失敗しました。")
       }
 
       const data = await response.json()
@@ -225,7 +207,7 @@ export default function JoinWorkshopPage() {
       setParticipantId(data.participantId)
       setHasJoined(true)
     } catch (error) {
-      setError(error instanceof Error ? error.message : "参加に失敗しました。もう一度お試しください。")
+      setError(error instanceof Error ? error.message : "ネットワークエラーが発生しました。接続を確認して再試行してください。")
     } finally {
       setIsLoading(false)
     }
@@ -273,14 +255,14 @@ export default function JoinWorkshopPage() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => null)
-        throw new Error(errorData?.error || "Failed to submit response")
+        if (response.status >= 500) throw new Error("サーバーエラーが発生しました。しばらくしてから再試行してください。")
+        throw new Error(errorData?.error || "回答の送信に失敗しました。")
       }
 
-      const data = await response.json()
-
+      await response.json()
       setHasSubmitted(true)
     } catch (error) {
-      setError(error instanceof Error ? error.message : "回答の送信に失敗しました。もう一度お試しください。")
+      setError(error instanceof Error ? error.message : "ネットワークエラーが発生しました。接続を確認して再試行してください。")
     } finally {
       setIsLoading(false)
     }
