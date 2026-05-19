@@ -24,7 +24,6 @@ export default function SurveysPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    console.log("[v0] Weekly survey submitted:", responses)
     setSubmitted(true)
     setTimeout(() => {
       setSubmitted(false)

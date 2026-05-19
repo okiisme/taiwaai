@@ -119,7 +119,6 @@ const loadFromLocalStorage = (key: string) => {
     const item = localStorage.getItem(key)
     return item ? JSON.parse(item) : null
   } catch (error) {
-    console.error(`[v0] Error loading from localStorage (${key}):`, error)
     return null
   }
 }
@@ -132,7 +131,6 @@ const saveToLocalStorage = (key: string, data: any) => {
   try {
     localStorage.setItem(key, JSON.stringify(data))
   } catch (error) {
-    console.error(`[v0] Error saving to localStorage (${key}):`, error)
   }
 }
 
@@ -164,7 +162,6 @@ const syncWithLocalStorage = (workshopId: string, sessionData?: WorkshopSession)
       }
     }
   } catch (error) {
-    console.error("[v0] Error syncing localStorage:", error)
   }
 }
 
@@ -224,7 +221,6 @@ const getSession = (id: string) => {
       return JSON.parse(stored)
     }
   } catch (error) {
-    console.error("[v0] Error loading session:", error)
   }
 
   return {
@@ -703,13 +699,11 @@ export default function FacilitatePage({ params }: { params: Promise<{ id: strin
         body: JSON.stringify({ status: newStatus }),
       })
       if (!response.ok) {
-        console.error("[v0] Failed to update session status")
       } else {
         // Optimistic update
         setSession(prev => ({ ...prev, status: newStatus as any }))
       }
     } catch (error) {
-      console.error("[v0] Error updating session status:", error)
     }
   }
 
@@ -732,7 +726,6 @@ export default function FacilitatePage({ params }: { params: Promise<{ id: strin
         })
       }
     } catch (error) {
-      console.error("[v0] Error fetching session:", error)
     } finally {
       setIsLoading(false)
     }
@@ -792,7 +785,6 @@ export default function FacilitatePage({ params }: { params: Promise<{ id: strin
   //       if (response.ok) {
   //         const data = await response.json()
   //         // Log participant data when received from API
-  //         console.log("[v0] Facilitate - Fetched session data:", {
   //           participantsCount: data.participants?.length,
   //           participants: data.participants?.map((p: any) => ({
   //             id: p.id,
@@ -806,7 +798,6 @@ export default function FacilitatePage({ params }: { params: Promise<{ id: strin
   //         if (!mounted) setMounted(true)
   //       }
   //     } catch (error) {
-  //       console.error("[v0] Facilitate - Error fetching session:", error)
   //     }
   //   }
 
@@ -886,7 +877,6 @@ export default function FacilitatePage({ params }: { params: Promise<{ id: strin
       }))
       await updateSessionStatus("question-display") // Persist stage change
     } catch (error) {
-      console.error("[v0] Error setting question:", error)
     }
   }
 
@@ -901,7 +891,6 @@ export default function FacilitatePage({ params }: { params: Promise<{ id: strin
       setIsGenerating(true)
       await updateSessionStatus("analysis") // Persist stage change
 
-      console.log("[v0] Sending analysis request for workshop:", workshopId);
 
       const response = await fetch("/api/workshop/analyze-responses", {
         method: "POST",
@@ -915,14 +904,11 @@ export default function FacilitatePage({ params }: { params: Promise<{ id: strin
       })
 
       if (!response.ok) {
-        console.error(`[v0] Analysis API failed with status: ${response.status}`);
         const errorText = await response.text();
-        console.error(`[v0] Analysis API Error Body:`, errorText);
         throw new Error(`API analysis failed: ${response.status} ${response.statusText}`);
       }
 
       const data = await response.json()
-      console.log("[v0] Analysis API Response:", data);
 
       if (data.analysis) {
         setSession((prev) => ({
@@ -931,11 +917,9 @@ export default function FacilitatePage({ params }: { params: Promise<{ id: strin
           analysis: data.analysis, // Assuming the API returns the full analysis object
         }))
       } else {
-        console.warn("[v0] Analysis data missing in response:", data);
         throw new Error("No analysis data received from API");
       }
     } catch (error: any) {
-      console.error("[v0] Error analyzing:", error)
       setError(`分析中にエラーが発生しました: ${error.message || "Unknown error"}. コンソールを確認してください。`);
     } finally {
       setIsGenerating(false)
@@ -1063,7 +1047,6 @@ export default function FacilitatePage({ params }: { params: Promise<{ id: strin
                                 }
                               }
                             } catch (err) {
-                              console.error("[v0] Error parsing joinedAt:", err)
                             }
 
                             return (
@@ -1571,7 +1554,6 @@ export default function FacilitatePage({ params }: { params: Promise<{ id: strin
                 </Card>
               }
               onError={(error, info) => {
-                console.error("[v0] Error boundary caught error in analysis section:", error, info)
               }}
             >
 

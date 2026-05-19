@@ -53,11 +53,9 @@ export async function POST(request: NextRequest) {
             ${analysisId}, ${id}, ${JSON.stringify(analysisResult)}, 'gemini-2.5-flash', ${submittedAt}, 'v1'
           )
         `
-        console.log(`[v0] Successfully analyzed and saved response ${id}`)
       }
     } catch (analysisError) {
       // Do not fail the response submission if analysis fails
-      console.error("[v0] Failed to analyze response, but response was saved:", analysisError)
     }
 
     return NextResponse.json({
@@ -65,7 +63,6 @@ export async function POST(request: NextRequest) {
       message: "Response saved to DB"
     })
   } catch (error) {
-    console.error("[v0] Database Error submitting response:", error)
     return NextResponse.json({ error: "Failed to submit response to DB" }, { status: 500 })
   }
 }

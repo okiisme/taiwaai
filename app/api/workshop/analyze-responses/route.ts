@@ -63,11 +63,9 @@ const analysisSchema = z.object({
 
 export async function POST(request: Request) {
   try {
-    console.log("[v0] Analysis API called")
 
     const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY
     if (!apiKey) {
-      console.error("[v0] API KEY is missing. Env check:", process.env.NODE_ENV);
       return NextResponse.json({
         analysis: {
           overallSummary: {
@@ -96,11 +94,9 @@ export async function POST(request: Request) {
     const { responses, question, workshopId } = body
 
     if (!responses || responses.length === 0) {
-      console.log("[v0] No responses provided")
       return NextResponse.json({ error: "No responses provided" }, { status: 400 })
     }
 
-    console.log("[v0] Analyzing", responses.length, "responses for question:", question)
 
     // Format responses for the AI prompt
     const formattedResponses = responses
@@ -197,10 +193,8 @@ JSON出力スキーマに厳密に従ってください。
         roiScore: roiScore,
       }
 
-      console.log("[v0] AI Analysis completed successfully")
       return NextResponse.json({ analysis: analysisWithRoi })
     } catch (aiError: any) {
-      console.error("[v0] AI generation error:", aiError)
 
       // Analyze specific error causes
       // Show exact raw error message from Google for debugging
@@ -303,7 +297,6 @@ JSON出力スキーマに厳密に従ってください。
     }
 
   } catch (error: any) {
-    console.error("[v0] Error in analysis route:", error)
     return NextResponse.json(
       { error: "Failed to analyze responses", analysis: null },
       { status: 500 },

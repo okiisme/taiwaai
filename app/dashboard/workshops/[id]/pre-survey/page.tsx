@@ -25,7 +25,6 @@ export default function PreSurveyPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    console.log("[v0] Pre-workshop survey submitted:", responses)
     setSubmitted(true)
     setTimeout(() => {
       router.push("/dashboard/workshops")

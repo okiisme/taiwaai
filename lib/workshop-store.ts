@@ -242,10 +242,8 @@ store.sessions.set("sample-workshop-2", {
 
 export function getSession(workshopId: string) {
   // CHANGE: Add debug logging
-  console.log("[v0] workshop-store: getSession called for:", workshopId)
 
   if (!store.sessions.has(workshopId)) {
-    console.log("[v0] workshop-store: Creating new session for:", workshopId)
     store.sessions.set(workshopId, {
       status: "preparation",
       participants: [],
@@ -255,7 +253,6 @@ export function getSession(workshopId: string) {
   }
 
   const session = store.sessions.get(workshopId)!
-  console.log("[v0] workshop-store: Returning session:", {
     workshopId,
     participantsCount: session.participants.length,
     responsesCount: session.responses.length,
@@ -279,7 +276,6 @@ export function addParticipant(
   },
 ) {
   // CHANGE: Add debug logging
-  console.log("[v0] workshop-store: addParticipant called:", { workshopId, participantName: participant.name })
 
   const session = getSession(workshopId)
   if (!session.participants.find((p) => p.id === participant.id)) {
@@ -287,9 +283,7 @@ export function addParticipant(
       ...participant,
       joinedAt: new Date().toISOString(),
     })
-    console.log("[v0] workshop-store: Participant added. Total participants:", session.participants.length)
   } else {
-    console.log("[v0] workshop-store: Participant already exists, skipping")
   }
 
   return session
@@ -297,13 +291,11 @@ export function addParticipant(
 
 export function setCurrentQuestion(workshopId: string, question: string) {
   // CHANGE: Add debug logging
-  console.log("[v0] workshop-store: setCurrentQuestion called:", { workshopId, question })
 
   const session = getSession(workshopId)
   session.currentQuestion = question
   session.responses = []
 
-  console.log("[v0] workshop-store: Question set, responses cleared")
 
   return session
 }
@@ -326,7 +318,6 @@ export function addResponse(
   },
 ) {
   // CHANGE: Add debug logging
-  console.log("[v0] workshop-store: addResponse called:", {
     workshopId,
     participantName: response.participantName,
     hasAsIs: !!response.asIs,
@@ -343,14 +334,12 @@ export function addResponse(
 
   session.responses.push(newResponse)
 
-  console.log("[v0] workshop-store: Response added. Total responses:", session.responses.length)
 
   return session
 }
 
 export function updateSessionStatus(workshopId: string, status: string) {
   // CHANGE: Add debug logging
-  console.log("[v0] workshop-store: updateSessionStatus called:", { workshopId, status })
 
   const session = getSession(workshopId)
   session.status = status
@@ -360,7 +349,6 @@ export function updateSessionStatus(workshopId: string, status: string) {
 
 export function updateSession(workshopId: string, updates: Partial<ReturnType<typeof getSession>>) {
   // CHANGE: Add debug logging
-  console.log("[v0] workshop-store: updateSession called:", {
     workshopId,
     updateKeys: Object.keys(updates),
   })
@@ -372,7 +360,6 @@ export function updateSession(workshopId: string, updates: Partial<ReturnType<ty
 }
 
 export function getAllSessions() {
-  console.log("[v0] workshop-store: getAllSessions called. Total sessions:", store.sessions.size)
 
   return Array.from(store.sessions.entries()).map(([id, session]) => ({
     id,
@@ -386,9 +373,7 @@ export function syncWithLocalStorage(workshopId: string) {
   try {
     const session = getSession(workshopId)
     localStorage.setItem(`workshop-${workshopId}`, JSON.stringify(session))
-    console.log("[v0] workshop-store: Synced to localStorage:", workshopId)
   } catch (error) {
-    console.error("[v0] workshop-store: Failed to sync with localStorage:", error)
   }
 }
 
@@ -400,7 +385,6 @@ export function loadFromLocalStorage(workshopId: string) {
     if (saved) {
       const parsed = JSON.parse(saved)
       store.sessions.set(workshopId, parsed)
-      console.log("[v0] workshop-store: Loaded from localStorage:", {
         workshopId,
         participantsCount: parsed.participants?.length || 0,
         responsesCount: parsed.responses?.length || 0,
@@ -408,7 +392,6 @@ export function loadFromLocalStorage(workshopId: string) {
       return parsed
     }
   } catch (error) {
-    console.error("[v0] workshop-store: Failed to load from localStorage:", error)
   }
   return null
 }

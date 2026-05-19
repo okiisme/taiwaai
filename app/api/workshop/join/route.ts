@@ -28,7 +28,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, participantId })
   } catch (error) {
-    console.error("[v0] Database Error joining workshop:", error)
     return NextResponse.json({ error: "Failed to join workshop" }, { status: 500 })
   }
 }

@@ -64,7 +64,6 @@ export default function JoinWorkshopPage() {
           }
         }
       } catch (err) {
-        console.error('[v0] Analysis polling error:', err)
       }
     }
 
@@ -127,7 +126,6 @@ export default function JoinWorkshopPage() {
     if (typeof window !== "undefined") {
       const path = window.location.pathname
       const id = path.split("/").filter(Boolean).pop() || ""
-      console.log("[v0] Extracted Workshop ID from URL:", id)
       setWorkshopId(id)
       setMounted(true)
     }
@@ -136,15 +134,12 @@ export default function JoinWorkshopPage() {
   useEffect(() => {
     if (!hasJoined || !workshopId || hasSubmitted) return
 
-    console.log("[v0] Starting question polling for workshop:", workshopId)
 
     const pollQuestion = async () => {
       try {
-        console.log("[v0] Polling session...")
         const response = await fetch(`/api/workshop/${workshopId}`)
         if (response.ok) {
           const data = await response.json()
-          console.log("[v0] Polling session data:", data)
           
           // data is the session object itself, so currentQuestion is directly on data
           const newQuestionObj = data.currentQuestion;
@@ -152,13 +147,10 @@ export default function JoinWorkshopPage() {
 
           if (newQuestionText && newQuestionText !== currentQuestion) {
             setCurrentQuestion(newQuestionText)
-            console.log("[v0] New question received:", newQuestionText)
           }
         } else {
-          console.error("[v0] Polling failed with status:", response.status)
         }
       } catch (error) {
-        console.error("[v0] Polling error:", error)
       }
     }
 
@@ -168,18 +160,14 @@ export default function JoinWorkshopPage() {
     return () => {
       if (pollingIntervalRef.current) {
         clearInterval(pollingIntervalRef.current)
-        console.log("[v0] Stopped polling")
       }
     }
   }, [hasJoined, workshopId, currentQuestion, hasSubmitted])
 
   const handleJoin = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log("[v0] handleJoin called")
-    console.log("[v0] Form values - name:", name, "name.trim():", name.trim(), "length:", name.trim().length)
 
     if (!name.trim() || !workshopId) {
-      console.error("[v0] Missing name or workshopId", { name: name.trim(), workshopId })
       return
     }
 
@@ -219,7 +207,6 @@ export default function JoinWorkshopPage() {
           // I will NOT update handleJoin for now, as the new UI is in the response phase.
         },
       }
-      console.log("[v0] Sending join request with payload:", JSON.stringify(payload, null, 2))
 
       const response = await fetch("/api/workshop/join", {
         method: "POST",
@@ -227,22 +214,17 @@ export default function JoinWorkshopPage() {
         body: JSON.stringify(payload),
       })
 
-      console.log("[v0] Join response status:", response.status)
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => null)
-        console.error("[v0] Join failed:", errorData)
         throw new Error(errorData?.error || "Failed to join workshop")
       }
 
       const data = await response.json()
-      console.log("[v0] Join response data:", data)
 
       setParticipantId(data.participantId)
       setHasJoined(true)
-      console.log("[v0] Successfully joined workshop, participantId:", data.participantId)
     } catch (error) {
-      console.error("[v0] Join error:", error)
       setError(error instanceof Error ? error.message : "参加に失敗しました。もう一度お試しください。")
     } finally {
       setIsLoading(false)
@@ -251,10 +233,8 @@ export default function JoinWorkshopPage() {
 
   const handleSubmitResponse = async (e?: React.FormEvent) => {
     if (e) e.preventDefault()
-    console.log("[v0] handleSubmitResponse called")
 
     if (!asIsFact.trim() || !toBeWill.trim() || !participantId) {
-      console.error("[v0] Missing required fields")
       return
     }
 
@@ -262,7 +242,6 @@ export default function JoinWorkshopPage() {
     setError("")
 
     try {
-      console.log("[v0] Submitting response...")
 
       const response = await fetch("/api/workshop/response", {
         method: "POST",
@@ -291,20 +270,16 @@ export default function JoinWorkshopPage() {
         }),
       })
 
-      console.log("[v0] Response submission status:", response.status)
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => null)
-        console.error("[v0] Submit failed:", errorData)
         throw new Error(errorData?.error || "Failed to submit response")
       }
 
       const data = await response.json()
-      console.log("[v0] Response submitted successfully:", data)
 
       setHasSubmitted(true)
     } catch (error) {
-      console.error("[v0] Submit error:", error)
       setError(error instanceof Error ? error.message : "回答の送信に失敗しました。もう一度お試しください。")
     } finally {
       setIsLoading(false)

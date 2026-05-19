@@ -13,7 +13,6 @@ export async function POST(request: NextRequest) {
       session 
     })
   } catch (error) {
-    console.error("[v0] Error setting question:", error)
     return NextResponse.json({ error: "Failed to set question" }, { status: 500 })
   }
 }

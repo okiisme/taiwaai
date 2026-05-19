@@ -5,7 +5,6 @@ export async function POST(request: Request) {
   try {
     const { theme } = await request.json()
 
-    console.log("[v0] Generating questions for theme:", theme)
 
     const { text } = await generateText({
       model: "openai/gpt-4o-mini",
@@ -28,7 +27,6 @@ export async function POST(request: Request) {
 質問だけを出力してください。説明は不要です。`,
     })
 
-    console.log("[v0] AI generated text:", text)
 
     const questions = text
       .split('\n')
@@ -42,7 +40,6 @@ export async function POST(request: Request) {
       }))
 
     if (questions.length === 0) {
-      console.log("[v0] Using fallback questions for theme:", theme)
       questions.push(
         {
           id: crypto.randomUUID(),
@@ -68,10 +65,8 @@ export async function POST(request: Request) {
       )
     }
 
-    console.log("[v0] Returning questions:", questions)
     return NextResponse.json({ questions })
   } catch (error) {
-    console.error("[v0] Error generating questions:", error)
     const { theme } = await request.json().catch(() => ({ theme: "心理的安全性" }))
     const fallbackQuestions = [
       {

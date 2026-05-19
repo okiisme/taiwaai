@@ -26,11 +26,9 @@ export async function POST(req: Request) {
       temperature: 0.8,
     })
 
-    console.log("[v0] Generated question:", text.trim())
 
     return Response.json({ question: text.trim() })
   } catch (error) {
-    console.error("[v0] Error generating question:", error)
     return Response.json(
       { error: "Failed to generate question", details: error instanceof Error ? error.message : "Unknown error" },
       { status: 500 },

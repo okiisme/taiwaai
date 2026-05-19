@@ -29,7 +29,6 @@ export default function CaptainLogPage() {
       setLogs([log, ...logs])
       setNewLog("")
       setIsSaving(false)
-      console.log("[v0] Captain log saved:", log)
     }, 500)
   }
 
