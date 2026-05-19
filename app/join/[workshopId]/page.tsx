@@ -68,7 +68,7 @@ export default function JoinWorkshopPage() {
     }
 
     pollAnalysis()
-    analysisPollingRef.current = setInterval(pollAnalysis, 3000)
+    analysisPollingRef.current = setInterval(pollAnalysis, 5000)
 
     return () => {
       if (analysisPollingRef.current) {
@@ -155,7 +155,7 @@ export default function JoinWorkshopPage() {
     }
 
     pollQuestion()
-    pollingIntervalRef.current = setInterval(pollQuestion, 2000)
+    pollingIntervalRef.current = setInterval(pollQuestion, 5000)
 
     return () => {
       if (pollingIntervalRef.current) {

@@ -761,12 +761,10 @@ export default function FacilitatePage({ params }: { params: Promise<{ id: strin
           })
         })
         .catch(e => console.error(e))
-    }, 3000)
+    }, 5000)
 
     return () => clearInterval(interval)
   }, [workshopId])
-
-  // CHANGE: Poll API every 2 seconds for real-time updates
 
 
   // CHANGE: Save session to localStorage whenever it changes (backup only)
