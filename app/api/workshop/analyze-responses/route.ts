@@ -168,12 +168,38 @@ JSON出力スキーマに厳密に従ってください。
         apiKey: validApiKey,
       });
 
-      const result = await generateObject({
-        model: google("gemini-2.5-flash"),
-        schema: analysisSchema,
-        system: systemPrompt,
-        prompt: `以下の回答を分析し、チームの現状と次の一手を明確にしてください: \n\n${formattedResponses} `,
-      })
+      const isRetryableError = (err: any) => {
+        const msg = err?.message?.toLowerCase() || ""
+        return msg.includes("429") || msg.includes("too many requests") ||
+          msg.includes("500") || msg.includes("503") ||
+          msg.includes("timeout") || msg.includes("econnreset") ||
+          msg.includes("fetch failed") || msg.includes("json") ||
+          err?.name?.includes("JSONParseError")
+      }
+
+      const sleep = (ms: number) => new Promise(r => setTimeout(r, ms))
+
+      let result: any
+      let lastError: any
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          result = await generateObject({
+            model: google("gemini-2.5-flash"),
+            schema: analysisSchema,
+            system: systemPrompt,
+            prompt: `以下の回答を分析し、チームの現状と次の一手を明確にしてください: \n\n${formattedResponses} `,
+          })
+          break
+        } catch (err: any) {
+          lastError = err
+          if (attempt < 2 && isRetryableError(err)) {
+            await sleep(2000 * (attempt + 1))
+            continue
+          }
+          throw err
+        }
+      }
+      if (!result) throw lastError
 
       // Calculate HERO ROI logic (updated)
       // Proxy: Quality = Bridge Balance (AI eval) + Gap Clarity
