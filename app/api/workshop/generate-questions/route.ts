@@ -34,7 +34,7 @@ export async function POST(request: Request) {
       .split('\n')
       .filter(line => line.match(/^\d+\./))
       .map((line, index) => ({
-        id: `q-${Date.now()}-${index}`,
+        id: crypto.randomUUID(),
         theme,
         question: line.replace(/^\d+\.\s*/, '').trim(),
         intent: theme,
@@ -45,21 +45,21 @@ export async function POST(request: Request) {
       console.log("[v0] Using fallback questions for theme:", theme)
       questions.push(
         {
-          id: `q-${Date.now()}-1`,
+          id: crypto.randomUUID(),
           theme,
           question: getQuestionForTheme(theme, 1),
           intent: theme,
           followUps: [],
         },
         {
-          id: `q-${Date.now()}-2`,
+          id: crypto.randomUUID(),
           theme,
           question: getQuestionForTheme(theme, 2),
           intent: theme,
           followUps: [],
         },
         {
-          id: `q-${Date.now()}-3`,
+          id: crypto.randomUUID(),
           theme,
           question: getQuestionForTheme(theme, 3),
           intent: theme,
@@ -75,21 +75,21 @@ export async function POST(request: Request) {
     const { theme } = await request.json().catch(() => ({ theme: "心理的安全性" }))
     const fallbackQuestions = [
       {
-        id: `q-${Date.now()}-1`,
+        id: crypto.randomUUID(),
         theme,
         question: getQuestionForTheme(theme, 1),
         intent: theme,
         followUps: [],
       },
       {
-        id: `q-${Date.now()}-2`,
+        id: crypto.randomUUID(),
         theme,
         question: getQuestionForTheme(theme, 2),
         intent: theme,
         followUps: [],
       },
       {
-        id: `q-${Date.now()}-3`,
+        id: crypto.randomUUID(),
         theme,
         question: getQuestionForTheme(theme, 3),
         intent: theme,

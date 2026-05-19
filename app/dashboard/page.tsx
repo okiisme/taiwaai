@@ -53,7 +53,7 @@ export default function DashboardPage() {
       alert("タイトルを入力してください")
       return
     }
-    const mockId = "ws-" + Date.now()
+    const mockId = crypto.randomUUID()
     window.location.href = `/dashboard/workshops/${mockId}/facilitate`
   }
 

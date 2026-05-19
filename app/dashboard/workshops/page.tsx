@@ -26,7 +26,7 @@ export default function WorkshopsPage() {
   const handleCreateWorkshop = () => {
     if (!workshopTheme.trim()) return
 
-    const newId = `ws-${Date.now()}`
+    const newId = crypto.randomUUID()
 
     const workshop = {
       id: newId,
