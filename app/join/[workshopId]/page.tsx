@@ -30,8 +30,8 @@ type ParticipantData = {
 type IndividualInsight = {
   participantId: string
   name?: string
-  heroProfile?: string
-  insight?: string
+  summary?: string
+  questionToAsk?: string
 }
 
 type SessionData = {
@@ -40,12 +40,15 @@ type SessionData = {
   currentQuestion: string | null
   responses: ResponseData[]
   analysis?: {
-    heroInsight?: { scores?: { hope: number; efficacy: number; resilience: number; optimism: number } }
-    cognitiveDissonance?: { pattern?: string; interpretation?: string; suggestions?: string[] }
-    themes?: { keyword?: string; voices?: string[] }[]
-    nextDialogue?: { title?: string; description?: string; featured?: boolean }[]
-    crossAnalysis?: { pattern?: string; insight?: string }[]
+    overallSummary?: { title: string; description: string }
+    heroInsight?: { parameterAnalysis?: string; strength?: string; scores?: { hope: number; efficacy: number; resilience: number; optimism: number } }
+    cognitiveDissonance?: { pointsOfFriction?: string[]; discussionTopics?: string[]; lemonMarketRisk?: string }
+    interventionQuestions?: { mutualUnderstanding?: string; suspendedJudgment?: string; smallAgreement?: string }
+    keyFindings?: string[]
+    consensus?: string[]
+    conflicts?: string[]
     individualInsights?: IndividualInsight[]
+    roiScore?: number
   }
 }
 import { Button } from "@/components/ui/button"
@@ -102,7 +105,7 @@ export default function JoinWorkshopPage() {
         const res = await fetch(`/api/workshop/${workshopId}`)
         if (res.ok) {
           const data = await res.json()
-          if ((data.status === 'analysis' || data.status === 'summary' || data.analysis) && data.responses && data.responses.length > 0) {
+          if ((data.status === 'summary' || data.analysis) && data.responses && data.responses.length > 0) {
             setSessionData(data)
             setAnalysisReady(true)
             if (analysisPollingRef.current) {
