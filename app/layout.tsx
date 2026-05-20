@@ -3,7 +3,6 @@ import type { Metadata } from "next"
 import { Noto_Sans_JP, Geist_Mono } from 'next/font/google'
 import "./globals.css"
 import { ClerkProvider } from "@clerk/nextjs"
-import { jaJP } from "@clerk/localizations"
 
 const notoSansJP = Noto_Sans_JP({
   variable: "--font-noto-sans-jp",
@@ -28,7 +27,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <ClerkProvider localization={jaJP}>
+    <ClerkProvider>
       <html lang="ja" className={`${notoSansJP.variable} ${geistMono.variable} antialiased`}>
         <body>
           {children}
