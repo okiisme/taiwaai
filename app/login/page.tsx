@@ -10,19 +10,15 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Sparkles } from "@/components/icons"
-import { useAuth } from "@/lib/auth-context"
-
 export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
-  const { login } = useAuth()
 
   useEffect(() => {
-    // Redirect to dashboard immediately since login is bypassed
-    router.push("/dashboard")
+    router.push("/sign-in")
   }, [router])
 
   const handleSubmit = async (e: React.FormEvent) => {

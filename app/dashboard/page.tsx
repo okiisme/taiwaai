@@ -1,7 +1,7 @@
 "use client"
 
 import { DashboardLayout } from "@/components/dashboard-layout"
-import { useAuth } from "@/lib/auth-context"
+import { useUser } from "@clerk/nextjs"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Plus, ArrowRight, QrCode, Calendar, Users, TrendingUp } from "@/components/icons"
@@ -11,51 +11,50 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
+type Workshop = {
+  id: string
+  theme: string | null
+  status: string
+  created_at: string
+  participant_count: number
+  response_count: number
+}
+
 export default function DashboardPage() {
-  const { user } = useAuth()
+  const { user } = useUser()
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [title, setTitle] = useState("")
-  const [workshops, setWorkshops] = useState<any[]>([])
+  const [workshops, setWorkshops] = useState<Workshop[]>([])
+  const [isCreating, setIsCreating] = useState(false)
 
   useEffect(() => {
-    // Load sample workshops
-    const sampleWorkshops = [
-      {
-        id: "sample-workshop-1",
-        title: "心理的安全性を深める",
-        date: new Date(Date.now() - 86400000).toLocaleDateString("ja-JP", {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        }),
-        responses: 3,
-        status: "completed",
-      },
-      {
-        id: "sample-workshop-2",
-        title: "チームの成長機会",
-        date: new Date(Date.now() - 172800000).toLocaleDateString("ja-JP", {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        }),
-        responses: 2,
-        status: "completed",
-      },
-    ]
-    setWorkshops(sampleWorkshops)
+    fetch("/api/workshops")
+      .then((r) => r.json())
+      .then((data) => setWorkshops(data.workshops || []))
+      .catch(() => {})
   }, [])
 
-  if (!user) return null
-
-  const handleCreate = () => {
-    if (!title) {
-      alert("タイトルを入力してください")
-      return
+  const handleCreate = async () => {
+    if (!title.trim() || isCreating) return
+    setIsCreating(true)
+    try {
+      const res = await fetch("/api/workshops", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ theme: title }),
+      })
+      if (res.ok) {
+        const newWorkshop = await res.json()
+        setIsCreateOpen(false)
+        setTitle("")
+        window.location.href = `/dashboard/workshops/${newWorkshop.id}/facilitate`
+      }
+    } finally {
+      setIsCreating(false)
     }
-    const mockId = crypto.randomUUID()
-    window.location.href = `/dashboard/workshops/${mockId}/facilitate`
   }
+
+  const recentWorkshops = workshops.slice(0, 5)
 
   return (
     <DashboardLayout>
@@ -66,7 +65,9 @@ export default function DashboardPage() {
               TAIWA AI
             </h1>
             <p className="text-2xl text-gray-600">As is / To beギャップ対話ワークショップ</p>
-            <p className="text-gray-500">QRコードで参加 → 回答 → レポート生成</p>
+            <p className="text-gray-500">
+              こんにちは、{user?.fullName || user?.emailAddresses[0]?.emailAddress || ""}さん
+            </p>
           </div>
 
           <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
@@ -92,14 +93,17 @@ export default function DashboardPage() {
                     placeholder="例：チームの心理的安全性"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleCreate()}
+                    autoFocus
                   />
                 </div>
                 <Button
                   onClick={handleCreate}
+                  disabled={!title.trim() || isCreating}
                   className="w-full bg-gradient-to-r from-teal-400 to-lime-400 text-white font-semibold rounded-xl"
                 >
                   <QrCode className="mr-2 h-5 w-5" />
-                  QRコードを生成して開始
+                  {isCreating ? "作成中..." : "QRコードを生成して開始"}
                 </Button>
               </div>
             </DialogContent>
@@ -109,20 +113,20 @@ export default function DashboardPage() {
         <Card className="rounded-3xl p-8 border-2">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-semibold">過去のワークショップ</h2>
-            <Link href="/dashboard/monitoring">
+            <Link href="/dashboard/workshops">
               <Button variant="outline" size="sm" className="rounded-xl bg-transparent">
                 すべて見る
               </Button>
             </Link>
           </div>
           <div className="space-y-3">
-            {workshops.length === 0 ? (
+            {recentWorkshops.length === 0 ? (
               <div className="text-center py-12 text-gray-500">
                 <p>まだワークショップがありません</p>
                 <p className="text-sm mt-2">上のボタンから新しいワークショップを開始してください</p>
               </div>
             ) : (
-              workshops.map((workshop) => (
+              recentWorkshops.map((workshop) => (
                 <div
                   key={workshop.id}
                   className="bg-gradient-to-r from-teal-50 to-lime-50 rounded-2xl p-5 border border-teal-100 hover:shadow-md transition-shadow"
@@ -133,12 +137,18 @@ export default function DashboardPage() {
                         <Calendar className="h-6 w-6 text-white" />
                       </div>
                       <div>
-                        <p className="font-semibold text-lg mb-1">{workshop.title}</p>
+                        <p className="font-semibold text-lg mb-1">{workshop.theme || "（テーマ未設定）"}</p>
                         <div className="flex items-center gap-4 text-sm text-gray-600">
-                          <span>{workshop.date}</span>
+                          <span>
+                            {new Date(workshop.created_at).toLocaleDateString("ja-JP", {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                            })}
+                          </span>
                           <span className="flex items-center gap-1">
                             <Users className="h-4 w-4" />
-                            {workshop.responses}名が回答
+                            {workshop.participant_count}名参加 / {workshop.response_count}件の回答
                           </span>
                         </div>
                       </div>
@@ -146,7 +156,7 @@ export default function DashboardPage() {
                     <Button size="sm" variant="ghost" asChild className="rounded-xl">
                       <Link href={`/dashboard/workshops/${workshop.id}/facilitate`}>
                         <TrendingUp className="mr-2 h-4 w-4" />
-                        レポートを見る
+                        結果を見る
                       </Link>
                     </Button>
                   </div>

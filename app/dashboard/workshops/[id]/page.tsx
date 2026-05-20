@@ -9,11 +9,9 @@ import { Input } from "@/components/ui/input"
 import { Calendar, Users, MessageSquare, ThumbsUp, Lock, Send, QrCode } from "@/components/icons"
 import { useState, useEffect } from "react"
 import { mockQuestions, type Question } from "@/lib/mock-data"
-import { useAuth } from "@/lib/auth-context"
 import { QRCodeSVG } from "qrcode.react"
 
 export default function WorkshopDetailPage() {
-  const { user } = useAuth()
   const [questions, setQuestions] = useState<Question[]>(mockQuestions)
   const [newQuestion, setNewQuestion] = useState("")
   const [isAnonymous, setIsAnonymous] = useState(true)
