@@ -1532,7 +1532,7 @@ export default function FacilitatePage({ params }: { params: Promise<{ id: strin
           </div>
         )}
 
-        {session.status === "analysis" && (
+        {(session.status === "analysis" || (session.status === "summary" && session.analysis)) && (
           <div className="space-y-6">
             {/* Debug logging removed */}
 

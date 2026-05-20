@@ -278,7 +278,7 @@ export default function JoinWorkshopPage() {
           participantId,
           participantName: name,
           participantRole: role,
-          answer: currentQuestion,
+          answer: [asIsFact && `【現状】${asIsFact}`, toBeWill && `【理想】${toBeWill}`, solutionAction && `【行動】${solutionAction}`].filter(Boolean).join('\n'),
           asIs: {
             fact: asIsFact,
             score: asIsScore / 10,

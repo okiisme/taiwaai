@@ -221,12 +221,13 @@ JSON出力スキーマに厳密に従ってください。
       }
 
       // 分析結果をDBに保存（参加者が取得できるように）
+      // status は 'summary' に変えない — facilitate 画面のポーリングで analysis セクションが消えるのを防ぐ
       if (workshopId) {
         try {
           await sql`ALTER TABLE workshops ADD COLUMN IF NOT EXISTS analysis JSONB`
           await sql`
             UPDATE workshops
-            SET analysis = ${JSON.stringify(analysisWithRoi)}, status = 'summary'
+            SET analysis = ${JSON.stringify(analysisWithRoi)}
             WHERE id = ${workshopId}
           `
         } catch {
