@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { createGoogleGenerativeAI } from "@ai-sdk/google"
 import { generateObject } from "ai"
 import { z } from "zod"
+import { sql } from "@vercel/postgres"
 
 // Define the schema for the analysis result
 const analysisSchema = z.object({
@@ -217,6 +218,20 @@ JSON出力スキーマに厳密に従ってください。
       const analysisWithRoi = {
         ...result.object,
         roiScore: roiScore,
+      }
+
+      // 分析結果をDBに保存（参加者が取得できるように）
+      if (workshopId) {
+        try {
+          await sql`ALTER TABLE workshops ADD COLUMN IF NOT EXISTS analysis JSONB`
+          await sql`
+            UPDATE workshops
+            SET analysis = ${JSON.stringify(analysisWithRoi)}, status = 'summary'
+            WHERE id = ${workshopId}
+          `
+        } catch {
+          // DB保存失敗しても分析結果は返す
+        }
       }
 
       return NextResponse.json({ analysis: analysisWithRoi })

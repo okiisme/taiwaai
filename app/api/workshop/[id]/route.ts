@@ -77,7 +77,9 @@ export async function GET(
                 },
                 analysis: r.analysis_result ? r.analysis_result : undefined,
                 submittedAt: r.submitted_at
-            }))
+            })),
+            // DBに保存された全体AI分析結果を含める
+            analysis: workshop.analysis || null,
         }
 
         return NextResponse.json(session)
