@@ -28,7 +28,7 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-      <html lang="ja" className={`${notoSansJP.variable} ${geistMono.variable} antialiased`}>
+      <html lang="ja" className={`${notoSansJP.variable} ${geistMono.variable} antialiased scroll-smooth`}>
         <body>
           {children}
         </body>
