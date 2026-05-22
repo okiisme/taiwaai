@@ -37,7 +37,7 @@ type IndividualInsight = {
 type SessionData = {
   status: string
   participants: ParticipantData[]
-  currentQuestion: string | null
+  currentQuestion: { id: string; question: string; theme?: string } | null
   responses: ResponseData[]
   analysis?: {
     overallSummary?: { title: string; description: string }

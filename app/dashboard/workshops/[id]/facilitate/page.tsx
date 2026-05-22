@@ -736,31 +736,44 @@ export default function FacilitatePage({ params }: { params: Promise<{ id: strin
     setIsLoading(true)
 
     // Initial fetch
-    fetch(`/api/workshop/${workshopId}`)
-      .then(res => res.json())
-      .then(data => {
+    const initialFetch = async () => {
+      try {
+        const res = await fetch(`/api/workshop/${workshopId}`)
+        if (!res.ok) return
+        const data = await res.json()
+        if (!data || data.error) return
         setSession(prev => ({ ...prev, ...data, workshopId }))
-        setIsLoading(false)
-      })
-      .catch(err => {
+      } catch (err) {
         console.error(err)
+      } finally {
         setIsLoading(false)
-      })
+      }
+    }
+    initialFetch()
 
-    const interval = setInterval(() => {
-      fetch(`/api/workshop/${workshopId}`)
-        .then(res => res.json())
-        .then(data => {
-          setSession(prev => {
-            if (JSON.stringify(prev.responses) !== JSON.stringify(data.responses) ||
-              prev.participants.length !== data.participants.length ||
-              prev.status !== data.status) {
-              return { ...prev, ...data, workshopId }
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/workshop/${workshopId}`)
+        if (!res.ok) return
+        const data = await res.json()
+        if (!data || !Array.isArray(data.responses) || !Array.isArray(data.participants)) return
+        setSession(prev => {
+          if (JSON.stringify(prev.responses) !== JSON.stringify(data.responses) ||
+            prev.participants.length !== data.participants.length ||
+            prev.status !== data.status) {
+            return {
+              ...prev,
+              ...data,
+              workshopId,
+              // analysisデータは一度取得したら絶対に失わない（DBへの保存タイミング競合を防ぐ）
+              analysis: data.analysis ?? prev.analysis,
             }
-            return prev
-          })
+          }
+          return prev
         })
-        .catch(e => console.error(e))
+      } catch (e) {
+        console.error(e)
+      }
     }, 5000)
 
     return () => clearInterval(interval)
@@ -887,8 +900,6 @@ export default function FacilitatePage({ params }: { params: Promise<{ id: strin
   const handleAnalyze = async () => {
     try {
       setIsGenerating(true)
-      await updateSessionStatus("analysis") // Persist stage change
-
 
       const response = await fetch("/api/workshop/analyze-responses", {
         method: "POST",
@@ -902,17 +913,18 @@ export default function FacilitatePage({ params }: { params: Promise<{ id: strin
       })
 
       if (!response.ok) {
-        const errorText = await response.text();
         throw new Error(`API analysis failed: ${response.status} ${response.statusText}`);
       }
 
       const data = await response.json()
 
       if (data.analysis) {
+        // 分析完了後にステータスを変更（先にAPIが保存済み）
+        await updateSessionStatus("analysis")
         setSession((prev) => ({
           ...prev,
           status: "analysis",
-          analysis: data.analysis, // Assuming the API returns the full analysis object
+          analysis: data.analysis,
         }))
       } else {
         throw new Error("No analysis data received from API");
