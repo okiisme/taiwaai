@@ -1,5 +1,5 @@
 "use client"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Play, RotateCcw, Pause, Maximize2, Minimize2, Users, ArrowRight } from "@/components/icons"
@@ -7,9 +7,11 @@ import { AnalysisDisplay } from "@/app/dashboard/workshops/[id]/facilitate/analy
 import type { LocalAnalysisStats, AnalysisResult } from "@/lib/types"
 import { QRCodeSVG } from "qrcode.react"
 
+// ─── Mock Data ───────────────────────────────────────────────────────────────
+
 const MOCK_STATS: LocalAnalysisStats = {
   warmth: 38,
-  heroScores: { hope: 8.2, efficacy: 3.8, resilience: 3.5, optimism: 5.0 },
+  heroScores: { hope: 82, efficacy: 38, resilience: 35, optimism: 50 },
   focusTags: { mindset: 65, process: 20, environment: 15 },
   responseCount: 4,
   roi: 2.4,
@@ -17,283 +19,345 @@ const MOCK_STATS: LocalAnalysisStats = {
 
 const MOCK_ANALYSIS: AnalysisResult = {
   overallSummary: {
-    title: "希望と無力感の断絶 — 精神論 vs 構造論の対立",
-    description: "マネージャーの高い希望(Hope: 8.2)に対し、メンバーの実行効力感(Efficacy: 3.8)が著しく低く、「理想だけが語られ、手段がない」状態。認識の前提が噛み合っていないため、対話量は増えても質が伴わないリスクがあります。",
+    title: "「希望の空回り」— 熱量はあるのに現場が動かない構造的断絶",
+    description:
+      "マネージャーの高い希望(Hope: 82%)に対し、メンバーの実行効力感(Efficacy: 38%)が著しく低い状態です。「もっとやる気を持て」という精神論と「まず仕組みを変えてくれ」という構造論が平行線をたどっており、対話量は増えても質が伴わないまま疲弊が進んでいます。このままでは「言っても無駄」という諦めがチーム全体に定着するリスクがあります。",
   },
   warmth: 38,
   consensus: [
-    "「チームをもっと良くしたい」という気持ちは全員が持っている",
-    "現状に不満があることは共通認識として存在している",
+    "「チームをもっと良くしたい」という気持ちは全員が共有している",
+    "現状に不満・課題感があることは誰もが認めている",
+    "変化が必要だという認識は一致している",
   ],
   conflicts: [
-    "マネージャーは「メンバーの意識・主体性の問題」と捉えている",
-    "メンバーは「失敗が許容されない仕組みと環境の問題」と捉えている",
-    "解決策がマネージャー=精神論、メンバー=具体的制度変更で全く噛み合っていない",
+    "マネージャー：「メンバーの当事者意識・主体性の問題」と認識",
+    "メンバー：「失敗が許容されない評価制度と環境の問題」と認識",
+    "解決策の方向性が精神論(Manager) vs 制度改革(Member)で根本的に噛み合っていない",
   ],
   structuralBridge: {
-    missingLink: "『精神論』ではなく『失敗しても安全な具体的ルールとリソース』の整備が欠けている",
-    bridgeBalance: "Mindset偏重（マネージャー側からのアプローチに偏っている）",
+    missingLink:
+      "「気持ちの問題」ではなく「失敗しても安全な具体的ルールとリソース配分」の整備が根本的に欠けている。心理的安全性の土台なしに主体性は生まれない。",
+    bridgeBalance: "Mindset偏重（マネージャー側の解決策アプローチに強く偏っている）",
   },
   discussionPoints: [
-    "「主体性がない」と感じる具体的な場面はどんな状況か？",
-    "「失敗してはいけない空気」はどこから来ているのか？",
-    "明日から変えられる、仕組みレベルでの一歩は何か？",
+    "「主体性がない」と感じる具体的な場面・行動はどんな状況か？",
+    "「失敗してはいけない空気」はどこから来ているのか、誰がそれを作っているか？",
+    "評価されなくても自分がやりたいと思える仕事とはどんなものか？",
   ],
-  sentiment: { positive: 20, neutral: 30, negative: 50 },
+  sentiment: { positive: 18, neutral: 27, negative: 55 },
   tags: MOCK_STATS.focusTags,
   cognitiveDissonance: {
     pointsOfFriction: [
-      "マネージャー「指示待ちが多い」⇔ メンバー「何を言っても変わらないから諦めた」",
-      "マネージャー「意識改革が必要」⇔ メンバー「制度と評価制度を変えてほしい」",
+      "マネージャー「指示待ちが多く自走しない」⇔ メンバー「何を言っても変わらないと学習した結果」",
+      "マネージャー「意識改革・マインドセット研修が必要」⇔ メンバー「評価制度と承認プロセスを変えてほしい」",
+      "マネージャー「失敗を恐れずチャレンジを」⇔ メンバー「実際に失敗したら評価が下がった経験がある」",
     ],
     discussionTopics: [
-      "メンバーが「言っても無駄」と感じた具体的な経験を一つ共有してもらう",
-      "「失敗しても評価されない」ルールを明文化できるか話し合う",
+      "メンバーが「言っても無駄」と感じた具体的な経験を1つ共有してもらい、その場で一緒に振り返る",
+      "「失敗しても評価が下がらない条件」を明文化し、まず小さな実験として合意できるか話し合う",
+      "マネージャーが「主体性がある」と感じた瞬間の具体例を挙げ、メンバーとギャップを確認する",
     ],
-    lemonMarketRisk: "高リスク — 認識の前提が噛み合わないまま対話が続くと、本音が失われ建前だけが残る「レモン市場化」が起きやすい状態です。",
+    lemonMarketRisk:
+      "高リスク — 本音度が平均38%と低く、面従腹背が定着しつつある状態。このままでは本音が失われ建前だけが残る「対話の形骸化」が加速します。",
   },
   heroInsight: {
-    parameterAnalysis: "Hope(8.2)とEfficacy(3.8)のギャップが4.4ptと非常に大きく、「理想は高いが自分たちには実現できない」という学習性無力感に陥りかけています。ResilienceとOptimismも低く、1度の失敗で挽回できないと感じているシグナルです。",
-    strength: "マネージャー層を中心に未来への強い希望があり、チームを良くしたいという意志は本物。この熱量を正しい方向に向けることができれば、大きな変化の起爆剤になれます。",
+    parameterAnalysis:
+      "Hope(82%)とEfficacy(38%)のギャップが44ptと非常に大きい。「理想は高いが自分たちには実現できない」という学習性無力感の典型パターン。Resilience(35%)も低く、1度の失敗で挽回できないと感じているシグナルです。Optimism(50%)は中程度で、まだ諦め切っていない段階——今が介入の最適タイミングです。",
+    strength:
+      "マネージャーを中心に未来への強い希望(Hope)があり、チームを良くしたいという意志は本物。この熱量を「精神論」から「構造改革」へ向け直すことができれば、大きな変化の起爆剤になれます。",
     scores: MOCK_STATS.heroScores,
   },
   interventionQuestions: {
-    mutualUnderstanding: "メンバーが「やりたくてもできない」と感じている具体的な物理的・制度的障壁は何だと思いますか？（マネージャーへ）",
-    suspendedJudgment: "もし「失敗しても評価が下がらない」としたら、まず何を変えたいですか？（メンバーへ）",
-    smallAgreement: "「意識を変えずに、仕組みだけで解決できること」を明日から1つだけ試しませんか？（全員へ）",
+    mutualUnderstanding:
+      "メンバーが「やりたくてもできない」と感じている具体的な物理的・制度的な障壁は何だと思いますか？（マネージャーへ）",
+    suspendedJudgment:
+      "もし「失敗しても評価が一切下がらない」としたら、まず何を変えてみたいですか？（メンバーへ）",
+    smallAgreement:
+      "「意識を変えずに、仕組みだけで解決できること」を、明日から1つだけ試してみませんか？（全員へ）",
   },
   keyFindings: [
-    "Hope-Efficacyギャップ(4.4pt): 理想と手段の乖離が深刻",
-    "本音度が平均40%以下 — 面従腹背リスクが高い",
-    "Mindset解決策が65%を占め、環境・制度改善視点が少ない",
+    "Hope-Efficacyギャップ 44pt：理想と実行力の乖離が深刻なレベル",
+    "本音度 平均38%：面従腹背リスクが高く、表面的な合意が危険",
+    "解決策の65%がMindset偏重：構造・環境の改善視点が著しく少ない",
+    "抵抗感 平均72%：この内容を共有することへの不安が非常に強い",
   ],
   roiScore: 62,
 }
 
+// ─── Demo Script ─────────────────────────────────────────────────────────────
+
 const DEMO_SCRIPT = [
   {
     stage: "intro",
-    title: "1. TAIWA AI デモンストレーション",
-    description: "「見えない課題」を可視化し、対話の質を変えるプロセスを体験します。",
-    duration: 3000,
+    title: "TAIWA AI — デモンストレーション",
+    duration: 3500,
+    narration: {
+      headline: "TAIWA AI とは？",
+      body: "チームの「見えない本音」を可視化し、対話の質を変えるAIファシリテーターです。ワークショップ形式で参加者が匿名入力した回答をAIが構造分析し、ファシリテーターに「次の問い」を提案します。",
+      points: ["📱 参加者はスマホから匿名で回答", "📊 リアルタイムで本音度・HERO指標を可視化", "🤖 AIが認識のズレと介入の問いを生成"],
+    },
   },
   {
     stage: "participants-join",
-    title: "2. 参加者が匿名で入室",
-    description: "QRコードから、メンバーが匿名でセッションに参加します。",
+    title: "Step 1 — 匿名参加",
+    duration: 4500,
     participants: [
-      { name: "マネージャーA", role: "manager", joinTime: 500, avatar: "👔" },
-      { name: "メンバーB", role: "member", joinTime: 1200, avatar: "👩‍💻" },
-      { name: "メンバーC", role: "member", joinTime: 1800, avatar: "👨‍💻" },
-      { name: "メンバーD", role: "member", joinTime: 2400, avatar: "🤔" },
+      { name: "マネージャーA", role: "manager", joinTime: 600, avatar: "👔" },
+      { name: "メンバーB", role: "member", joinTime: 1400, avatar: "👩‍💻" },
+      { name: "メンバーC", role: "member", joinTime: 2200, avatar: "👨‍💻" },
+      { name: "メンバーD", role: "member", joinTime: 3000, avatar: "🤔" },
     ],
-    duration: 4000,
-    showQR: true,
+    narration: {
+      headline: "なぜ「匿名」なのか？",
+      body: "心理的安全性が低い環境では、人は本音を言わず建前で回答します。QRコード1つで匿名参加できる設計により、役職や人間関係のプレッシャーなしに本音を引き出します。",
+      points: [
+        "🔒 名前・顔出し不要でスマホからアクセス",
+        "🎯 役職フィルターなしで生の声を収集",
+        "⚡ リアルタイムで参加状況をファシリテーターが確認",
+      ],
+    },
   },
   {
     stage: "responses-coming",
-    title: "3. 本音と課題の収集",
-    description: "As-Is/To-Be/Solution の構造化入力と HERO・本音度をリアルタイム収集。",
+    title: "Step 2 — 4ステップ入力",
+    duration: 6000,
     responses: [
       {
-        participant: "マネージャーA",
-        role: "manager",
-        asIs: "メンバーの主体性が足りない",
-        toBe: "全員が自走するチーム",
-        honesty: 95,
-        resistance: 15,
-        hero: { hope: 90, efficacy: 80, resilience: 60, optimism: 70 },
-        time: 500,
+        participant: "マネージャーA", role: "manager",
+        asIs: "メンバーの主体性が足りず、指示待ちになっている",
+        toBe: "全員が当事者意識を持って自走するチーム",
+        solution: "意識改革・マインドセット研修を実施する",
+        honesty: 95, resistance: 12,
+        hero: { hope: 90, efficacy: 80, resilience: 65, optimism: 70 },
+        time: 600,
       },
       {
-        participant: "メンバーB",
-        role: "member",
-        asIs: "何を言っても変わらない空気がある",
-        toBe: "失敗を許容するルールが欲しい",
-        honesty: 20,
-        resistance: 85,
-        hero: { hope: 40, efficacy: 20, resilience: 30, optimism: 35 },
-        time: 1500,
+        participant: "メンバーB", role: "member",
+        asIs: "何を言っても変わらない空気があって諦めている",
+        toBe: "失敗しても責められない心理的安全性のあるチーム",
+        solution: "失敗を許容する評価制度のルール化",
+        honesty: 22, resistance: 88,
+        hero: { hope: 38, efficacy: 20, resilience: 28, optimism: 32 },
+        time: 1800,
       },
       {
-        participant: "メンバーC",
-        role: "member",
-        asIs: "理想ばかり語られて疲れる",
-        toBe: "リソースを増やしてほしい",
-        honesty: 40,
-        resistance: 75,
-        hero: { hope: 50, efficacy: 30, resilience: 35, optimism: 45 },
-        time: 2500,
+        participant: "メンバーC", role: "member",
+        asIs: "理想ばかり語られて現場が疲弊している",
+        toBe: "具体的なリソースと権限が与えられた環境",
+        solution: "意思決定の権限移譲と予算配分の見直し",
+        honesty: 38, resistance: 75,
+        hero: { hope: 50, efficacy: 32, resilience: 38, optimism: 45 },
+        time: 3200,
       },
       {
-        participant: "メンバーD",
-        role: "member",
-        asIs: "入力中...",
-        toBe: "",
-        honesty: 0,
-        resistance: 0,
-        hero: null,
-        time: 3500,
-        typing: true,
+        participant: "メンバーD", role: "member",
+        asIs: "入力中...", toBe: "", solution: "",
+        honesty: 0, resistance: 0, hero: null,
+        time: 4800, typing: true,
       },
     ],
-    duration: 5000,
+    narration: {
+      headline: "4ステップ構造化入力",
+      body: "「なんとなく不満」を構造化することで、AIが分析しやすいデータになります。感情ではなく事実と理想を分けて入力することで、認識のズレが数値として可視化されます。",
+      points: [
+        "⚡ Step1: エネルギーレベル（今の状態チェック）",
+        "📝 Step2: As-Is / To-Be / Solution（思考の構造化）",
+        "🦸 Step3: HERO心理資本（Hope/Efficacy/Resilience/Optimism）",
+        "💬 Step4: 本音度 & 抵抗感（どのくらい正直に答えたか）",
+      ],
+    },
   },
   {
     stage: "realtime-analysis",
-    title: "4. リアルタイム集計",
-    description: "AIを待たずに、本音度・抵抗感・HEROスコアが即座に可視化されます。",
-    showStats: true,
-    duration: 3500,
+    title: "Step 3 — リアルタイム集計",
+    duration: 4000,
+    narration: {
+      headline: "AIを待たずに即座に可視化",
+      body: "回答が集まるたびにリアルタイムで集計されます。「本音度が低い」「抵抗感が高い」といった指標が見えることで、ファシリテーターが場のコンディションを把握し、対話の進め方を調整できます。",
+      points: [
+        "💬 本音度：どれだけ正直に答えたかの平均",
+        "😰 抵抗感：共有することへの不安の強さ",
+        "🦸 HERO：チームの心理資本の現在地",
+        "🎯 解決策比重：Mindset/Process/Environmentの偏り",
+      ],
+    },
   },
   {
     stage: "ai-insight",
-    title: "5. AIによる構造分析",
-    description: "「断絶」や「語られない本音」をAIが鋭く指摘します。",
-    showAnalysis: true,
-    duration: 10000,
+    title: "Step 4 — AI構造分析",
+    duration: 12000,
+    narration: {
+      headline: "AIが「語られない本音」を読む",
+      body: "全参加者の回答を横断的に分析し、「誰と誰の認識がどうズレているか」「次にどんな問いを投げかけるべきか」をAIが提案します。ファシリテーターはこれを見ながら対話を進めます。",
+      points: [
+        "🔍 認識のズレ（Friction）を具体的に特定",
+        "🦸 HEROスコアで心理状態の構造を把握",
+        "💡 3種類の介入の問い（Intervention Questions）を提示",
+        "⚠️ 対話不全リスク（レモン市場化）を警告",
+      ],
+    },
   },
 ]
 
-// Mobile wizard matching the current join page (4-step)
-const MockMobileClient = ({ step }: { step: number }) => {
-  const totalSteps = 4
+// ─── Mobile Wizard Mock ───────────────────────────────────────────────────────
+
+function TypingText({ text, speed = 40 }: { text: string; speed?: number }) {
+  const [displayed, setDisplayed] = useState("")
+  const [done, setDone] = useState(false)
+  useEffect(() => {
+    setDisplayed("")
+    setDone(false)
+    let i = 0
+    const timer = setInterval(() => {
+      i++
+      setDisplayed(text.slice(0, i))
+      if (i >= text.length) { clearInterval(timer); setDone(true) }
+    }, speed)
+    return () => clearInterval(timer)
+  }, [text, speed])
   return (
-    <div className="w-[280px] h-[580px] bg-slate-900 rounded-[3rem] border-8 border-slate-800 shadow-2xl overflow-hidden relative mx-auto">
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-28 h-5 bg-slate-800 rounded-b-2xl z-20" />
-      <div className="h-full w-full bg-gradient-to-br from-teal-50 via-lime-50 to-cyan-50 pt-10 px-4 pb-4 flex flex-col overflow-hidden">
-        {/* Progress bar */}
-        <div className="flex items-center gap-1 mb-4">
-          {Array.from({ length: totalSteps }).map((_, i) => (
-            <div key={i} className={`h-1.5 flex-1 rounded-full transition-colors ${i + 1 <= step ? "bg-teal-500" : "bg-gray-200"}`} />
+    <span>
+      {displayed}
+      {!done && <span className="inline-block w-0.5 h-3 bg-slate-500 animate-pulse ml-0.5 align-middle" />}
+    </span>
+  )
+}
+
+function AnimatedSlider({ value, color }: { value: number; color: string }) {
+  const [current, setCurrent] = useState(0)
+  useEffect(() => {
+    let v = 0
+    const timer = setInterval(() => {
+      v = Math.min(v + 3, value)
+      setCurrent(v)
+      if (v >= value) clearInterval(timer)
+    }, 20)
+    return () => clearInterval(timer)
+  }, [value])
+  return (
+    <div className="bg-slate-200 h-2 rounded-full relative">
+      <div className={`absolute top-0 left-0 h-full ${color} rounded-full transition-all`} style={{ width: `${current}%` }} />
+      <div className="absolute top-1/2 -translate-y-1/2 h-3.5 w-3.5 bg-white rounded-full shadow border border-slate-200 transition-all" style={{ left: `calc(${current}% - 7px)` }} />
+    </div>
+  )
+}
+
+function MockMobileClient({ step }: { step: number }) {
+  return (
+    <div className="w-[270px] h-[560px] bg-slate-900 rounded-[3rem] border-[7px] border-slate-800 shadow-2xl overflow-hidden relative mx-auto">
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-5 bg-slate-800 rounded-b-2xl z-20" />
+      <div className="h-full w-full bg-gradient-to-br from-teal-50 via-lime-50 to-cyan-50 pt-9 px-3.5 pb-3 flex flex-col overflow-hidden">
+        {/* Progress */}
+        <div className="flex items-center gap-1 mb-3">
+          {[1, 2, 3, 4].map(i => (
+            <div key={i} className={`h-1.5 flex-1 rounded-full transition-all duration-500 ${i <= step ? "bg-teal-500" : "bg-gray-200"}`} />
           ))}
+          <span className="text-[9px] text-gray-400 ml-1 font-bold">{step}/4</span>
         </div>
 
-        {/* Question card */}
-        <div className="bg-slate-900 text-white rounded-xl p-3 mb-4">
-          <p className="text-[9px] font-bold text-teal-400 uppercase tracking-widest mb-1">今回の問い</p>
-          <p className="text-xs font-bold leading-snug">チームの主体性を高めるために、あなたが感じる最大の障壁は？</p>
+        {/* Current question */}
+        <div className="bg-slate-900 text-white rounded-xl p-2.5 mb-3">
+          <p className="text-[8px] font-bold text-teal-400 uppercase tracking-widest mb-0.5">今回の問い</p>
+          <p className="text-[10px] font-bold leading-snug">チームの主体性を高めるために、あなたが感じる最大の障壁は？</p>
         </div>
 
-        {/* Step 1: エネルギーレベル */}
+        {/* Step 1 */}
         {step === 1 && (
-          <div className="flex-1 flex flex-col animate-in slide-in-from-right duration-400">
-            <h3 className="font-bold text-slate-800 text-sm mb-1">1. 今のコンディション</h3>
-            <p className="text-[10px] text-slate-500 mb-4">正直な今の状態を教えてください</p>
-            <div className="space-y-4">
-              <div>
-                <div className="flex justify-between text-[10px] font-bold text-slate-600 mb-2">
-                  <span>エネルギーレベル</span>
-                  <span className="text-yellow-600">72%</span>
-                </div>
-                <div className="flex text-lg justify-between px-1 mb-1">
-                  <span>💤</span><span>😐</span><span>🔥</span>
-                </div>
-                <div className="bg-slate-200 h-2.5 rounded-full relative">
-                  <div className="absolute top-0 left-0 h-full bg-yellow-500 rounded-full" style={{ width: "72%" }} />
-                  <div className="absolute top-1/2 -translate-y-1/2 h-4 w-4 bg-white rounded-full shadow border border-slate-200" style={{ left: "calc(72% - 8px)" }} />
-                </div>
-              </div>
+          <div className="flex-1 flex flex-col">
+            <p className="text-[11px] font-bold text-slate-700 mb-0.5">① 今のコンディション</p>
+            <p className="text-[9px] text-slate-500 mb-3">正直な今の状態を教えてください</p>
+            <p className="text-[9px] font-bold text-slate-600 mb-1.5">エネルギーレベル</p>
+            <div className="flex text-base justify-between px-0.5 mb-1"><span>💤</span><span>😐</span><span>🔥</span></div>
+            <AnimatedSlider value={72} color="bg-yellow-400" />
+            <p className="text-[10px] font-black text-yellow-600 text-center mt-1">72%</p>
+            <div className="mt-2 bg-yellow-50 border border-yellow-200 rounded-lg p-2">
+              <p className="text-[9px] text-yellow-700 font-medium">⚡ やや高め。積極的に発言できる状態です</p>
             </div>
-            <div className="mt-auto">
-              <div className="w-full h-10 bg-gradient-to-r from-teal-500 to-lime-500 rounded-xl flex items-center justify-center text-white text-xs font-bold">
-                次へ →
-              </div>
+            <div className="mt-auto pt-2">
+              <div className="w-full h-9 bg-gradient-to-r from-teal-500 to-lime-500 rounded-xl flex items-center justify-center text-white text-[11px] font-bold">次へ →</div>
             </div>
           </div>
         )}
 
-        {/* Step 2: As-Is / To-Be / Solution */}
+        {/* Step 2 */}
         {step === 2 && (
-          <div className="flex-1 flex flex-col animate-in slide-in-from-right duration-400 overflow-hidden">
-            <h3 className="font-bold text-slate-800 text-sm mb-1">2. 思考の構造化</h3>
-            <p className="text-[10px] text-slate-500 mb-3">事実と理想を分けて考えましょう</p>
-            <div className="space-y-2 flex-1 overflow-hidden">
-              <div className="p-2.5 bg-red-50 rounded-xl border-l-4 border-red-400">
-                <span className="text-[9px] font-bold text-red-500 uppercase tracking-wider block mb-1">As-Is (現状の事実)</span>
-                <p className="text-[11px] text-slate-700 font-medium">何を言っても変わらない空気がある</p>
+          <div className="flex-1 flex flex-col overflow-hidden">
+            <p className="text-[11px] font-bold text-slate-700 mb-0.5">② 思考の構造化</p>
+            <p className="text-[9px] text-slate-500 mb-2">事実と理想を分けて考えましょう</p>
+            <div className="space-y-1.5 flex-1 overflow-hidden">
+              <div className="p-2 bg-red-50 rounded-lg border-l-[3px] border-red-400">
+                <span className="text-[8px] font-bold text-red-500 uppercase tracking-wider block mb-0.5">As-Is（現状の事実）</span>
+                <p className="text-[10px] text-slate-700 font-medium leading-snug">
+                  <TypingText text="何を言っても変わらない空気があって諦めている" speed={35} />
+                </p>
               </div>
-              <div className="p-2.5 bg-teal-50 rounded-xl border-l-4 border-teal-400">
-                <span className="text-[9px] font-bold text-teal-500 uppercase tracking-wider block mb-1">To-Be (理想の状態)</span>
-                <p className="text-[11px] text-slate-700 font-medium">失敗を許容するルールがあるチーム</p>
+              <div className="p-2 bg-teal-50 rounded-lg border-l-[3px] border-teal-400">
+                <span className="text-[8px] font-bold text-teal-500 uppercase tracking-wider block mb-0.5">To-Be（理想の状態）</span>
+                <p className="text-[10px] text-slate-700 font-medium leading-snug">失敗しても責められない安全なチーム</p>
               </div>
-              <div className="p-2.5 bg-orange-50 rounded-xl border-l-4 border-orange-400 h-16">
-                <span className="text-[9px] font-bold text-orange-500 uppercase tracking-wider block mb-1">Solution (行動)</span>
-                <p className="text-[11px] text-slate-400 animate-pulse">入力中...</p>
+              <div className="p-2 bg-orange-50 rounded-lg border-l-[3px] border-orange-400 h-14">
+                <span className="text-[8px] font-bold text-orange-500 uppercase tracking-wider block mb-0.5">Solution（解決策）</span>
+                <p className="text-[10px] text-slate-400 animate-pulse">入力中...</p>
               </div>
             </div>
             <div className="mt-2">
-              <div className="w-full h-10 bg-gradient-to-r from-teal-500 to-lime-500 rounded-xl flex items-center justify-center text-white text-xs font-bold">
-                次へ →
-              </div>
+              <div className="w-full h-9 bg-gradient-to-r from-teal-500 to-lime-500 rounded-xl flex items-center justify-center text-white text-[11px] font-bold">次へ →</div>
             </div>
           </div>
         )}
 
-        {/* Step 3: HERO */}
+        {/* Step 3 */}
         {step === 3 && (
-          <div className="flex-1 flex flex-col animate-in slide-in-from-right duration-400">
-            <h3 className="font-bold text-slate-800 text-sm mb-1">3. HERO 心理資本</h3>
-            <p className="text-[10px] text-slate-500 mb-3">この課題への感覚（直感で）</p>
-            <div className="space-y-3">
+          <div className="flex-1 flex flex-col">
+            <p className="text-[11px] font-bold text-slate-700 mb-0.5">③ HERO 心理資本</p>
+            <p className="text-[9px] text-slate-500 mb-2.5">この課題への感覚（直感で答えてください）</p>
+            <div className="space-y-2.5">
               {[
-                { label: "Hope (希望)", val: 40, col: "bg-teal-500" },
-                { label: "Efficacy (効力感)", val: 20, col: "bg-indigo-500" },
-                { label: "Resilience (回復力)", val: 30, col: "bg-orange-500" },
-                { label: "Optimism (楽観性)", val: 35, col: "bg-lime-500" },
-              ].map((item, i) => (
-                <div key={i}>
-                  <div className="flex justify-between text-[10px] font-bold mb-1 text-slate-600">
-                    <span>{item.label}</span>
-                    <span className="text-slate-400">{item.val}%</span>
+                { label: "Hope（希望）", val: 38, col: "bg-teal-500", desc: "改善できると思う？" },
+                { label: "Efficacy（効力感）", val: 20, col: "bg-indigo-500", desc: "自分が変えられると思う？" },
+                { label: "Resilience（回復力）", val: 28, col: "bg-orange-500", desc: "失敗しても立ち直れる？" },
+                { label: "Optimism（楽観性）", val: 32, col: "bg-lime-500", desc: "最終的には良くなると思う？" },
+              ].map(item => (
+                <div key={item.label}>
+                  <div className="flex justify-between text-[9px] font-bold mb-0.5 text-slate-600">
+                    <span>{item.label}</span><span className="text-slate-400">{item.val}%</span>
                   </div>
-                  <div className="bg-slate-100 h-2 rounded-full relative overflow-hidden">
-                    <div className={`absolute top-0 left-0 h-full ${item.col} rounded-full`} style={{ width: `${item.val}%` }} />
-                    <div className="absolute top-1/2 -translate-y-1/2 h-3.5 w-3.5 bg-white rounded-full shadow border border-slate-200" style={{ left: `calc(${item.val}% - 7px)` }} />
-                  </div>
+                  <AnimatedSlider value={item.val} color={item.col} />
                 </div>
               ))}
             </div>
-            <div className="mt-auto pt-3">
-              <div className="w-full h-10 bg-gradient-to-r from-teal-500 to-lime-500 rounded-xl flex items-center justify-center text-white text-xs font-bold">
-                次へ →
-              </div>
+            <div className="mt-auto pt-2.5">
+              <div className="w-full h-9 bg-gradient-to-r from-teal-500 to-lime-500 rounded-xl flex items-center justify-center text-white text-[11px] font-bold">次へ →</div>
             </div>
           </div>
         )}
 
-        {/* Step 4: Vulnerability */}
+        {/* Step 4 */}
         {step === 4 && (
-          <div className="flex-1 flex flex-col animate-in slide-in-from-right duration-400">
-            <h3 className="font-bold text-slate-800 text-sm mb-1">4. 本音度 & 抵抗感</h3>
-            <p className="text-[10px] text-slate-500 mb-4">正直に答えてください</p>
-            <div className="space-y-5">
+          <div className="flex-1 flex flex-col">
+            <p className="text-[11px] font-bold text-slate-700 mb-0.5">④ 本音度 & 抵抗感</p>
+            <p className="text-[9px] text-slate-500 mb-3">正直に答えてください（本当の気持ち）</p>
+            <div className="space-y-4">
               <div>
-                <div className="flex justify-between text-[10px] font-bold mb-1 text-slate-600">
-                  <span>💬 本音度</span>
-                  <span className="text-red-500">20%</span>
+                <div className="flex justify-between text-[9px] font-bold mb-0.5 text-slate-600">
+                  <span>💬 本音度</span><span className="text-red-500">22%</span>
                 </div>
-                <p className="text-[9px] text-slate-400 mb-2">今の回答、どのくらい本音ですか？</p>
-                <div className="bg-slate-100 h-2 rounded-full relative">
-                  <div className="absolute top-0 left-0 h-full bg-red-400 rounded-full" style={{ width: "20%" }} />
-                  <div className="absolute top-1/2 -translate-y-1/2 h-3.5 w-3.5 bg-white rounded-full shadow border border-slate-200" style={{ left: "calc(20% - 7px)" }} />
-                </div>
+                <p className="text-[8px] text-slate-400 mb-1">今の回答、どれくらい本音ですか？</p>
+                <AnimatedSlider value={22} color="bg-red-400" />
+                <p className="text-[8px] text-red-600 font-medium mt-1">⚠️ かなり建前が混じっています</p>
               </div>
               <div>
-                <div className="flex justify-between text-[10px] font-bold mb-1 text-slate-600">
-                  <span>😰 抵抗感</span>
-                  <span className="text-orange-500">85%</span>
+                <div className="flex justify-between text-[9px] font-bold mb-0.5 text-slate-600">
+                  <span>😰 抵抗感</span><span className="text-orange-500">88%</span>
                 </div>
-                <p className="text-[9px] text-slate-400 mb-2">この内容を共有することへの抵抗は？</p>
-                <div className="bg-slate-100 h-2 rounded-full relative">
-                  <div className="absolute top-0 left-0 h-full bg-orange-400 rounded-full" style={{ width: "85%" }} />
-                  <div className="absolute top-1/2 -translate-y-1/2 h-3.5 w-3.5 bg-white rounded-full shadow border border-slate-200" style={{ left: "calc(85% - 7px)" }} />
-                </div>
+                <p className="text-[8px] text-slate-400 mb-1">この内容を共有することへの不安は？</p>
+                <AnimatedSlider value={88} color="bg-orange-400" />
+                <p className="text-[8px] text-orange-600 font-medium mt-1">⚠️ 共有することに強い抵抗を感じています</p>
               </div>
             </div>
-            <div className="mt-auto pt-3">
-              <div className="w-full h-10 bg-slate-900 rounded-xl flex items-center justify-center text-white text-xs font-bold animate-pulse">
-                回答を送信 →
+            <div className="mt-auto pt-2.5">
+              <div className="w-full h-9 bg-slate-900 rounded-xl flex items-center justify-center text-white text-[11px] font-bold animate-pulse">
+                📤 回答を送信する
               </div>
             </div>
           </div>
@@ -303,48 +367,49 @@ const MockMobileClient = ({ step }: { step: number }) => {
   )
 }
 
-// Real-time stats display for stage 4
-const RealtimeStatsDisplay = () => {
+// ─── Realtime Stats ───────────────────────────────────────────────────────────
+
+function RealtimeStatsDisplay() {
   const avgHonesty = 38
-  const avgResistance = 70
-  const avgEnergy = 62
+  const avgResistance = 72
+  const avgEnergy = 64
   const hero = MOCK_STATS.heroScores
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-700">
+    <div className="space-y-5 animate-in fade-in duration-700">
       {/* Meta badges */}
-      <div className="flex flex-wrap gap-3 justify-center">
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border text-sm font-bold text-red-700 bg-red-50 border-red-200">
-          💬 本音度 <span className="text-xl font-black">{avgHonesty}%</span>
-        </div>
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border text-sm font-bold text-orange-700 bg-orange-50 border-orange-200">
-          😰 抵抗感 <span className="text-xl font-black">{avgResistance}%</span>
-        </div>
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border text-sm font-bold text-yellow-700 bg-yellow-50 border-yellow-200">
-          🔥 エネルギー <span className="text-xl font-black">{avgEnergy}%</span>
-        </div>
+      <div className="flex flex-wrap gap-3">
+        {[
+          { label: "💬 本音度", val: avgHonesty, color: "text-red-700 bg-red-50 border-red-200", alert: true },
+          { label: "😰 抵抗感", val: avgResistance, color: "text-orange-700 bg-orange-50 border-orange-200", alert: true },
+          { label: "🔥 エネルギー", val: avgEnergy, color: "text-yellow-700 bg-yellow-50 border-yellow-200", alert: false },
+        ].map(b => (
+          <div key={b.label} className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl border font-bold text-sm ${b.color}`}>
+            {b.label} <span className="text-xl font-black">{b.val}%</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Alert */}
+      <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-xl p-3 text-amber-800 text-sm">
+        ⚠️ <span><strong>建前モードの可能性。</strong> 本音度38%は低く、面従腹背リスクがあります。対話の前に場の安心感づくりを推奨します。</span>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        {/* Alert */}
-        <div className="col-span-2 flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-xl p-3 text-amber-800 text-sm">
-          ⚠️ <span><strong>建前モードの可能性。</strong> 本音度38%は低く、面従腹背リスクがあります。</span>
-        </div>
-
-        {/* HERO scores */}
+        {/* HERO */}
         <Card className="p-4 rounded-2xl bg-white border border-gray-100">
-          <p className="text-xs font-bold text-gray-500 mb-3 uppercase tracking-wider">HERO 心理資本 (チーム平均)</p>
-          <div className="space-y-2">
+          <p className="text-xs font-bold text-gray-500 mb-3 uppercase tracking-wider">🦸 HERO 心理資本（チーム平均）</p>
+          <div className="space-y-2.5">
             {[
-              { label: "Hope", val: Math.round(hero.hope * 10), col: "bg-teal-400" },
-              { label: "Efficacy", val: Math.round(hero.efficacy * 10), col: "bg-indigo-400" },
-              { label: "Resilience", val: Math.round(hero.resilience * 10), col: "bg-orange-400" },
-              { label: "Optimism", val: Math.round(hero.optimism * 10), col: "bg-lime-400" },
+              { label: "Hope（希望）", val: hero.hope, col: "bg-teal-400" },
+              { label: "Efficacy（効力感）", val: hero.efficacy, col: "bg-indigo-400" },
+              { label: "Resilience（回復力）", val: hero.resilience, col: "bg-orange-400" },
+              { label: "Optimism（楽観性）", val: hero.optimism, col: "bg-lime-400" },
             ].map(item => (
               <div key={item.label}>
                 <div className="flex justify-between text-xs mb-0.5">
-                  <span className="font-medium text-gray-600">{item.label}</span>
-                  <span className="font-bold text-gray-700">{item.val}%</span>
+                  <span className="text-gray-600 font-medium">{item.label}</span>
+                  <span className={`font-black ${item.val < 50 ? "text-red-500" : "text-gray-700"}`}>{item.val}%</span>
                 </div>
                 <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
                   <div className={`h-full ${item.col} rounded-full`} style={{ width: `${item.val}%` }} />
@@ -352,21 +417,22 @@ const RealtimeStatsDisplay = () => {
               </div>
             ))}
           </div>
+          <p className="text-[10px] text-red-600 font-semibold mt-3">⚠️ Hope-Efficacy ギャップ 44pt — 希望はあるが実行力が伴っていない</p>
         </Card>
 
         {/* Focus tags */}
         <Card className="p-4 rounded-2xl bg-white border border-gray-100">
-          <p className="text-xs font-bold text-gray-500 mb-3 uppercase tracking-wider">解決策の観点 比重</p>
-          <div className="space-y-2">
+          <p className="text-xs font-bold text-gray-500 mb-3 uppercase tracking-wider">🎯 解決策の観点 比重</p>
+          <div className="space-y-2.5">
             {[
-              { label: "Mindset (意識)", val: MOCK_STATS.focusTags.mindset, col: "bg-purple-400" },
-              { label: "Process (仕組み)", val: MOCK_STATS.focusTags.process, col: "bg-blue-400" },
-              { label: "Environment (環境)", val: MOCK_STATS.focusTags.environment, col: "bg-green-400" },
+              { label: "Mindset（意識改革）", val: MOCK_STATS.focusTags.mindset, col: "bg-purple-400" },
+              { label: "Process（仕組み）", val: MOCK_STATS.focusTags.process, col: "bg-blue-400" },
+              { label: "Environment（環境）", val: MOCK_STATS.focusTags.environment, col: "bg-green-400" },
             ].map(item => (
               <div key={item.label}>
                 <div className="flex justify-between text-xs mb-0.5">
-                  <span className="font-medium text-gray-600">{item.label}</span>
-                  <span className="font-bold text-gray-700">{item.val}%</span>
+                  <span className="text-gray-600 font-medium">{item.label}</span>
+                  <span className="font-black text-gray-700">{item.val}%</span>
                 </div>
                 <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
                   <div className={`h-full ${item.col} rounded-full`} style={{ width: `${item.val}%` }} />
@@ -374,30 +440,60 @@ const RealtimeStatsDisplay = () => {
               </div>
             ))}
           </div>
-          <p className="text-[10px] text-orange-600 font-semibold mt-3">⚠️ Mindset偏重 — 構造的解決策が少ない</p>
+          <p className="text-[10px] text-purple-700 font-semibold mt-3">⚠️ Mindset偏重 — 「意識の問題」という認識が支配的。構造的解決策が少ない。</p>
+
+          {/* Response count */}
+          <div className="mt-4 pt-3 border-t border-gray-100">
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-gray-500">回答済み</span>
+              <div className="flex gap-1">
+                {[1, 2, 3].map(i => <div key={i} className="w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center text-white text-[10px] font-bold">{i}</div>)}
+                <div className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center text-gray-400 text-[10px] animate-pulse">...</div>
+              </div>
+            </div>
+          </div>
         </Card>
       </div>
     </div>
   )
 }
 
+// ─── Narration Panel ──────────────────────────────────────────────────────────
+
+function NarrationPanel({ narration }: { narration: { headline: string; body: string; points: string[] } }) {
+  return (
+    <div className="bg-slate-900 text-white rounded-2xl p-5 space-y-4 animate-in fade-in slide-in-from-right-4 duration-500">
+      <div>
+        <p className="text-[10px] font-bold text-teal-400 uppercase tracking-widest mb-1.5">解説</p>
+        <h3 className="text-base font-black leading-snug">{narration.headline}</h3>
+      </div>
+      <p className="text-xs text-slate-300 leading-relaxed">{narration.body}</p>
+      <ul className="space-y-2">
+        {narration.points.map((pt, i) => (
+          <li key={i} className="flex items-start gap-2 text-xs text-slate-200 leading-snug">
+            <span className="shrink-0">{pt}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
+
 type DemoResponse = {
-  participant: string
-  role: string
-  asIs: string
-  toBe: string
-  honesty: number
-  resistance: number
+  participant: string; role: string
+  asIs: string; toBe: string; solution: string
+  honesty: number; resistance: number
   hero: { hope: number; efficacy: number; resilience: number; optimism: number } | null
-  time: number
-  typing?: boolean
+  time: number; typing?: boolean
 }
 
 export function InteractiveDemo() {
   const [isPlaying, setIsPlaying] = useState(false)
   const [isPaused, setIsPaused] = useState(false)
   const [currentStepIndex, setCurrentStepIndex] = useState(0)
-  const [participants, setParticipants] = useState<{ name: string; role: string; avatar: string }[]>([])
+  const [participants, setParticipants] = useState<{ name: string; role: string; avatar: string; joinTime: number }[]>([])
   const [responses, setResponses] = useState<DemoResponse[]>([])
   const [speed, setSpeed] = useState(1)
   const [isFullScreen, setIsFullScreen] = useState(false)
@@ -410,101 +506,66 @@ export function InteractiveDemo() {
 
   useEffect(() => {
     if (currentStepIndex === 0 && !isPlaying) {
-      setParticipants([])
-      setResponses([])
-      setMobileStep(1)
+      setParticipants([]); setResponses([]); setMobileStep(1)
     }
   }, [currentStepIndex, isPlaying])
 
   useEffect(() => {
     if (!isPlaying || isPaused) return
-
     let timer: NodeJS.Timeout
     let cycleTimer: NodeJS.Timeout | null = null
-    const stepDuration = currentStep.duration / speed
+    const dur = currentStep.duration / speed
 
-    if (currentStep.stage === "participants-join" && currentStep.participants) {
-      if (participants.length === 0) {
-        currentStep.participants.forEach(p => {
-          setTimeout(() => { setParticipants(prev => [...prev, p]) }, p.joinTime / speed)
-        })
-      }
+    if (currentStep.stage === "participants-join" && currentStep.participants && participants.length === 0) {
+      currentStep.participants.forEach(p => {
+        setTimeout(() => setParticipants(prev => [...prev, p]), p.joinTime / speed)
+      })
     }
-
-    if (currentStep.stage === "responses-coming" && currentStep.responses) {
-      if (responses.length === 0) {
-        const cycleInterval = 1800 / speed
-        cycleTimer = setInterval(() => {
-          setMobileStep(prev => prev >= 4 ? 1 : prev + 1)
-        }, cycleInterval)
-        currentStep.responses.forEach(r => {
-          setTimeout(() => { setResponses(prev => [...prev, r as DemoResponse]) }, r.time / speed)
-        })
-      }
+    if (currentStep.stage === "responses-coming" && currentStep.responses && responses.length === 0) {
+      cycleTimer = setInterval(() => setMobileStep(prev => prev >= 4 ? 1 : prev + 1), 2000 / speed)
+      currentStep.responses.forEach(r => {
+        setTimeout(() => setResponses(prev => [...prev, r as DemoResponse]), r.time / speed)
+      })
     }
 
     timer = setTimeout(() => {
-      if (currentStepIndex < DEMO_SCRIPT.length - 1) {
-        setCurrentStepIndex(prev => prev + 1)
-      } else {
-        setIsPlaying(false)
-        setIsPaused(false)
-      }
-    }, stepDuration)
+      if (currentStepIndex < DEMO_SCRIPT.length - 1) setCurrentStepIndex(p => p + 1)
+      else { setIsPlaying(false); setIsPaused(false) }
+    }, dur)
 
-    return () => {
-      clearTimeout(timer)
-      if (cycleTimer) clearInterval(cycleTimer)
-    }
+    return () => { clearTimeout(timer); if (cycleTimer) clearInterval(cycleTimer) }
   }, [isPlaying, isPaused, currentStepIndex, currentStep, speed])
 
   const handleStart = () => {
-    setIsPlaying(true)
-    setIsPaused(false)
-    setCurrentStepIndex(0)
-    setParticipants([])
-    setResponses([])
-    if (window.innerWidth > 768) setIsFullScreen(true)
+    setIsPlaying(true); setIsPaused(false); setCurrentStepIndex(0)
+    setParticipants([]); setResponses([]); setMobileStep(1)
+    if (typeof window !== "undefined" && window.innerWidth > 768) setIsFullScreen(true)
   }
-
   const handleReset = () => {
-    setIsPlaying(false)
-    setIsPaused(false)
-    setCurrentStepIndex(0)
-    setParticipants([])
-    setResponses([])
-    setIsFullScreen(false)
-    setMobileStep(1)
-  }
-
-  const handleSpeedChange = () => {
-    setSpeed(prev => {
-      if (prev === 1) return 1.5
-      if (prev === 1.5) return 2
-      return 1
-    })
+    setIsPlaying(false); setIsPaused(false); setCurrentStepIndex(0)
+    setParticipants([]); setResponses([]); setIsFullScreen(false); setMobileStep(1)
   }
 
   if (!isMounted) return null
 
   const containerClasses = isFullScreen ? "fixed inset-0 z-50 bg-slate-50 overflow-y-auto" : "relative w-full"
-  const contentClasses = isFullScreen ? "min-h-screen p-8 max-w-7xl mx-auto flex flex-col" : "w-full"
+  const contentClasses = isFullScreen ? "min-h-screen p-6 max-w-7xl mx-auto flex flex-col" : "w-full"
 
   return (
     <div className={containerClasses}>
       <div className={contentClasses}>
 
-        {/* Controls bar */}
-        <div className="flex items-center justify-between mb-6 bg-white/80 backdrop-blur-sm p-4 rounded-2xl border shadow-sm sticky top-4 z-40">
+        {/* Controls */}
+        <div className="flex items-center justify-between mb-6 bg-white/90 backdrop-blur-sm p-4 rounded-2xl border shadow-sm sticky top-4 z-40">
           <div className="flex items-center gap-4">
-            <div className="bg-gradient-to-r from-teal-400 to-lime-400 p-2 rounded-xl text-white">
-              {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
+            <div className="bg-gradient-to-r from-teal-400 to-lime-400 p-2 rounded-xl text-white shrink-0">
+              {isPlaying && !isPaused ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
             </div>
             <div>
               <h3 className="font-bold text-gray-800 text-sm sm:text-base">{currentStep.title}</h3>
-              <div className="flex items-center gap-2">
-                <div className="w-24 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-teal-400 transition-all duration-300" style={{ width: `${((currentStepIndex + 1) / DEMO_SCRIPT.length) * 100}%` }} />
+              <div className="flex items-center gap-2 mt-0.5">
+                <div className="w-32 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                  <div className="h-full bg-teal-400 transition-all duration-500" style={{ width: `${((currentStepIndex + 1) / DEMO_SCRIPT.length) * 100}%` }} />
                 </div>
                 <span className="text-xs text-gray-400">{currentStepIndex + 1}/{DEMO_SCRIPT.length}</span>
               </div>
@@ -516,7 +577,7 @@ export function InteractiveDemo() {
                 {isPaused ? <Play className="w-5 h-5" /> : <Pause className="w-5 h-5" />}
               </Button>
             )}
-            <Button onClick={handleSpeedChange} variant="ghost" className="text-xs font-mono text-gray-500 hidden sm:flex">
+            <Button onClick={() => setSpeed(p => p === 1 ? 1.5 : p === 1.5 ? 2 : 1)} variant="ghost" className="text-xs font-mono text-gray-500 hidden sm:flex">
               {speed}x
             </Button>
             <Button onClick={() => setIsFullScreen(f => !f)} variant="ghost" size="icon" className="text-gray-500">
@@ -532,81 +593,88 @@ export function InteractiveDemo() {
         {!isFullScreen && !isPlaying && currentStepIndex === 0 && (
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/60 backdrop-blur-[2px] rounded-3xl">
             <Button onClick={handleStart} size="lg" className="bg-gradient-to-r from-teal-400 to-lime-400 text-white font-bold text-xl px-12 py-8 rounded-full shadow-2xl hover:scale-105 transition-transform">
-              <Play className="w-8 h-8 mr-3 fill-current" />
-              デモを開始する
+              <Play className="w-8 h-8 mr-3 fill-current" /> デモを開始する
             </Button>
           </div>
         )}
 
-        {/* Main content */}
-        <div className="flex-1 flex flex-col relative min-h-[500px]">
+        {/* Content */}
+        <div className="flex-1 min-h-[520px]">
 
           {/* Intro */}
           {currentStep.stage === "intro" && (
-            <div className="flex flex-col items-center justify-center text-center h-full my-auto py-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
-              <h1 className="text-4xl md:text-6xl font-black bg-clip-text text-transparent bg-gradient-to-r from-teal-500 to-lime-600 mb-6 leading-tight">
-                TAIWA AI<br />Interactive Demo
-              </h1>
-              <p className="text-xl md:text-2xl text-gray-500 max-w-2xl">{currentStep.description}</p>
-              {!isPlaying && isFullScreen && (
-                <Button onClick={handleStart} size="lg" className="mt-12 bg-black text-white rounded-full px-8">スタート</Button>
-              )}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 h-full items-center animate-in fade-in slide-in-from-bottom-4 duration-700">
+              <div className="text-center md:text-left">
+                <h1 className="text-4xl md:text-5xl font-black bg-clip-text text-transparent bg-gradient-to-r from-teal-500 to-lime-600 mb-4 leading-tight">
+                  TAIWA AI<br />Interactive Demo
+                </h1>
+                <p className="text-lg text-gray-500 leading-relaxed mb-6">チームの「見えない本音」を可視化し、対話の質を変えるプロセスを体験します。</p>
+                {!isPlaying && isFullScreen && (
+                  <Button onClick={handleStart} size="lg" className="bg-black text-white rounded-full px-8">スタート</Button>
+                )}
+              </div>
+              {"narration" in currentStep && <NarrationPanel narration={currentStep.narration} />}
             </div>
           )}
 
           {/* Participants joining */}
           {currentStep.stage === "participants-join" && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center h-full my-auto animate-in fade-in duration-500">
-              <div className="bg-white p-8 rounded-3xl shadow-xl border-4 border-gray-100 flex flex-col items-center text-center">
-                <h3 className="text-xl font-bold text-gray-800 mb-4">参加用QRコード</h3>
-                <div className="bg-white p-4 rounded-xl shadow-inner border">
-                  <QRCodeSVG value="https://taiwaai-livid.vercel.app/join/demo" size={200} />
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 h-full items-start animate-in fade-in duration-500">
+              <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                <div className="bg-white p-6 rounded-3xl shadow-xl border-4 border-gray-100 flex flex-col items-center text-center">
+                  <h3 className="text-lg font-bold text-gray-800 mb-3">参加用QRコード</h3>
+                  <div className="bg-white p-3 rounded-xl shadow-inner border mb-3">
+                    <QRCodeSVG value="https://taiwaai-livid.vercel.app/join/demo" size={180} />
+                  </div>
+                  <p className="text-xs text-gray-400">スキャンするだけ。アカウント不要。</p>
                 </div>
-                <p className="mt-4 text-sm text-gray-400">スマートフォンでスキャンして参加</p>
-              </div>
-              <div className="space-y-6">
-                <h3 className="text-2xl font-bold text-gray-700 flex items-center gap-3">
-                  <Users className="w-6 h-6" /> 参加者 ({participants.length})
-                </h3>
-                <div className="grid grid-cols-2 gap-4">
-                  {participants.map((p, i) => (
-                    <div key={i} className="flex items-center gap-3 bg-white p-4 rounded-2xl shadow-sm border border-gray-100 animate-in fade-in slide-in-from-right-4 duration-500">
-                      <div className="text-3xl">{p.avatar}</div>
-                      <div>
-                        <p className="font-bold text-gray-800 text-sm">{p.name}</p>
-                        <p className="text-xs text-gray-500 uppercase font-semibold">{p.role}</p>
+                <div className="space-y-4">
+                  <h3 className="text-xl font-bold text-gray-700 flex items-center gap-2"><Users className="w-5 h-5" /> 入室状況</h3>
+                  <div className="space-y-3">
+                    {participants.map((p, i) => (
+                      <div key={i} className="flex items-center gap-3 bg-white p-3.5 rounded-2xl shadow-sm border border-gray-100 animate-in fade-in slide-in-from-right-4 duration-500">
+                        <div className="text-2xl">{p.avatar}</div>
+                        <div className="flex-1">
+                          <p className="font-bold text-gray-800 text-sm">{p.name}</p>
+                          <p className="text-xs text-gray-500">{p.role === "manager" ? "マネージャー" : "メンバー"}</p>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                          <span className="text-xs text-green-600 font-semibold">参加済み</span>
+                        </div>
                       </div>
-                      <div className="ml-auto w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-                    </div>
-                  ))}
-                  {participants.length === 0 && <p className="text-gray-400 italic col-span-2 text-sm">待機中...</p>}
+                    ))}
+                    {participants.length < 4 && (
+                      <div className="flex items-center gap-2 text-sm text-gray-400 italic p-3">
+                        <div className="w-2 h-2 rounded-full bg-gray-300 animate-pulse" /> 参加待ち...
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
+              {"narration" in currentStep && <NarrationPanel narration={currentStep.narration} />}
             </div>
           )}
 
-          {/* Responses coming (split: dashboard + mobile) */}
+          {/* Responses coming */}
           {currentStep.stage === "responses-coming" && (
-            <div className="h-full flex flex-col md:flex-row gap-8 animate-in fade-in duration-500">
-              <div className="flex-1">
-                <h3 className="text-xl font-bold text-gray-700 mb-4 flex items-center gap-2">
-                  <ArrowRight className="w-5 h-5 text-teal-500" />
-                  ファシリテーション画面（リアルタイム）
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 h-full animate-in fade-in duration-500">
+              <div className="lg:col-span-2 space-y-4">
+                <h3 className="text-lg font-bold text-gray-700 flex items-center gap-2">
+                  <ArrowRight className="w-5 h-5 text-teal-500" /> ファシリテーター画面（リアルタイム）
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {responses.map((r, i) => {
-                    const honestyColor = r.honesty >= 70 ? "text-green-700 bg-green-50 border-green-200" : r.honesty >= 40 ? "text-yellow-700 bg-yellow-50 border-yellow-200" : "text-red-700 bg-red-50 border-red-200"
-                    const resistanceColor = r.resistance < 30 ? "text-green-700 bg-green-50 border-green-200" : r.resistance <= 70 ? "text-yellow-700 bg-yellow-50 border-yellow-200" : "text-red-700 bg-red-50 border-red-200"
+                    const hColor = r.honesty >= 70 ? "bg-green-50 border-green-200 text-green-700" : r.honesty >= 40 ? "bg-yellow-50 border-yellow-200 text-yellow-700" : "bg-red-50 border-red-200 text-red-700"
+                    const rColor = r.resistance < 30 ? "bg-green-50 border-green-200 text-green-700" : r.resistance <= 70 ? "bg-yellow-50 border-yellow-200 text-yellow-700" : "bg-red-50 border-red-200 text-red-700"
                     return (
-                      <div key={i} className={`bg-white p-4 rounded-2xl shadow-md border-l-4 ${r.role === "manager" ? "border-l-indigo-500" : "border-l-teal-500"} animate-in zoom-in fade-in slide-in-from-bottom-2 duration-500`}>
-                        <div className="flex items-center gap-2 mb-3">
-                          <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${r.role === "manager" ? "bg-indigo-100 text-indigo-700" : "bg-teal-100 text-teal-700"}`}>
-                            {r.participant}
-                          </span>
+                      <div key={i} className={`bg-white p-4 rounded-2xl shadow-sm border-l-4 ${r.role === "manager" ? "border-l-indigo-400" : "border-l-teal-400"} animate-in zoom-in fade-in duration-500`}>
+                        <div className="flex items-center gap-1.5 mb-2 flex-wrap">
+                          <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${r.role === "manager" ? "bg-indigo-100 text-indigo-700" : "bg-teal-100 text-teal-700"}`}>{r.participant}</span>
                           {!r.typing && (
                             <>
-                              <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${honestyColor}`}>💬 {r.honesty}%</span>
-                              <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${resistanceColor}`}>😰 {r.resistance}%</span>
+                              <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full border ${hColor}`}>💬 {r.honesty}%</span>
+                              <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full border ${rColor}`}>😰 {r.resistance}%</span>
                             </>
                           )}
                         </div>
@@ -615,13 +683,13 @@ export function InteractiveDemo() {
                         ) : (
                           <div className="space-y-1.5">
                             <div>
-                              <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">As-Is</p>
-                              <p className="text-sm text-gray-800 font-medium">"{r.asIs}"</p>
+                              <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">As-Is</p>
+                              <p className="text-xs text-gray-800 font-medium leading-snug">{r.asIs}</p>
                             </div>
                             {r.toBe && (
                               <div>
-                                <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">To-Be</p>
-                                <p className="text-sm text-gray-600">"{r.toBe}"</p>
+                                <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">To-Be</p>
+                                <p className="text-xs text-gray-600 leading-snug">{r.toBe}</p>
                               </div>
                             )}
                           </div>
@@ -629,57 +697,75 @@ export function InteractiveDemo() {
                       </div>
                     )
                   })}
-                  <div className="bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl flex items-center justify-center p-8 opacity-50">
-                    <span className="animate-pulse text-gray-400 text-sm">待機中...</span>
+                  {responses.length < 4 && (
+                    <div className="bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl flex items-center justify-center p-8 opacity-40">
+                      <span className="animate-pulse text-gray-400 text-sm">待機中...</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Mobile mockup inline for lg */}
+                <div className="hidden lg:hidden">
+                  <div className="text-center mb-3">
+                    <span className="bg-gray-900 text-white text-xs px-3 py-1 rounded-full">参加者の入力画面</span>
                   </div>
+                  <MockMobileClient step={mobileStep} />
                 </div>
               </div>
 
-              {/* Mobile mockup */}
-              <div className="w-full md:w-[300px] shrink-0 border-l pl-8 border-gray-100 hidden md:block">
-                <div className="text-center mb-4">
-                  <span className="bg-gray-900 text-white text-xs px-3 py-1 rounded-full">参加者の入力画面</span>
+              {/* Right column: mobile + narration */}
+              <div className="space-y-4">
+                <div className="text-center">
+                  <span className="bg-gray-900 text-white text-xs px-3 py-1 rounded-full">参加者の入力画面（スマホ）</span>
                 </div>
                 <MockMobileClient step={mobileStep} />
+                {"narration" in currentStep && <NarrationPanel narration={currentStep.narration} />}
               </div>
             </div>
           )}
 
           {/* Realtime stats */}
           {currentStep.stage === "realtime-analysis" && (
-            <div className="h-full flex flex-col animate-in fade-in duration-700">
-              <div className="mb-6 flex items-center justify-between">
-                <h2 className="text-2xl font-bold flex items-center gap-2">
-                  <span className="text-3xl">📊</span> リアルタイム集計
-                </h2>
-                <span className="animate-pulse text-teal-600 font-bold bg-teal-50 px-3 py-1 rounded-full border border-teal-200 text-sm">
-                  AI分析を準備中...
-                </span>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in fade-in duration-700">
+              <div className="lg:col-span-2">
+                <div className="flex items-center justify-between mb-5">
+                  <h2 className="text-xl font-bold flex items-center gap-2">📊 リアルタイム集計</h2>
+                  <span className="animate-pulse text-teal-600 font-bold bg-teal-50 px-3 py-1.5 rounded-full border border-teal-200 text-sm">AI分析を準備中...</span>
+                </div>
+                <div className="bg-white/60 backdrop-blur-sm rounded-3xl p-5 border shadow-sm">
+                  <RealtimeStatsDisplay />
+                </div>
               </div>
-              <div className="bg-white/50 backdrop-blur-sm rounded-3xl p-6 border shadow-sm flex-1 overflow-y-auto">
-                <RealtimeStatsDisplay />
-              </div>
+              {"narration" in currentStep && <NarrationPanel narration={currentStep.narration} />}
             </div>
           )}
 
           {/* AI analysis */}
           {currentStep.stage === "ai-insight" && (
-            <div className="h-full flex flex-col animate-in fade-in duration-700">
-              <div className="mb-6 flex items-center gap-2">
-                <h2 className="text-2xl font-bold flex items-center gap-2">
-                  <span className="text-3xl">🤖</span> AI 構造分析レポート
-                </h2>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in fade-in duration-700">
+              <div className="lg:col-span-2">
+                <h2 className="text-xl font-bold flex items-center gap-2 mb-5">🤖 AI 構造分析レポート</h2>
+                <div className="bg-white/60 backdrop-blur-sm rounded-3xl p-5 border shadow-sm overflow-y-auto max-h-[700px]">
+                  <AnalysisDisplay analysis={MOCK_ANALYSIS} stats={MOCK_STATS} onSelectQuestion={() => {}} />
+                </div>
               </div>
-              <div className="bg-white/50 backdrop-blur-sm rounded-3xl p-6 border shadow-sm flex-1 overflow-y-auto">
-                <AnalysisDisplay
-                  analysis={MOCK_ANALYSIS}
-                  stats={MOCK_STATS}
-                  onSelectQuestion={() => {}}
-                />
-              </div>
+              {"narration" in currentStep && (
+                <div className="space-y-4">
+                  <NarrationPanel narration={currentStep.narration} />
+                  {/* Highlight key output */}
+                  <div className="bg-teal-50 border border-teal-200 rounded-2xl p-4 space-y-2">
+                    <p className="text-xs font-bold text-teal-700 uppercase tracking-wider">出力される内容</p>
+                    {["認識のズレ（Friction）の特定", "HEROスコアによる心理状態分析", "おすすめの介入の問い（3種類）", "対話不全リスクの警告"].map((item, i) => (
+                      <div key={i} className="flex items-center gap-2 text-xs text-teal-800">
+                        <div className="w-4 h-4 bg-teal-500 rounded-full flex items-center justify-center text-white font-bold text-[9px] shrink-0">{i + 1}</div>
+                        {item}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
-
         </div>
       </div>
     </div>
